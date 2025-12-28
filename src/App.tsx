@@ -396,7 +396,7 @@ export default function App() {
         tasks={tasks}
       />
       
-      <main className="max-w-7xl mx-auto px-4 py-20 pb-24">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-20 pb-24">
         {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />
         ) : (
