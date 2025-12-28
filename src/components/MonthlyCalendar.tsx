@@ -237,33 +237,27 @@ const MonthlyCalendarBase = ({ isOpen, onClose, selectedDate, onSelectDate, task
     return map;
   }, [tasks, generateDateKey]);
 
-  // Get all days in the current month with padding for the start of the month - memoized
+  // Get all days in the current month with padding - optimized computation
   const calendarDays = useMemo(() => {
-    // Performance optimization: Early return for re-renders where month hasn't changed
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const startDayOfWeek = getDay(monthStart);
+    const daysInMonth = monthEnd.getDate();
     
-    // Pre-allocate array with exact size for better memory performance
-    const totalDays = startDayOfWeek + monthEnd.getDate();
+    // Pre-allocate array with exact size
+    const totalDays = startDayOfWeek + daysInMonth;
     const days: (Date | null)[] = new Array(totalDays);
     
     // Fill in empty spaces for the first week
-    for (let i = 0; i < startDayOfWeek; i++) {
-      days[i] = null;
-    }
+    days.fill(null, 0, startDayOfWeek);
     
-    // Fill in actual days - using a for loop is more efficient than eachDayOfInterval
-    const daysInMonth = monthEnd.getDate();
+    // Create base date values once
+    const year = monthStart.getFullYear();
+    const month = monthStart.getMonth();
+    
+    // Fill in actual days efficiently
     for (let i = 0; i < daysInMonth; i++) {
-      days[startDayOfWeek + i] = new Date(
-        monthStart.getFullYear(),
-        monthStart.getMonth(),
-        i + 1,
-        12, // Set to noon to avoid timezone issues
-        0,
-        0
-      );
+      days[startDayOfWeek + i] = new Date(year, month, i + 1, 12, 0, 0);
     }
     
     return days;
@@ -365,41 +359,32 @@ const MonthlyCalendarBase = ({ isOpen, onClose, selectedDate, onSelectDate, task
     return result;
   }, [tasksByDate, tasks, isSameDayOptimized, generateDateKey]);
 
-  // Month navigation handlers
+  // Month navigation handlers - fixed to avoid stale closures
   const handlePrevMonth = useCallback(() => {
-    setCurrentMonth(prevMonth => {
-      const newMonth = addMonths(prevMonth, -1);
-      // Focus on a middle date of the new month
-      requestAnimationFrame(() => {
-        const midIndex = Math.floor(calendarDays.length / 2);
-        setFocusedDateIndex(midIndex);
-      });
-      return newMonth;
-    });
-  }, [calendarDays.length]);
+    setCurrentMonth(prevMonth => addMonths(prevMonth, -1));
+    // Reset focus index to prevent issues
+    setFocusedDateIndex(null);
+  }, []);
 
   const handleNextMonth = useCallback(() => {
-    setCurrentMonth(prevMonth => {
-      const newMonth = addMonths(prevMonth, 1);
-      // Focus on a middle date of the new month
-      requestAnimationFrame(() => {
-        const midIndex = Math.floor(calendarDays.length / 2);
-        setFocusedDateIndex(midIndex);
-      });
-      return newMonth;
-    });
-  }, [calendarDays.length]);
+    setCurrentMonth(prevMonth => addMonths(prevMonth, 1));
+    // Reset focus index to prevent issues
+    setFocusedDateIndex(null);
+  }, []);
 
   // Toggle year selector
   const toggleYearSelector = useCallback(() => {
     setViewMode(prev => prev === 'calendar' ? 'year' : 'calendar');
   }, []);
 
-  // Handle change year
+  // Handle change year - optimized
   const handleYearChange = useCallback((year: number) => {
-    setCurrentMonth(prevMonth => setYear(prevMonth, year));
+    const newDate = new Date(year, currentMonth.getMonth(), 1, 12, 0, 0);
+    setCurrentMonth(newDate);
     setViewMode('calendar');
-  }, []);
+    // Reset focus
+    setFocusedDateIndex(null);
+  }, [currentMonth]);
 
   // Handle mouse enter for tooltip
   const handleMouseEnter = useCallback((date: Date, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -512,24 +497,23 @@ const MonthlyCalendarBase = ({ isOpen, onClose, selectedDate, onSelectDate, task
     touchStartYRef.current = null;
   }, [handlePrevMonth, handleNextMonth]);
 
-  // Handle date selection
+  // Handle date selection - optimized to prevent race conditions
   const handleDateSelection = useCallback((date: Date) => {
     try {
       // Create a normalized date to avoid timezone issues
       const selectedDate = createNormalizedDate(date);
       
+      // Close immediately for better UX
+      onClose();
+      
       // Pass the normalized date to ensure consistency
       onSelectDate(selectedDate);
       
-      // Increase the delay before closing to ensure proper date selection without auto-task selection
-      setTimeout(() => {
-        onClose();
-        // Dispatch a custom event to signal that a date was selected but no task should be auto-selected
-        const preventAutoSelectEvent = new CustomEvent('preventAutoTaskSelect', { 
-          detail: { date: selectedDate }
-        });
-        window.dispatchEvent(preventAutoSelectEvent);
-      }, 100);
+      // Dispatch event to prevent auto-task selection
+      const preventAutoSelectEvent = new CustomEvent('preventAutoTaskSelect', { 
+        detail: { date: selectedDate }
+      });
+      window.dispatchEvent(preventAutoSelectEvent);
     } catch (error) {
       console.error('Error selecting date:', error);
     }
@@ -648,20 +632,17 @@ const MonthlyCalendarBase = ({ isOpen, onClose, selectedDate, onSelectDate, task
     dayButtonsRef.current = dayButtonsRef.current.slice(0, calendarDays.length);
   }, [calendarDays.length]);
 
-  // Handle today button
+  // Handle today button - optimized
   const handleTodayClick = useCallback(() => {
-    const today = createNormalizedDate(new Date());
-    setCurrentMonth(today);
-    // Find and focus today's date
-    const todayIndex = calendarDays.findIndex(date => date && isSameDayOptimized(date, today));
-    if (todayIndex !== -1) {
-      setFocusedDateIndex(todayIndex);
-      requestAnimationFrame(() => {
-        dayButtonsRef.current[todayIndex]?.focus();
-      });
-    }
-    onSelectDate(today);
-  }, [onSelectDate, calendarDays, isSameDayOptimized]);
+    const today = new Date();
+    const normalizedToday = createNormalizedDate(today);
+    
+    // Set to current month
+    setCurrentMonth(normalizedToday);
+    
+    // Select today's date
+    handleDateSelection(normalizedToday);
+  }, [handleDateSelection]);
 
   // Format task name for display in tooltip
   const formatTaskName = useCallback((name: string): string => {
@@ -772,12 +753,10 @@ const MonthlyCalendarBase = ({ isOpen, onClose, selectedDate, onSelectDate, task
     );
   }, [hoveredDate, tooltipPosition, getTasksForDate, formatTaskName, formatCategoryName, isMobileRef]);
   
-  // Clear the task summary cache when component unmounts or when tasks change
+  // Clear the task summary cache when tasks or month changes
   useEffect(() => {
-    return () => {
-      taskSummaryCacheRef.current.clear();
-    };
-  }, [tasks]);
+    taskSummaryCacheRef.current.clear();
+  }, [tasks, currentMonth]);
 
   // Return all the JSX and UI implementation
   return (
@@ -1130,8 +1109,20 @@ const MonthlyCalendarBase = ({ isOpen, onClose, selectedDate, onSelectDate, task
   );
 };
 
-// Export the memoized component to prevent unnecessary re-renders
-export const MonthlyCalendar = memo(MonthlyCalendarBase);
+// Custom comparison function to prevent unnecessary re-renders
+const arePropsEqual = (prevProps: MonthlyCalendarProps, nextProps: MonthlyCalendarProps) => {
+  // Only re-render if critical props change
+  return (
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.selectedDate.getTime() === nextProps.selectedDate.getTime() &&
+    prevProps.tasks.length === nextProps.tasks.length &&
+    prevProps.onClose === nextProps.onClose &&
+    prevProps.onSelectDate === nextProps.onSelectDate
+  );
+};
+
+// Export the memoized component with custom comparison to prevent unnecessary re-renders
+export const MonthlyCalendar = memo(MonthlyCalendarBase, arePropsEqual);
 
 // Default export for lazy loading
 export default { MonthlyCalendar };

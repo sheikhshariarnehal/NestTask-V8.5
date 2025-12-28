@@ -316,6 +316,41 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
     setTasks(propTasks || allTasks || []);
   }, [propTasks, allTasks]);
 
+  // Read initial date from URL parameters
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const dateParam = params.get('selectedDate');
+      
+      if (dateParam) {
+        const parsedDate = parseISO(dateParam);
+        if (!isNaN(parsedDate.getTime())) {
+          setSelectedDate(parsedDate);
+          console.log('Initial date loaded from URL:', dateParam);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing initial date from URL:', error);
+    }
+  }, []); // Run only once on mount
+
+  // Listen for dateSelected events from Navigation calendar
+  useEffect(() => {
+    const handleDateSelected = (event: CustomEvent) => {
+      const { date } = event.detail;
+      if (date) {
+        setSelectedDate(new Date(date));
+        setSelectedTask(null);
+        console.log('Date selected from Navigation calendar:', date);
+      }
+    };
+    
+    window.addEventListener('dateSelected', handleDateSelected as EventListener);
+    return () => {
+      window.removeEventListener('dateSelected', handleDateSelected as EventListener);
+    };
+  }, []);
+
   // Clear loading state if stuck for too long
   useEffect(() => {
     if (loading) {
@@ -621,7 +656,7 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
     setSelectedTask(null);
   }, []);
 
-  // Optimize render cycle by only updating date in URL when needed
+  // Sync URL with selected date bidirectionally
   useEffect(() => {
     const updateUrl = () => {
       try {
@@ -629,6 +664,7 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
         const dateParam = params.get('selectedDate');
         const currentDateStr = formatDate(selectedDate);
         
+        // Update URL if it doesn't match
         if (dateParam !== currentDateStr) {
           params.set('selectedDate', currentDateStr);
           const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -639,9 +675,31 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
       }
     };
     
+    // Also listen for URL changes (back/forward navigation)
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const dateParam = params.get('selectedDate');
+        if (dateParam) {
+          const parsedDate = parseISO(dateParam);
+          if (!isNaN(parsedDate.getTime())) {
+            setSelectedDate(parsedDate);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing date from URL:', error);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
     // Debounce URL updates to avoid excessive history entries
     const timeoutId = setTimeout(updateUrl, 300);
-    return () => clearTimeout(timeoutId);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [selectedDate, formatDate]);
 
   // Render loading skeleton during initial load

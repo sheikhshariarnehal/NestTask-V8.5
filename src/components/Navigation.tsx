@@ -106,14 +106,12 @@ export function Navigation({
     };
   }, [handleScroll]);
 
-  const handleCalendarToggle = () => {
-    setIsCalendarOpen(!isCalendarOpen);
-  };
+  const handleCalendarToggle = useCallback(() => {
+    setIsCalendarOpen(prev => !prev);
+  }, []);
 
-  // We'll just use click events which work for both mouse and touch
-  // without needing to preventDefault()
-
-  const handleDateSelect = (date: Date) => {
+  // Memoized date select handler to prevent re-creation on every render
+  const handleDateSelect = useCallback((date: Date) => {
     // Update local state
     setSelectedDate(date);
     setIsCalendarOpen(false);
@@ -122,34 +120,36 @@ export function Navigation({
     onPageChange('upcoming');
     
     try {
-      // Optimize date formatting - direct string extraction is faster than string padding
+      // Optimize date formatting
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const day = date.getDate();
       
-      // Format with ternary operators for better performance
-      const formattedDate = `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+      // Format with zero padding
+      const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       
-      // Use URLSearchParams constructor directly with an object for better performance
+      // Update URL with date parameter
       const params = new URLSearchParams(window.location.search);
       params.set('selectedDate', formattedDate);
       
-      // Force URL update with correct date parameter
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       window.history.replaceState({ path: newUrl, date: formattedDate }, '', newUrl);
       
-      // Dispatch a custom event to notify other components
-      const dateSelectedEvent = new CustomEvent('dateSelected', { detail: { date } });
-      window.dispatchEvent(dateSelectedEvent);
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('dateSelected', { detail: { date } }));
       
-      // For debugging in development
       if (process.env.NODE_ENV === 'development') {
         console.log('Navigation: Selected date and updated URL', formattedDate);
       }
     } catch (error) {
       console.error('Error setting date parameter:', error);
     }
-  };
+  }, [onPageChange]);
+
+  // Memoized close handler
+  const handleCalendarClose = useCallback(() => {
+    setIsCalendarOpen(false);
+  }, []);
 
   return (
     <>
@@ -208,7 +208,7 @@ export function Navigation({
       {/* Monthly Calendar */}
       <MonthlyCalendar
         isOpen={isCalendarOpen}
-        onClose={() => setIsCalendarOpen(false)}
+        onClose={handleCalendarClose}
         selectedDate={selectedDate}
         onSelectDate={handleDateSelect}
         tasks={tasks}
