@@ -94,6 +94,13 @@ export function TaskManagerEnhanced({
     loadTasks();
   }, [loadTasks]);
 
+  // Sync openCreateForm prop with local state
+  useEffect(() => {
+    if (openCreateForm) {
+      setShowCreateForm(true);
+    }
+  }, [openCreateForm]);
+
   const handleTaskCreated = useCallback((task: EnhancedTask) => {
     setTasks(prev => [task, ...prev]);
     setTotal(prev => prev + 1);
@@ -468,6 +475,15 @@ export function TaskManagerEnhanced({
           onTaskDeleted={handleTaskDeleted}
         />
       )}
+
+      {/* Mobile FAB - Create Task */}
+      <button
+        onClick={() => setShowCreateForm(true)}
+        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50 active:scale-95"
+        aria-label="Create Task"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
     </div>
   );
 }

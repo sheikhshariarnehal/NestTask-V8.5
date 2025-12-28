@@ -17,7 +17,7 @@ import type { Teacher, NewTeacher } from '../types/teacher';
 import type { AdminTab } from '../types/admin';
 import { useAuth } from '../hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
-import { RefreshCcw, AlertTriangle, Loader2 } from 'lucide-react';
+import { RefreshCcw, AlertTriangle, Loader2, Plus } from 'lucide-react';
 
 // Minimum time between refreshes (in ms)
 const MIN_REFRESH_INTERVAL = 30000; // 30 seconds
@@ -98,6 +98,16 @@ export function AdminDashboard({
     
     previousTabRef.current = activeTab;
   }, [activeTab]);
+
+  // Reset openTaskFormV2 after it's been consumed by TaskManagerEnhanced
+  useEffect(() => {
+    if (openTaskFormV2 && activeTab === 'task-management-v2') {
+      const timer = setTimeout(() => {
+        setOpenTaskFormV2(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [openTaskFormV2, activeTab]);
   
   // Force task form visible when task management tab is activated
   useEffect(() => {
@@ -686,6 +696,18 @@ export function AdminDashboard({
           </div>
         </div>
       </main>
+
+      {/* Mobile FAB - Create Task */}
+      <button
+        onClick={() => {
+          setOpenTaskFormV2(true);
+          setActiveTab('task-management-v2');
+        }}
+        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50 active:scale-95"
+        aria-label="Create Task"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
     </div>
   );
 }

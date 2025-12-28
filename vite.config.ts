@@ -23,69 +23,94 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: [
-        'favicon.ico', 
-        'robots.txt', 
         'icons/*.png',
         'manifest.json',
         'offline.html'
       ],
-      manifest: {
-        name: 'NestTask',
-        short_name: 'NestTask',
-        description: 'A modern task management application for teams and individuals',
-        theme_color: '#0284c7',
-        icons: [
-          {
-            src: '/icons/icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/maskable-icon.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
-      },
+      manifest: false, // Use manual manifest.json in public folder
       workbox: {
+        // Clean URLs for SPA
+        cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        
+        // Assets to precache
+        globPatterns: [
+          '**/*.{js,css,html,ico,png,svg,woff2}'
+        ],
+        
+        // Ignore specific patterns
+        globIgnores: [
+          '**/node_modules/**',
+          'sw.js',
+          'workbox-*.js'
+        ],
+        
+        // Runtime caching strategies
         runtimeCaching: [
+          // Google Fonts stylesheets
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'google-fonts-cache',
+              cacheName: 'google-fonts-stylesheets',
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
               }
             }
           },
+          // Google Fonts webfonts
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'gstatic-fonts-cache',
+              cacheName: 'google-fonts-webfonts',
               expiration: {
-                maxEntries: 10,
+                maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               },
               cacheableResponse: {
                 statuses: [0, 200]
               }
             }
+          },
+          // Static assets
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
+          // JS/CSS assets
+          {
+            urlPattern: /\.(?:js|css)$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              }
+            }
           }
+        ],
+        
+        // Navigation fallback
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/auth/,
+          /^\/_vercel/
         ]
+      },
+      devOptions: {
+        enabled: false // Disable in development for faster builds
       }
     }),
     compression({
