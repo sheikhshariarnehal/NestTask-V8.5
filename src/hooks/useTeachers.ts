@@ -34,37 +34,7 @@ export function useTeachers() {
 
   useEffect(() => {
     loadTeachers();
-
-    // Debounced realtime subscription
-    let realtimeTimeout: number | null = null;
-    let lastUpdate = 0;
-
-    const subscription = supabase
-      .channel('teachers')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'teachers'
-        },
-        () => {
-          const now = Date.now();
-          if (now - lastUpdate < 5000) return;
-          
-          if (realtimeTimeout) clearTimeout(realtimeTimeout);
-          realtimeTimeout = window.setTimeout(() => {
-            lastUpdate = Date.now();
-            loadTeachers(true);
-          }, 2000);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (realtimeTimeout) clearTimeout(realtimeTimeout);
-      subscription.unsubscribe();
-    };
+    // No realtime subscriptions - user must manually refresh
   }, [loadTeachers]);
 
   const handleCreateTeacher = async (teacher: NewTeacher, courseIds: string[]) => {

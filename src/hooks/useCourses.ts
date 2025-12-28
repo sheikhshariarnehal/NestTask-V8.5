@@ -54,47 +54,7 @@ export function useCourses() {
   useEffect(() => {
     loadCourses();
     loadMaterials();
-
-    // Debounced realtime subscriptions to prevent rapid refreshes
-    let coursesTimeout: number | null = null;
-    let materialsTimeout: number | null = null;
-    let lastCoursesUpdate = 0;
-    let lastMaterialsUpdate = 0;
-
-    const coursesSubscription = supabase
-      .channel('courses')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, () => {
-        const now = Date.now();
-        if (now - lastCoursesUpdate < 5000) return;
-        
-        if (coursesTimeout) clearTimeout(coursesTimeout);
-        coursesTimeout = window.setTimeout(() => {
-          lastCoursesUpdate = Date.now();
-          loadCourses(true);
-        }, 2000);
-      })
-      .subscribe();
-
-    const materialsSubscription = supabase
-      .channel('materials')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'study_materials' }, () => {
-        const now = Date.now();
-        if (now - lastMaterialsUpdate < 5000) return;
-        
-        if (materialsTimeout) clearTimeout(materialsTimeout);
-        materialsTimeout = window.setTimeout(() => {
-          lastMaterialsUpdate = Date.now();
-          loadMaterials(true);
-        }, 2000);
-      })
-      .subscribe();
-
-    return () => {
-      if (coursesTimeout) clearTimeout(coursesTimeout);
-      if (materialsTimeout) clearTimeout(materialsTimeout);
-      coursesSubscription.unsubscribe();
-      materialsSubscription.unsubscribe();
-    };
+    // No realtime subscriptions - user must manually refresh
   }, [loadCourses, loadMaterials]);
 
   const handleCreateCourse = async (course: NewCourse) => {

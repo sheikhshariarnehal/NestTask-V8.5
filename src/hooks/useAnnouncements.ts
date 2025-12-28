@@ -26,43 +26,7 @@ export function useAnnouncements() {
 
   useEffect(() => {
     loadAnnouncements();
-
-    // Debounced realtime subscription to prevent rapid refreshes
-    let realtimeTimeout: number | null = null;
-    let lastUpdate = 0;
-
-    const subscription = supabase
-      .channel('announcements')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'announcements'
-        },
-        () => {
-          const now = Date.now();
-          // Skip if we just processed an update (within 5 seconds)
-          if (now - lastUpdate < 5000) return;
-          
-          if (realtimeTimeout) {
-            clearTimeout(realtimeTimeout);
-          }
-          
-          realtimeTimeout = window.setTimeout(() => {
-            lastUpdate = Date.now();
-            loadAnnouncements();
-          }, 2000); // 2 second debounce
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (realtimeTimeout) {
-        clearTimeout(realtimeTimeout);
-      }
-      subscription.unsubscribe();
-    };
+    // No realtime subscriptions - user must manually refresh
   }, [loadAnnouncements]);
 
   const handleCreateAnnouncement = async (newAnnouncement: NewAnnouncement) => {

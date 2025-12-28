@@ -217,59 +217,15 @@ export function AdminDashboard({
   
 
 
-  // Optimized page visibility handling - minimal refreshes
+  // Track page visibility for internal state only - no auto-refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
-      const isVisible = document.visibilityState === 'visible';
-      const now = Date.now();
-
-      isPageActiveRef.current = isVisible;
-
-      if (isVisible) {
-        const timeSinceLastChange = now - lastVisibilityChangeRef.current;
-        lastVisibilityChangeRef.current = now;
-
-        // Only refresh if page was hidden for more than 5 minutes
-        // This prevents the annoying auto-refresh behavior
-        if (timeSinceLastChange > VISIBILITY_REFRESH_THRESHOLD && !pendingRefreshRef.current) {
-          pendingRefreshRef.current = true;
-          
-          // Clear any pending refresh timeouts
-          if (refreshTimeoutRef.current) {
-            clearTimeout(refreshTimeoutRef.current);
-            refreshTimeoutRef.current = null;
-          }
-
-          // Single debounced refresh with longer delay
-          refreshTimeoutRef.current = window.setTimeout(() => {
-            // Only refresh the active tab, not all data
-            const lastRefresh = lastRefreshByTabRef.current[activeTab] || 0;
-            if (now - lastRefresh > MIN_REFRESH_INTERVAL) {
-              lastRefreshByTabRef.current[activeTab] = now;
-              
-              // Silently refresh without UI interruption
-              if (activeTab === 'tasks') {
-                refreshTasks(false); // Don't force refresh
-              } else if (activeTab === 'dashboard') {
-                refreshTasks(false);
-              }
-            }
-            pendingRefreshRef.current = false;
-            refreshTimeoutRef.current = null;
-          }, 2000);
-        }
-      }
+      isPageActiveRef.current = document.visibilityState === 'visible';
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-    };
-  }, [activeTab, refreshTasks]);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Check for mobile view on mount and resize with debounce
   useEffect(() => {
@@ -310,9 +266,9 @@ export function AdminDashboard({
     setIsSidebarCollapsed(collapsed);
   }, []);
 
-  // Optimized tab change handling with throttled data loading
+  // Tab change handling - no auto-refresh, only manual refresh by user
   const handleTabChange = useCallback((tab: AdminTab) => {
-    // Skip reload if already on this tab
+    // Skip if already on this tab
     if (tab === activeTab) return;
 
     // Store previous tab
@@ -324,54 +280,10 @@ export function AdminDashboard({
 
     setActiveTab(tab);
 
-    // Check if we should refresh data for this tab
-    const now = Date.now();
-    const lastRefresh = lastRefreshByTabRef.current[tab] || 0;
-    const shouldRefresh = now - lastRefresh > MIN_REFRESH_INTERVAL;
-
-    // Don't refresh on initial mount or if data is fresh
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      return;
-    }
-
-    // Only refresh if data is stale (older than MIN_REFRESH_INTERVAL)
-    if (!shouldRefresh) {
-      if (tab === 'tasks') {
-        setShowTaskForm(true);
-      }
-      return;
-    }
-
-    lastRefreshByTabRef.current[tab] = now;
-
+    // Only set UI states, no data fetching
     switch (tab) {
       case 'tasks':
         setShowTaskForm(true);
-        // Don't auto-refresh, let user manually refresh if needed
-        break;
-      case 'users':
-        // Only refresh users if data is stale
-        refreshUsers();
-        break;
-      case 'routine':
-        refreshRoutines();
-        break;
-      case 'courses':
-        refreshCourses();
-        break;
-      case 'announcements':
-        refreshAnnouncements();
-        break;
-      case 'teachers':
-        refreshTeachers();
-        break;
-      case 'lecture-slides':
-        // Lecture slides don't need special refresh logic
-        break;
-      case 'dashboard':
-        // For dashboard, only load if data is stale
-        refreshUsers();
         break;
       default:
         setShowTaskForm(false);

@@ -186,57 +186,12 @@ export function useTasks(userId: string | undefined) {
     // Initial load - fetch data once on mount
     loadTasks();
 
-    // Debounced realtime subscription with longer debounce to prevent excessive refreshes
-    let realtimeTimeout: number | null = null;
-    let lastRealtimeUpdate = 0;
-
-    const subscription = supabase
-      .channel('tasks_channel')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'tasks',
-        filter: `user_id=eq.${userId}`
-      }, () => {
-        if (isMountedRef.current) {
-          const now = Date.now();
-          
-          // Skip if we just processed a realtime update (within 5 seconds)
-          if (now - lastRealtimeUpdate < 5000) {
-            return;
-          }
-          
-          // Debounce realtime updates with longer delay
-          if (realtimeTimeout) {
-            clearTimeout(realtimeTimeout);
-          }
-
-          realtimeTimeout = window.setTimeout(() => {
-            if (isMountedRef.current && !loadingRef.current) {
-              lastRealtimeUpdate = Date.now();
-              loadTasks();
-            }
-          }, 3000); // 3 second debounce for realtime updates
-        }
-      })
-      .subscribe();
-
-    // Removed visibility change handler - AdminDashboard handles this now
-    // This prevents duplicate refresh triggers
-
-    // Removed polling interval - it was causing unnecessary checks and state resets
+    // No realtime subscriptions - user must manually refresh
 
     return () => {
       // Mark component as unmounted
       isMountedRef.current = false;
 
-      // Cleanup realtime timeout
-      if (realtimeTimeout) {
-        clearTimeout(realtimeTimeout);
-      }
-
-      // Clean up
-      subscription.unsubscribe();
       // Abort any in-progress request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();

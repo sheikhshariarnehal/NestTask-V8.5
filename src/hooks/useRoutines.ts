@@ -44,35 +44,7 @@ export function useRoutines(userId?: string) {
   useEffect(() => {
     // Load routines on initial mount
     loadRoutines();
-
-    // Debounced realtime subscription
-    let realtimeTimeout: number | null = null;
-    let lastUpdate = 0;
-
-    const subscription = supabase
-      .channel('routines_channel')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'routines'
-      }, () => {
-        const now = Date.now();
-        if (now - lastUpdate < 5000) return;
-        
-        if (realtimeTimeout) clearTimeout(realtimeTimeout);
-        realtimeTimeout = window.setTimeout(() => {
-          lastUpdate = Date.now();
-          loadRoutines();
-        }, 2000);
-      })
-      .subscribe();
-
-    // Removed visibility change handler - AdminDashboard handles this centrally
-
-    return () => {
-        if (realtimeTimeout) clearTimeout(realtimeTimeout);
-        subscription.unsubscribe();
-      };
+    // No realtime subscriptions - user must manually refresh
   }, [loadRoutines]); // Create a new routine
   const handleCreateRoutine = async (routine: Omit<Routine, 'id' | 'createdAt' | 'createdBy'>) => {
     try {
