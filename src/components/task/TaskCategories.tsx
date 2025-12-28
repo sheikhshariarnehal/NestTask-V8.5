@@ -46,7 +46,7 @@ export function TaskCategories({ onCategorySelect, selectedCategory, categoryCou
 
   return (
     <div className="mb-3 sm:mb-4">
-      <div className="mb-3 sm:mb-4 px-3 xs:px-4 sm:px-0">
+      <div className="mb-3 sm:mb-4 px-1 sm:px-0">
         <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           Tasks
         </h2>
@@ -54,7 +54,7 @@ export function TaskCategories({ onCategorySelect, selectedCategory, categoryCou
 
       {/* Mobile: Fully scrollable categories */}
       <div className="block sm:hidden">
-        <div className="flex mobile-category-gap-xs gap-2 xs:gap-3 overflow-x-auto pb-3 mobile-category-compact px-3 xs:px-4 scrollbar-hide mobile-category-scroll">
+        <div className="flex mobile-category-gap-xs gap-2 xs:gap-3 overflow-x-auto pb-3 mobile-category-compact px-1 sm:px-0 scrollbar-hide mobile-category-scroll">
           {allCategories.map(({ id, label, icon: Icon, count }) => (
             <button
               key={id || 'total'}

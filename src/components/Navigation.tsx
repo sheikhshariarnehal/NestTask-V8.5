@@ -41,7 +41,6 @@ export function Navigation({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
-  const isMobileView = useRef(window.innerWidth < 768);
   const ticking = useRef(false);
   const userScrolling = useRef<NodeJS.Timeout | null>(null);
 
@@ -51,27 +50,30 @@ export function Navigation({
       requestAnimationFrame(() => {
         const currentScrollY = window.scrollY;
         
-        // Only apply hide logic on mobile
-        if (isMobileView.current) {
-          // If scrolling down and past threshold
-          if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
-            setHeaderVisible(false);
-          } 
-          // If scrolling up
-          else if (currentScrollY < lastScrollY.current) {
-            setHeaderVisible(true);
-          }
-          
-          // Reset user scrolling timeout
-          if (userScrolling.current) {
-            clearTimeout(userScrolling.current);
-          }
-          
-          // Show header after user stops scrolling for 1.5 seconds
-          userScrolling.current = setTimeout(() => {
-            setHeaderVisible(true);
-          }, 1500);
+        // Show header if at top of page
+        if (currentScrollY <= 20) {
+          setHeaderVisible(true);
         }
+        // If scrolling down and past threshold - hide header
+        else if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+          setHeaderVisible(false);
+        } 
+        // If scrolling up - show header
+        else if (currentScrollY < lastScrollY.current - 5) {
+          setHeaderVisible(true);
+        }
+        
+        // Reset user scrolling timeout
+        if (userScrolling.current) {
+          clearTimeout(userScrolling.current);
+        }
+        
+        // Show header after user stops scrolling
+        userScrolling.current = setTimeout(() => {
+          if (currentScrollY > 20) {
+            setHeaderVisible(true);
+          }
+        }, 2000);
         
         lastScrollY.current = currentScrollY;
         ticking.current = false;
@@ -82,24 +84,12 @@ export function Navigation({
   }, []);
 
   useEffect(() => {
-    const checkMobileView = () => {
-      isMobileView.current = window.innerWidth < 768;
-      // Always show header on desktop
-      if (!isMobileView.current) {
-        setHeaderVisible(true);
-      }
-    };
-
-    checkMobileView(); // Initial check
-    
-    // Add event listeners
+    // Add event listener
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkMobileView, { passive: true });
 
     return () => {
       // Cleanup event listeners
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkMobileView);
       if (userScrolling.current) {
         clearTimeout(userScrolling.current);
       }
@@ -155,9 +145,16 @@ export function Navigation({
     <>
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
-          !headerVisible && isMobileView.current ? '-translate-y-full' : 'translate-y-0'
+          !headerVisible ? '-translate-y-full' : 'translate-y-0'
         }`}
       >
+        {/* Safe area spacer */}
+        <div 
+          className="bg-white dark:bg-gray-900"
+          style={{ 
+            height: 'env(safe-area-inset-top, 0px)'
+          }}
+        />
         <div className="bg-white/98 dark:bg-gray-900/98 backdrop-blur-md border-b border-gray-200/70 dark:border-gray-800/70 shadow-sm">
           <div className="max-w-7xl mx-auto px-3 sm:px-6">
             <div className="flex justify-between items-center h-14">

@@ -14,6 +14,13 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     // Use Material 3 theme
     useLegacyBridge: false
+  },
+  plugins: {
+    StatusBar: {
+      style: 'dark',
+      backgroundColor: '#1e293b',
+      overlaysWebView: false
+    }
   }
 };
 

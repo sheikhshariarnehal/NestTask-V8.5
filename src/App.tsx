@@ -17,6 +17,8 @@ import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 
 // Page import functions
 const importAdminDashboard = () => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard }));
@@ -41,6 +43,22 @@ const LectureSlidesPage = lazy(importLectureSlidesPage);
 type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
 
 export default function App() {
+  // Initialize Status Bar for native mobile apps
+  useEffect(() => {
+    const initStatusBar = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#1e293b' });
+          await StatusBar.setOverlaysWebView({ overlay: false });
+        } catch (error) {
+          console.error('Failed to configure status bar:', error);
+        }
+      }
+    };
+    initStatusBar();
+  }, []);
+
   // Always call all hooks first, regardless of any conditions
   const { user, loading: authLoading, error: authError, login, signup, logout, forgotPassword } = useAuth();
   
@@ -380,7 +398,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container">
       <Navigation 
         onLogout={logout}
         hasUnreadNotifications={hasUnreadNotifications}
@@ -396,7 +414,12 @@ export default function App() {
         tasks={tasks}
       />
       
-      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-20 pb-24">
+      <main 
+        className="max-w-7xl mx-auto px-2 sm:px-4 pb-24" 
+        style={{ 
+          paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))'
+        }}
+      >
         {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />
         ) : (
