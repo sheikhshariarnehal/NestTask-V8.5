@@ -8,6 +8,9 @@ import path from 'path';
 // Define algorithm type to avoid type errors
 type CompressionAlgorithm = 'gzip' | 'brotliCompress' | 'deflate' | 'deflateRaw';
 
+// Check if building for Capacitor (disable compression for mobile)
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
@@ -24,11 +27,26 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: false, // Use manual manifest.json in public folder
       workbox: {
-        // No precaching - network only
-        globPatterns: [],
+        // Minimal configuration for Capacitor compatibility
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
         
-        // No runtime caching
-        runtimeCaching: [],
+        // Basic runtime caching for assets
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ],
         
         // Clean old caches
         cleanupOutdatedCaches: true,
@@ -36,20 +54,23 @@ export default defineConfig({
         skipWaiting: true,
         
         // Navigation fallback for SPA
-        navigateFallback: null
+        navigateFallback: '/index.html'
       },
       devOptions: {
         enabled: false
       }
     }),
-    compression({
-      algorithm: 'brotliCompress' as CompressionAlgorithm,
-      ext: '.br'
-    }),
-    compression({
-      algorithm: 'gzip' as CompressionAlgorithm,
-      ext: '.gz'
-    }),
+    // Disable compression for Capacitor builds to avoid duplicate resources
+    ...(!isCapacitorBuild ? [
+      compression({
+        algorithm: 'brotliCompress' as CompressionAlgorithm,
+        ext: '.br'
+      }),
+      compression({
+        algorithm: 'gzip' as CompressionAlgorithm,
+        ext: '.gz'
+      })
+    ] : []),
     visualizer({
       open: false,
       gzipSize: true,
