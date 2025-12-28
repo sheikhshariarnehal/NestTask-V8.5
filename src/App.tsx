@@ -15,7 +15,7 @@ import type { TaskCategory } from './types/task';
 import type { Task } from './types/task';
 import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { supabase, testConnection } from './lib/supabase';
+import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
 
 // Page import functions
@@ -93,6 +93,28 @@ export default function App() {
   const [statFilter, setStatFilter] = useState<StatFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isResetPasswordFlow, setIsResetPasswordFlow] = useState(false);
+  
+  // Track if we just returned from a hidden state to prevent blank screens
+  const [wasRecentlyHidden, setWasRecentlyHidden] = useState(false);
+  
+  // Track visibility to prevent blank screens on tab switch
+  useEffect(() => {
+    let wasHidden = false;
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        wasHidden = true;
+      } else if (document.visibilityState === 'visible' && wasHidden) {
+        setWasRecentlyHidden(true);
+        // Clear the flag after content has had time to render
+        setTimeout(() => setWasRecentlyHidden(false), 500);
+        wasHidden = false;
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Calculate today's task count - always compute this value regardless of rendering path
   const todayTaskCount = useMemo(() => {
@@ -162,57 +184,39 @@ export default function App() {
     };
     
     // Handle page visibility changes (for pull-to-refresh)
+    // Track when we last became hidden
+    let lastHiddenTime = Date.now();
+    
     const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Record when we went hidden
+        lastHiddenTime = Date.now();
+        localStorage.setItem('lastActiveTimestamp', lastHiddenTime.toString());
+        return;
+      }
+      
       if (document.visibilityState === 'visible') {
-        // Refresh data when page becomes visible after refresh
-        if (user?.id) {
-          console.log('Page visible - forcing task refresh');
+        // Calculate how long we were hidden
+        const now = Date.now();
+        const hiddenDuration = now - lastHiddenTime;
+        const inactiveThreshold = 5 * 60 * 1000; // 5 minutes
+        const wasInactiveLong = hiddenDuration > inactiveThreshold;
+        
+        // Update timestamp
+        localStorage.setItem('lastActiveTimestamp', now.toString());
+        
+        // Only refresh if we have a user and were away for a while
+        if (user?.id && wasInactiveLong) {
+          console.log(`Page visible after ${Math.round(hiddenDuration / 1000)}s - refreshing data`);
           
-          // Add timestamp tracking to detect long tab/window inactivity
-          const lastActivity = localStorage.getItem('lastActiveTimestamp');
-          const now = Date.now();
-          const inactiveThreshold = 5 * 60 * 1000; // 5 minutes
-          
-          // Store current timestamp for future reference
-          localStorage.setItem('lastActiveTimestamp', now.toString());
-          
-          // Check if we've been inactive for a while
-          const wasInactiveLong = lastActivity ? (now - parseInt(lastActivity)) > inactiveThreshold : false;
-          
-          // Use a try-catch to handle any errors during data refresh
-          try {
-            // Force a connection check using the imported testConnection
-            testConnection(wasInactiveLong).then((isConnected: boolean) => {
-              if (isConnected) {
-                // Get current session
-                supabase.auth.getSession().then(({ data }) => {
-                  if (data.session) {
-                    // Refresh all data sources with proper error handling
-                    refreshTasks(wasInactiveLong);
-                  } else {
-                    // If no session, redirect to login page
-                    window.location.href = '/auth';
-                  }
-                }).catch(error => {
-                  console.error('Session check failed:', error);
-                  // Try to recover by forcing tasks refresh
-                  refreshTasks(true);
-                });
-              } else {
-                // If connection failed, try to refresh data instead of reloading
-                console.warn('Connection test failed on visibility change, attempting to refresh data');
-                refreshTasks(true); // Force refresh with recovery mode
-              }
-            }).catch((error: any) => {
-              console.error('Error testing connection:', error);
-              // Try refreshing data directly as a fallback before reloading
-              refreshTasks(true);
-            });
-          } catch (error) {
-            console.error('Error refreshing data on visibility change:', error);
-            // Try to recover by resetting the state
-            setActivePage(prev => prev);
-          }
+          // Simple refresh without aggressive connection checking
+          // This prevents the blank screen issue
+          setTimeout(() => {
+            refreshTasks(true);
+          }, 100);
+        } else if (user?.id) {
+          // For short inactivity, just log without refreshing
+          console.log('Page visible - short inactivity, no refresh needed');
         }
       }
     };
@@ -288,7 +292,12 @@ export default function App() {
   };
 
   // Early returns based on loading state and authentication
-  if (isLoading || authLoading || ((user?.role === 'admin' || user?.role === 'super-admin') && usersLoading)) {
+  // Don't show loading screen if we just returned from hidden state (prevents blank screen)
+  const shouldShowInitialLoading = !wasRecentlyHidden && (
+    isLoading || authLoading || ((user?.role === 'admin' || user?.role === 'super-admin') && usersLoading)
+  );
+  
+  if (shouldShowInitialLoading) {
     return <LoadingScreen minimumLoadTime={1000} showProgress={true} />;
   }
 
@@ -388,7 +397,7 @@ export default function App() {
       />
       
       <main className="max-w-7xl mx-auto px-4 py-20 pb-24">
-        {tasksLoading ? (
+        {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />
         ) : (
           renderContent()

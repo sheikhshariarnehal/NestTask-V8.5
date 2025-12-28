@@ -85,13 +85,14 @@ if (typeof document !== 'undefined') {
       const now = Date.now();
       const inactiveTime = now - lastActiveTime;
       
-      // If we were inactive for more than 5 minutes, reset connection state
-      if (inactiveTime > 5 * 60 * 1000) {
+      // Only reset if we were inactive for more than 10 minutes (increased from 5)
+      // This reduces unnecessary connection resets that cause blank screens
+      if (inactiveTime > 10 * 60 * 1000) {
         console.log(`Resetting connection state after ${Math.round(inactiveTime/1000)}s inactivity`);
         connectionPromise = null;
         isInitialized = false;
-        // Force reconnection on next operation
-        testConnection(true).catch(console.error);
+        // Don't force reconnection immediately - let it happen naturally
+        // This prevents race conditions that can cause blank screens
       }
       
       visibilityChangeCount++;

@@ -28,11 +28,46 @@ export function useTasks(userId: string | undefined) {
   const userIdRef = useRef<string | undefined>(userId);
   // Track if we're in tab switch recovery mode
   const tabSwitchRecoveryRef = useRef(false);
+  // Track if the page was recently hidden
+  const wasHiddenRef = useRef(false);
+  // Track the last visibility change time
+  const lastVisibilityChangeRef = useRef(Date.now());
 
   // Update ref when userId changes
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
+
+  // Track page visibility to prevent blank screens
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        wasHiddenRef.current = true;
+        lastVisibilityChangeRef.current = Date.now();
+      } else if (document.visibilityState === 'visible') {
+        // Mark that we came back from hidden
+        const hiddenDuration = Date.now() - lastVisibilityChangeRef.current;
+        lastVisibilityChangeRef.current = Date.now();
+        
+        // Only mark as recent tab switch if hidden for less than 30 seconds
+        // This prevents showing loading state immediately after tab switch
+        if (hiddenDuration < 30000) {
+          wasHiddenRef.current = true;
+          // Clear the flag after a short delay
+          setTimeout(() => {
+            wasHiddenRef.current = false;
+          }, 1000);
+        } else {
+          wasHiddenRef.current = false;
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const loadTasks = useCallback(async (options: { force?: boolean } = {}) => {
     if (!userId) return;
@@ -70,8 +105,12 @@ export function useTasks(userId: string | undefined) {
     }
 
     try {
-      // Always set loading state for admin dashboard
-      if (isMountedRef.current) {
+      // Don't show loading indicator if we just came back from hidden state
+      // and we already have tasks - this prevents blank screens
+      const hasExistingTasks = tasks.length > 0;
+      const shouldShowLoading = !wasHiddenRef.current || !hasExistingTasks;
+      
+      if (isMountedRef.current && shouldShowLoading) {
         setLoading(true);
       }
       loadingRef.current = true;

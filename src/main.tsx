@@ -8,10 +8,16 @@ import { initPWA } from './utils/pwa';
 import { supabase } from './lib/supabase';
 import type { LoginCredentials, SignupCredentials } from './types/auth';
 
-// Lazy-load core pages
+// Lazy-load core pages with preload hint
 const App = lazy(() => import('./App'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
 const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
+
+// Preload the main App component eagerly for better UX
+if (typeof window !== 'undefined') {
+  // Start loading App immediately but don't block
+  import('./App').catch(() => {});
+}
 
 // Ensure environment variables are properly loaded in production
 if (import.meta.env.PROD) {
