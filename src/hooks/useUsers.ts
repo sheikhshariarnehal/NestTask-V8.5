@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUsers, deleteUser, promoteUser as promoteUserService, demoteUser as demoteUserService } from '../services/user.service';
 import type { User } from '../types/auth';
 
@@ -6,30 +6,45 @@ export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastLoadTimeRef = useRef<number>(0);
+  const loadingRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async (force = false) => {
+    // Prevent concurrent requests
+    if (loadingRef.current && !force) return;
+    
+    // Throttle requests (minimum 10 seconds between refreshes unless forced)
+    const now = Date.now();
+    if (!force && now - lastLoadTimeRef.current < 10000) return;
+    
     try {
+      loadingRef.current = true;
       setLoading(true);
       const data = await fetchUsers();
       setUsers(data);
+      lastLoadTimeRef.current = Date.now();
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUsers(true);
+  }, [loadUsers]);
 
   const handleDeleteUser = async (userId: string) => {
     try {
       setError(null);
       await deleteUser(userId);
-      await loadUsers(); // Reload the users list after deletion
+      // Optimistically update local state instead of reloading
+      setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (err: any) {
       setError(err.message);
+      // Reload on error to restore correct state
+      await loadUsers(true);
       throw err;
     }
   };
@@ -38,9 +53,11 @@ export function useUsers() {
     try {
       setError(null);
       await promoteUserService(userId, role);
-      await loadUsers(); // Reload the users list after promotion
+      // Optimistically update local state
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
     } catch (err: any) {
       setError(err.message);
+      await loadUsers(true);
       throw err;
     }
   };
@@ -49,9 +66,11 @@ export function useUsers() {
     try {
       setError(null);
       await demoteUserService(userId, role);
-      await loadUsers(); // Reload the users list after demotion
+      // Optimistically update local state
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
     } catch (err: any) {
       setError(err.message);
+      await loadUsers(true);
       throw err;
     }
   };
@@ -60,7 +79,7 @@ export function useUsers() {
     users,
     loading,
     error,
-    refreshUsers: loadUsers,
+    refreshUsers: () => loadUsers(true),
     deleteUser: handleDeleteUser,
     promoteUser: handlePromoteUser,
     demoteUser: handleDemoteUser

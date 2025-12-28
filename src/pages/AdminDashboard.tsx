@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef, memo } from 'react';
 import { SideNavigation } from '../components/admin/navigation/SideNavigation';
 import { UserStats } from '../components/admin/UserStats';
 import { UserActivity } from '../components/admin/UserActivity';
@@ -18,6 +18,10 @@ import type { AdminTab } from '../types/admin';
 import { useAuth } from '../hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
 import { RefreshCcw, AlertTriangle, Loader2 } from 'lucide-react';
+
+// Minimum time between refreshes (in ms)
+const MIN_REFRESH_INTERVAL = 30000; // 30 seconds
+const VISIBILITY_REFRESH_THRESHOLD = 300000; // 5 minutes
 
 // Lazy load heavy components
 const UserList = lazy(() => import('../components/admin/UserList').then(module => ({ default: module.UserList })));
@@ -66,6 +70,9 @@ export function AdminDashboard({
   const lastVisibilityChangeRef = useRef<number>(Date.now());
   const isPageActiveRef = useRef<boolean>(true);
   const refreshTimeoutRef = useRef<number | null>(null);
+  const lastRefreshByTabRef = useRef<Record<string, number>>({});
+  const isInitialMountRef = useRef<boolean>(true);
+  const pendingRefreshRef = useRef<boolean>(false);
 
   // Get current user from auth for debugging
   const { user } = useAuth();
@@ -210,7 +217,7 @@ export function AdminDashboard({
   
 
 
-  // Optimized page visibility handling to prevent excessive refreshes
+  // Optimized page visibility handling - minimal refreshes
   useEffect(() => {
     const handleVisibilityChange = () => {
       const isVisible = document.visibilityState === 'visible';
@@ -222,34 +229,34 @@ export function AdminDashboard({
         const timeSinceLastChange = now - lastVisibilityChangeRef.current;
         lastVisibilityChangeRef.current = now;
 
-        // Only refresh if page was hidden for more than 2 minutes to prevent excessive refreshes
-        if (timeSinceLastChange > 120000) {
-          console.log('Page visible after long absence, refreshing current tab data');
-
+        // Only refresh if page was hidden for more than 5 minutes
+        // This prevents the annoying auto-refresh behavior
+        if (timeSinceLastChange > VISIBILITY_REFRESH_THRESHOLD && !pendingRefreshRef.current) {
+          pendingRefreshRef.current = true;
+          
           // Clear any pending refresh timeouts
           if (refreshTimeoutRef.current) {
             clearTimeout(refreshTimeoutRef.current);
             refreshTimeoutRef.current = null;
           }
 
-          // Debounced refresh to prevent multiple rapid refreshes
+          // Single debounced refresh with longer delay
           refreshTimeoutRef.current = window.setTimeout(() => {
-            switch (activeTab) {
-              case 'tasks':
-                refreshTasks(true);
-                break;
-              case 'users':
-                refreshUsers();
-                break;
-              case 'dashboard':
-                Promise.all([refreshTasks(), refreshUsers()]);
-                break;
-              default:
-                // Don't auto-refresh other tabs
-                break;
+            // Only refresh the active tab, not all data
+            const lastRefresh = lastRefreshByTabRef.current[activeTab] || 0;
+            if (now - lastRefresh > MIN_REFRESH_INTERVAL) {
+              lastRefreshByTabRef.current[activeTab] = now;
+              
+              // Silently refresh without UI interruption
+              if (activeTab === 'tasks') {
+                refreshTasks(false); // Don't force refresh
+              } else if (activeTab === 'dashboard') {
+                refreshTasks(false);
+              }
             }
+            pendingRefreshRef.current = false;
             refreshTimeoutRef.current = null;
-          }, 1000);
+          }, 2000);
         }
       }
     };
@@ -262,7 +269,7 @@ export function AdminDashboard({
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [activeTab, refreshTasks, refreshUsers]);
+  }, [activeTab, refreshTasks]);
 
   // Check for mobile view on mount and resize with debounce
   useEffect(() => {
@@ -303,7 +310,7 @@ export function AdminDashboard({
     setIsSidebarCollapsed(collapsed);
   }, []);
 
-  // Optimized tab change handling with smart data loading
+  // Optimized tab change handling with throttled data loading
   const handleTabChange = useCallback((tab: AdminTab) => {
     // Skip reload if already on this tab
     if (tab === activeTab) return;
@@ -317,58 +324,54 @@ export function AdminDashboard({
 
     setActiveTab(tab);
 
-    // Smart data loading - only refresh if data is likely stale or critical
-    const shouldRefreshData = () => {
-      // Only refresh if page has been active and we're switching to a data-heavy tab
-      return isPageActiveRef.current && (tab === 'tasks' || tab === 'dashboard');
-    };
+    // Check if we should refresh data for this tab
+    const now = Date.now();
+    const lastRefresh = lastRefreshByTabRef.current[tab] || 0;
+    const shouldRefresh = now - lastRefresh > MIN_REFRESH_INTERVAL;
+
+    // Don't refresh on initial mount or if data is fresh
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
+    // Only refresh if data is stale (older than MIN_REFRESH_INTERVAL)
+    if (!shouldRefresh) {
+      if (tab === 'tasks') {
+        setShowTaskForm(true);
+      }
+      return;
+    }
+
+    lastRefreshByTabRef.current[tab] = now;
 
     switch (tab) {
       case 'tasks':
         setShowTaskForm(true);
-        // Only force refresh if we really need fresh data
-        if (shouldRefreshData()) {
-          refreshTasks();
-        }
+        // Don't auto-refresh, let user manually refresh if needed
         break;
       case 'users':
-        // Only refresh users if switching to users tab and page is active
-        if (shouldRefreshData()) {
-          refreshUsers();
-        }
+        // Only refresh users if data is stale
+        refreshUsers();
         break;
       case 'routine':
-        // Lazy load routines only when needed
-        if (isPageActiveRef.current) {
-          refreshRoutines();
-        }
+        refreshRoutines();
         break;
       case 'courses':
-        // Lazy load courses only when needed
-        if (isPageActiveRef.current) {
-          refreshCourses();
-        }
+        refreshCourses();
         break;
       case 'announcements':
-        // Lazy load announcements only when needed
-        if (isPageActiveRef.current) {
-          refreshAnnouncements();
-        }
+        refreshAnnouncements();
         break;
       case 'teachers':
-        // Lazy load teachers only when needed
-        if (isPageActiveRef.current) {
-          refreshTeachers();
-        }
+        refreshTeachers();
         break;
       case 'lecture-slides':
         // Lecture slides don't need special refresh logic
         break;
       case 'dashboard':
-        // For dashboard, only load key data if page is active
-        if (shouldRefreshData()) {
-          Promise.all([refreshTasks(), refreshUsers()]);
-        }
+        // For dashboard, only load if data is stale
+        refreshUsers();
         break;
       default:
         setShowTaskForm(false);
@@ -528,27 +531,8 @@ export function AdminDashboard({
 
 
 
-  // Optimized auto-recovery for stuck loading states - less aggressive
-  useEffect(() => {
-    let timeoutId: number;
-
-    // Only attempt recovery if we're on tasks tab, loading seems stuck, and page is active
-    if (activeTab === 'tasks' && tasksLoading && isPageActiveRef.current) {
-      timeoutId = window.setTimeout(() => {
-        // Double-check conditions before recovery
-        if (activeTab === 'tasks' && tasksLoading && isPageActiveRef.current) {
-          console.warn('Task loading appears stuck, attempting recovery');
-          handleManualRefresh();
-        }
-      }, 30000); // Increased timeout to 30 seconds to be much less aggressive
-    }
-
-    return () => {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [activeTab, tasksLoading, handleManualRefresh]);
+  // Removed auto-recovery effect - it was causing unnecessary refreshes
+  // Users can manually refresh if loading is stuck
 
   // Pre-render loading states for better perceived performance
   const loadingFallback = useMemo(() => (

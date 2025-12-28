@@ -27,7 +27,10 @@ export function useAnnouncements() {
   useEffect(() => {
     loadAnnouncements();
 
-    // Subscribe to realtime updates
+    // Debounced realtime subscription to prevent rapid refreshes
+    let realtimeTimeout: number | null = null;
+    let lastUpdate = 0;
+
     const subscription = supabase
       .channel('announcements')
       .on(
@@ -38,12 +41,26 @@ export function useAnnouncements() {
           table: 'announcements'
         },
         () => {
-          loadAnnouncements();
+          const now = Date.now();
+          // Skip if we just processed an update (within 5 seconds)
+          if (now - lastUpdate < 5000) return;
+          
+          if (realtimeTimeout) {
+            clearTimeout(realtimeTimeout);
+          }
+          
+          realtimeTimeout = window.setTimeout(() => {
+            lastUpdate = Date.now();
+            loadAnnouncements();
+          }, 2000); // 2 second debounce
         }
       )
       .subscribe();
 
     return () => {
+      if (realtimeTimeout) {
+        clearTimeout(realtimeTimeout);
+      }
       subscription.unsubscribe();
     };
   }, [loadAnnouncements]);

@@ -183,11 +183,12 @@ export function useTasks(userId: string | undefined) {
     // Set mounted ref
     isMountedRef.current = true;
     
-    // Initial load - always fetch fresh data for admin dashboard
+    // Initial load - fetch data once on mount
     loadTasks();
 
-    // Debounced realtime subscription to prevent excessive refreshes
+    // Debounced realtime subscription with longer debounce to prevent excessive refreshes
     let realtimeTimeout: number | null = null;
+    let lastRealtimeUpdate = 0;
 
     const subscription = supabase
       .channel('tasks_channel')
@@ -198,60 +199,32 @@ export function useTasks(userId: string | undefined) {
         filter: `user_id=eq.${userId}`
       }, () => {
         if (isMountedRef.current) {
-          // Debounce realtime updates to prevent rapid-fire refreshes
+          const now = Date.now();
+          
+          // Skip if we just processed a realtime update (within 5 seconds)
+          if (now - lastRealtimeUpdate < 5000) {
+            return;
+          }
+          
+          // Debounce realtime updates with longer delay
           if (realtimeTimeout) {
             clearTimeout(realtimeTimeout);
           }
 
           realtimeTimeout = window.setTimeout(() => {
             if (isMountedRef.current && !loadingRef.current) {
+              lastRealtimeUpdate = Date.now();
               loadTasks();
             }
-          }, 1000); // 1 second debounce
+          }, 3000); // 3 second debounce for realtime updates
         }
       })
       .subscribe();
 
-    // Optimized visibility change handler to prevent excessive refreshes
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const now = Date.now();
-        const timeSinceLastLoad = now - lastLoadTimeRef.current;
+    // Removed visibility change handler - AdminDashboard handles this now
+    // This prevents duplicate refresh triggers
 
-        // Always reset stuck state on tab focus
-        if (loadingRef.current) {
-          console.log('Resetting loading state on visibility change');
-          loadingRef.current = false;
-        }
-
-        // Only refresh if we've been away for more than 5 minutes to prevent excessive refreshes
-         if (timeSinceLastLoad > 300000) { // 5 minutes
-           console.log('Page visible after long absence, refreshing tasks');
-           loadTasks({ force: true });
-         } else if (tabSwitchRecoveryRef.current) {
-           // Only force refresh if we're in recovery mode
-           console.warn('Task loading needs recovery, forcing refresh');
-           loadTasks({ force: true });
-         } else if (timeSinceLastLoad > 60000) { // 1 minute minimum
-           // Always refresh for admin dashboard after 1 minute
-           loadTasks();
-         }
-      }
-    };
-
-    // Set up regular polling to check for stuck state with increased timeout value
-    const pollInterval = setInterval(() => {
-      if (loadingRef.current && Date.now() - lastLoadTimeRef.current > TASK_FETCH_TIMEOUT + 5000) {
-        console.warn('Task loading stuck in polling check, resetting state');
-        loadingRef.current = false;
-        if (isMountedRef.current) {
-          setLoading(false);
-          tabSwitchRecoveryRef.current = true;
-        }
-      }
-    }, 5000);
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Removed polling interval - it was causing unnecessary checks and state resets
 
     return () => {
       // Mark component as unmounted
@@ -264,8 +237,6 @@ export function useTasks(userId: string | undefined) {
 
       // Clean up
       subscription.unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(pollInterval);
       // Abort any in-progress request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();

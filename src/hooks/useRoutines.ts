@@ -45,7 +45,10 @@ export function useRoutines(userId?: string) {
     // Load routines on initial mount
     loadRoutines();
 
-    // Set up real-time subscription for routines updates
+    // Debounced realtime subscription
+    let realtimeTimeout: number | null = null;
+    let lastUpdate = 0;
+
     const subscription = supabase
       .channel('routines_channel')
       .on('postgres_changes', {
@@ -53,23 +56,22 @@ export function useRoutines(userId?: string) {
         schema: 'public',
         table: 'routines'
       }, () => {
-        loadRoutines(); // Reload on database changes
+        const now = Date.now();
+        if (now - lastUpdate < 5000) return;
+        
+        if (realtimeTimeout) clearTimeout(realtimeTimeout);
+        realtimeTimeout = window.setTimeout(() => {
+          lastUpdate = Date.now();
+          loadRoutines();
+        }, 2000);
       })
       .subscribe();
 
-    // Additional event listener for page visibility changes
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Force refresh when the page becomes visible again
-        loadRoutines();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Removed visibility change handler - AdminDashboard handles this centrally
 
     return () => {
+        if (realtimeTimeout) clearTimeout(realtimeTimeout);
         subscription.unsubscribe();
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
   }, [loadRoutines]); // Create a new routine
   const handleCreateRoutine = async (routine: Omit<Routine, 'id' | 'createdAt' | 'createdBy'>) => {

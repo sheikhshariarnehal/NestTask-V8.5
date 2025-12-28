@@ -35,7 +35,10 @@ export function useTeachers() {
   useEffect(() => {
     loadTeachers();
 
-    // Subscribe to changes
+    // Debounced realtime subscription
+    let realtimeTimeout: number | null = null;
+    let lastUpdate = 0;
+
     const subscription = supabase
       .channel('teachers')
       .on(
@@ -46,12 +49,20 @@ export function useTeachers() {
           table: 'teachers'
         },
         () => {
-          loadTeachers(true);
+          const now = Date.now();
+          if (now - lastUpdate < 5000) return;
+          
+          if (realtimeTimeout) clearTimeout(realtimeTimeout);
+          realtimeTimeout = window.setTimeout(() => {
+            lastUpdate = Date.now();
+            loadTeachers(true);
+          }, 2000);
         }
       )
       .subscribe();
 
     return () => {
+      if (realtimeTimeout) clearTimeout(realtimeTimeout);
       subscription.unsubscribe();
     };
   }, [loadTeachers]);
