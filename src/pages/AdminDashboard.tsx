@@ -22,6 +22,7 @@ import { RefreshCcw, AlertTriangle, Loader2 } from 'lucide-react';
 // Lazy load heavy components
 const UserList = lazy(() => import('../components/admin/UserList').then(module => ({ default: module.UserList })));
 const TaskManager = lazy(() => import('../components/admin/TaskManager').then(module => ({ default: module.TaskManager })));
+const TaskManagerEnhanced = lazy(() => import('../components/admin/TaskManagerEnhanced').then(module => ({ default: module.TaskManagerEnhanced })));
 const AnnouncementManager = lazy(() => import('../components/admin/announcement/AnnouncementManager').then(module => ({ default: module.AnnouncementManager })));
 const CourseManager = lazy(() => import('../components/admin/course/CourseManager').then(module => ({ default: module.CourseManager })));
 const StudyMaterialManager = lazy(() => import('../components/admin/study-materials/StudyMaterialManager').then(module => ({ default: module.StudyMaterialManager })));
@@ -639,6 +640,15 @@ export function AdminDashboard({
               </>
             )}
 
+            {activeTab === 'task-management-v2' && (
+              <TaskManagerEnhanced
+                userId={user?.id || ''}
+                sectionId={sectionId}
+                isSectionAdmin={isSectionAdmin}
+                isAdmin={!isSectionAdmin}
+              />
+            )}
+
             {activeTab === 'announcements' && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5 overflow-hidden">
                 <AnnouncementManager
@@ -732,7 +742,8 @@ export function AdminDashboard({
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   {activeTab === 'dashboard' && 'Dashboard'}
                   {activeTab === 'users' && 'User Management'}
-                  {activeTab === 'tasks' && 'Task Management'}
+                  {activeTab === 'tasks' && 'Task Management (Legacy)'}
+                  {activeTab === 'task-management-v2' && 'Task Management'}
                   {activeTab === 'announcements' && 'Announcements'}
                   {activeTab === 'teachers' && 'Teacher Management'}
                   {activeTab === 'courses' && 'Course Management'}

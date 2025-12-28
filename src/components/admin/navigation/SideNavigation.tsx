@@ -65,7 +65,8 @@ export const SideNavigation = React.memo(function SideNavigation({
   const mainNavItems = useMemo(() => [
     { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'users' as const, label: 'Users', icon: Users, badge: 147 },
-    { id: 'tasks' as const, label: 'Tasks', icon: ListTodo, badge: 56 },
+    { id: 'tasks' as const, label: 'Tasks (Legacy)', icon: ListTodo, badge: 56 },
+    { id: 'task-management-v2' as const, label: 'Task Management', icon: CheckCircle, badge: null },
   ], []);
   
   // Full list of management items
