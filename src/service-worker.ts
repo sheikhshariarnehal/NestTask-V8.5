@@ -1,182 +1,63 @@
 /**
- * NestTask Service Worker (TypeScript/Workbox)
- * Optimized for performance and reliability
+ * NestTask Service Worker - No Cache (Network Only)
+ * Minimal service worker for PWA install capability without caching
  */
 
 /// <reference lib="webworker" />
 declare const self: ServiceWorkerGlobalScope;
 
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate, NetworkFirst } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
-import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+const VERSION = 'v5-nocache';
 
 // ===================
-// Constants
-// ===================
-
-const VERSION = 'v5';
-const CACHE_PREFIX = 'nesttask';
-const STATIC_CACHE = `${CACHE_PREFIX}-static-${VERSION}`;
-const FONT_CACHE = `${CACHE_PREFIX}-fonts-${VERSION}`;
-const IMAGE_CACHE = `${CACHE_PREFIX}-images-${VERSION}`;
-const DYNAMIC_CACHE = `${CACHE_PREFIX}-dynamic-${VERSION}`;
-const OFFLINE_URL = '/offline.html';
-
-// Routes to exclude from caching
-const EXCLUDED_PATTERNS = [
-  /\/auth/,
-  /\/login/,
-  /\/signup/,
-  /\/reset-password/,
-  /supabase\.co/,
-  /_vercel\/insights/,
-  /chrome-extension/,
-  /browser-sync/
-];
-
-// ===================
-// Setup
-// ===================
-
-// Clean old caches
-cleanupOutdatedCaches();
-
-// Precache critical assets from build manifest
-precacheAndRoute(self.__WB_MANIFEST || []);
-
-// ===================
-// Utility Functions
-// ===================
-
-/**
- * Check if URL should be cached
- */
-function shouldCache(url: string): boolean {
-  try {
-    const urlObj = new URL(url);
-    
-    // Only http/https
-    if (!['http:', 'https:'].includes(urlObj.protocol)) {
-      return false;
-    }
-    
-    // Check exclusion patterns
-    return !EXCLUDED_PATTERNS.some(pattern => pattern.test(url));
-  } catch {
-    return false;
-  }
-}
-
-// ===================
-// Caching Strategies
-// ===================
-
-// Static assets (JS, CSS) - Stale While Revalidate
-registerRoute(
-  ({ request, url }) => {
-    if (!shouldCache(url.href)) return false;
-    return request.destination === 'script' || request.destination === 'style';
-  },
-  new StaleWhileRevalidate({
-    cacheName: STATIC_CACHE,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 30,
-        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
-        purgeOnQuotaError: true
-      })
-    ]
-  })
-);
-
-// Fonts - Cache First (fonts rarely change)
-registerRoute(
-  ({ request, url }) => {
-    if (!shouldCache(url.href)) return false;
-    return request.destination === 'font' ||
-           url.hostname.includes('fonts.googleapis.com') ||
-           url.hostname.includes('fonts.gstatic.com');
-  },
-  new CacheFirst({
-    cacheName: FONT_CACHE,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 15,
-        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
-        purgeOnQuotaError: true
-      })
-    ]
-  })
-);
-
-// Images - Cache First with limited entries
-registerRoute(
-  ({ request, url }) => {
-    if (!shouldCache(url.href)) return false;
-    return request.destination === 'image';
-  },
-  new CacheFirst({
-    cacheName: IMAGE_CACHE,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 50,
-        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-        purgeOnQuotaError: true
-      })
-    ]
-  })
-);
-
-// ===================
-// Event Handlers
-// ===================
-
 // Install - Skip waiting
+// ===================
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// Activate - Claim clients and cleanup
+// ===================
+// Activate - Clean all caches & claim clients
+// ===================
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
-      self.clients.claim(),
-      // Clean old caches
-      caches.keys().then(keys =>
-        Promise.all(
-          keys
-            .filter(key => key.startsWith(CACHE_PREFIX) && ![STATIC_CACHE, FONT_CACHE, IMAGE_CACHE, DYNAMIC_CACHE].includes(key))
-            .map(key => caches.delete(key))
-        )
-      )
+      // Delete ALL existing caches
+      caches.keys().then(keys => 
+        Promise.all(keys.map(key => caches.delete(key)))
+      ),
+      // Claim all clients immediately
+      self.clients.claim()
     ])
   );
 });
 
-// Fetch - Handle navigation requests
+// ===================
+// Fetch - Network only
+// ===================
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  
   // Skip non-GET
-  if (request.method !== 'GET') return;
+  if (event.request.method !== 'GET') return;
   
-  // Handle navigation - Network first with offline fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(OFFLINE_URL) as Promise<Response>)
-    );
-  }
+  // Network only - no caching
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      // Offline fallback for navigation only
+      if (event.request.mode === 'navigate') {
+        return new Response(
+          `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#1e293b;text-align:center}@media(prefers-color-scheme:dark){body{background:#0f172a;color:#f1f5f9}}.c{max-width:320px;padding:2rem}h1{font-size:1.25rem;margin-bottom:0.5rem}p{color:#64748b;margin-bottom:1.5rem}button{background:#0284c7;color:#fff;border:none;padding:0.75rem 1.5rem;border-radius:0.5rem;cursor:pointer}button:hover{background:#0369a1}</style></head><body><div class="c"><h1>You're offline</h1><p>Check your connection and try again.</p><button onclick="location.reload()">Retry</button></div><script>addEventListener("online",()=>location.reload())</script></body></html>`,
+          { headers: { 'Content-Type': 'text/html' } }
+        );
+      }
+      return new Response('Network error', { status: 503 });
+    })
+  );
 });
 
-// Message handler
+// ===================
+// Message Handler
+// ===================
 self.addEventListener('message', (event) => {
   const { data } = event;
-  
   if (!data?.type) return;
   
   switch (data.type) {
@@ -187,23 +68,7 @@ self.addEventListener('message', (event) => {
     case 'CLEAR_CACHES':
       caches.keys()
         .then(keys => Promise.all(keys.map(key => caches.delete(key))))
-        .then(() => {
-          event.source?.postMessage({ type: 'CACHES_CLEARED', success: true });
-        });
-      break;
-      
-    case 'HEALTH_CHECK':
-      caches.keys().then(keys => {
-        event.source?.postMessage({
-          type: 'HEALTH_STATUS',
-          status: {
-            version: VERSION,
-            caches: keys.length,
-            healthy: true,
-            timestamp: Date.now()
-          }
-        });
-      });
+        .then(() => event.source?.postMessage({ type: 'CACHES_CLEARED', success: true }));
       break;
       
     case 'GET_VERSION':
