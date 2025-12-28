@@ -64,6 +64,7 @@ export function AdminDashboard({
   const [isMobileView, setIsMobileView] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [openTaskFormV2, setOpenTaskFormV2] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const previousTabRef = useRef<AdminTab | null>(null);
@@ -88,6 +89,11 @@ export function AdminDashboard({
       setIsCreatingTask(false);
       setShowTaskForm(false);
       setError(null);
+    }
+    
+    // Reset openTaskFormV2 when switching away from task-management-v2
+    if (activeTab !== 'task-management-v2') {
+      setOpenTaskFormV2(false);
     }
     
     previousTabRef.current = activeTab;
@@ -542,6 +548,7 @@ export function AdminDashboard({
                 sectionId={sectionId}
                 isSectionAdmin={isSectionAdmin}
                 isAdmin={!isSectionAdmin}
+                openCreateForm={openTaskFormV2}
               />
             )}
 
@@ -625,6 +632,7 @@ export function AdminDashboard({
         onLogout={onLogout}
         onCollapse={handleToggleSidebar}
         isSectionAdmin={isSectionAdmin}
+        onCreateTask={() => setOpenTaskFormV2(true)}
       />
       
       <main className={`

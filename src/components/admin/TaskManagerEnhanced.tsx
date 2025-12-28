@@ -7,7 +7,6 @@ import {
   Filter,
   Search,
   Download,
-  RefreshCw,
   Trash2,
   CheckSquare,
   FileText,
@@ -28,6 +27,7 @@ interface TaskManagerEnhancedProps {
   sectionId?: string;
   isSectionAdmin?: boolean;
   isAdmin?: boolean;
+  openCreateForm?: boolean;
 }
 
 type ViewMode = 'list' | 'kanban' | 'analytics' | 'templates';
@@ -37,18 +37,18 @@ export function TaskManagerEnhanced({
   sectionId,
   isSectionAdmin: _isSectionAdmin = false,
   isAdmin: _isAdmin = false,
+  openCreateForm = false,
 }: TaskManagerEnhancedProps) {
   // View State
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showFilters, setShowFilters] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(openCreateForm);
   const [selectedTask, setSelectedTask] = useState<EnhancedTask | null>(null);
   const [editingTask, setEditingTask] = useState<EnhancedTask | null>(null);
 
   // Data State
   const [tasks, setTasks] = useState<EnhancedTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [page] = useState(1);
   const [total, setTotal] = useState(0);
 
@@ -69,9 +69,7 @@ export function TaskManagerEnhanced({
 
   const loadTasks = useCallback(async (refresh = false) => {
     try {
-      if (refresh) {
-        setRefreshing(true);
-      } else {
+      if (!refresh) {
         setLoading(true);
       }
 
@@ -89,16 +87,11 @@ export function TaskManagerEnhanced({
       console.error('Failed to load tasks:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [userId, page, filters, sort, sectionId]);
 
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
-
-  const handleRefresh = useCallback(() => {
-    loadTasks(true);
   }, [loadTasks]);
 
   const handleTaskCreated = useCallback((task: EnhancedTask) => {

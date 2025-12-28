@@ -18,6 +18,7 @@ interface SideNavigationProps {
   onLogout: () => void;
   onCollapse?: (collapsed: boolean) => void;
   isSectionAdmin?: boolean;
+  onCreateTask?: () => void;
 }
 
 export const SideNavigation = React.memo(function SideNavigation({ 
@@ -25,7 +26,8 @@ export const SideNavigation = React.memo(function SideNavigation({
   onTabChange, 
   onLogout, 
   onCollapse,
-  isSectionAdmin = false
+  isSectionAdmin = false,
+  onCreateTask
 }: SideNavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -226,7 +228,12 @@ export const SideNavigation = React.memo(function SideNavigation({
               <div className="mt-6 mx-2">
                 <button 
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors shadow-sm"
-                  onClick={() => handleNavigation('tasks')}
+                  onClick={() => {
+                    if (onCreateTask) {
+                      onCreateTask();
+                    }
+                    handleNavigation('task-management-v2');
+                  }}
                 >
                   <Plus className="w-4 h-4" />
                   <span>Create Task</span>
@@ -238,7 +245,12 @@ export const SideNavigation = React.memo(function SideNavigation({
               <div className="mt-6 flex justify-center">
                 <button 
                   className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-colors shadow-sm"
-                  onClick={() => handleNavigation('tasks')}
+                  onClick={() => {
+                    if (onCreateTask) {
+                      onCreateTask();
+                    }
+                    handleNavigation('task-management-v2');
+                  }}
                   aria-label="Create Task"
                 >
                   <Plus className="w-5 h-5" />
