@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Plus,
   BarChart3,
@@ -7,16 +7,14 @@ import {
   Filter,
   Search,
   Download,
-  Upload,
   RefreshCw,
   Trash2,
   CheckSquare,
-  Settings,
   FileText,
 } from 'lucide-react';
-import type { EnhancedTask, TaskFilters, TaskSortOptions, CreateTaskInput } from '../../types/taskEnhanced';
+import type { EnhancedTask, TaskFilters, TaskSortOptions } from '../../types/taskEnhanced';
 import type { TaskStatus } from '../../types/task';
-import { fetchTasksEnhanced, bulkDeleteTasks, bulkUpdateTaskStatus, bulkUpdateTaskPriority } from '../../services/taskEnhanced.service';
+import { fetchTasksEnhanced, bulkDeleteTasks, bulkUpdateTaskStatus } from '../../services/taskEnhanced.service';
 import { TaskKanbanBoard } from './TaskKanbanBoard';
 import { TaskAnalytics } from './TaskAnalytics';
 import { TaskTemplateManager } from './TaskTemplateManager';
@@ -37,21 +35,21 @@ type ViewMode = 'list' | 'kanban' | 'analytics' | 'templates';
 export function TaskManagerEnhanced({
   userId,
   sectionId,
-  isSectionAdmin = false,
-  isAdmin = false,
+  isSectionAdmin: _isSectionAdmin = false,
+  isAdmin: _isAdmin = false,
 }: TaskManagerEnhancedProps) {
   // View State
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState<EnhancedTask | null>(null);
+  const [editingTask, setEditingTask] = useState<EnhancedTask | null>(null);
 
   // Data State
   const [tasks, setTasks] = useState<EnhancedTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [page] = useState(1);
   const [total, setTotal] = useState(0);
 
   // Filter & Sort State
@@ -69,11 +67,7 @@ export function TaskManagerEnhanced({
   // Bulk Operations
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadTasks();
-  }, [page, filters, sort, sectionId]);
-
-  const loadTasks = async (refresh = false) => {
+  const loadTasks = useCallback(async (refresh = false) => {
     try {
       if (refresh) {
         setRefreshing(true);
@@ -91,58 +85,61 @@ export function TaskManagerEnhanced({
 
       setTasks(response.tasks);
       setTotal(response.total);
-      setHasMore(response.hasMore);
     } catch (error) {
       console.error('Failed to load tasks:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId, page, filters, sort, sectionId]);
 
-  const handleRefresh = () => {
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  const handleRefresh = useCallback(() => {
     loadTasks(true);
-  };
+  }, [loadTasks]);
 
-  const handleTaskCreated = (task: EnhancedTask) => {
-    setTasks([task, ...tasks]);
-    setTotal(total + 1);
+  const handleTaskCreated = useCallback((task: EnhancedTask) => {
+    setTasks(prev => [task, ...prev]);
+    setTotal(prev => prev + 1);
     setShowCreateForm(false);
-  };
+  }, []);
 
-  const handleTaskUpdated = (updatedTask: EnhancedTask) => {
-    setTasks(tasks.map(t => (t.id === updatedTask.id ? updatedTask : t)));
-    if (selectedTask?.id === updatedTask.id) {
-      setSelectedTask(updatedTask);
-    }
-  };
+  const handleTaskUpdated = useCallback((updatedTask: EnhancedTask) => {
+    setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
+    setSelectedTask(prev => prev?.id === updatedTask.id ? updatedTask : prev);
+  }, []);
 
-  const handleTaskDeleted = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
-    setTotal(total - 1);
-    setSelectedTaskIds(selectedTaskIds.filter(id => id !== taskId));
-    if (selectedTask?.id === taskId) {
-      setSelectedTask(null);
-    }
-  };
+  const handleTaskEdit = useCallback((task: EnhancedTask) => {
+    setEditingTask(task);
+  }, []);
 
-  const handleBulkDelete = async () => {
+  const handleTaskDeleted = useCallback((taskId: string) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    setTotal(prev => prev - 1);
+    setSelectedTaskIds(prev => prev.filter(id => id !== taskId));
+    setSelectedTask(prev => prev?.id === taskId ? null : prev);
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
     if (selectedTaskIds.length === 0) return;
     if (!confirm(`Delete ${selectedTaskIds.length} selected tasks?`)) return;
 
     try {
       await bulkDeleteTasks(selectedTaskIds);
-      setTasks(tasks.filter(t => !selectedTaskIds.includes(t.id)));
-      setTotal(total - selectedTaskIds.length);
+      setTasks(prev => prev.filter(t => !selectedTaskIds.includes(t.id)));
+      setTotal(prev => prev - selectedTaskIds.length);
       setSelectedTaskIds([]);
       alert('Tasks deleted successfully');
     } catch (error) {
       console.error('Failed to delete tasks:', error);
       alert('Failed to delete tasks');
     }
-  };
+  }, [selectedTaskIds]);
 
-  const handleBulkStatusUpdate = async (status: TaskStatus) => {
+  const handleBulkStatusUpdate = useCallback(async (status: TaskStatus) => {
     if (selectedTaskIds.length === 0) return;
 
     try {
@@ -154,17 +151,16 @@ export function TaskManagerEnhanced({
       console.error('Failed to update tasks:', error);
       alert('Failed to update tasks');
     }
-  };
+  }, [selectedTaskIds, loadTasks]);
 
-  const handleExportCSV = () => {
-    const headers = ['Name', 'Category', 'Status', 'Priority', 'Due Date', 'Assigned To', 'Created At'];
+  const handleExportCSV = useCallback(() => {
+    const headers = ['Name', 'Category', 'Status', 'Priority', 'Due Date', 'Created At'];
     const rows = tasks.map(task => [
       task.name,
       task.category,
       task.status,
       task.priority,
       task.dueDate,
-      task.assignedToUser?.name || 'Unassigned',
       new Date(task.createdAt).toLocaleDateString(),
     ]);
 
@@ -176,7 +172,7 @@ export function TaskManagerEnhanced({
     a.download = `tasks-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }, [tasks]);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -196,92 +192,84 @@ export function TaskManagerEnhanced({
   return (
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Task Management
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
               {total} total tasks
               {selectedTaskIds.length > 0 && ` • ${selectedTaskIds.length} selected`}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleRefresh}
-              className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-              title="Refresh"
-              disabled={refreshing}
-            >
-              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowCreateForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex-1 sm:flex-initial touch-manipulation"
             >
               <Plus className="w-5 h-5" />
-              Create Task
+              <span className="text-sm sm:text-base">Create Task</span>
             </button>
           </div>
         </div>
 
         {/* View Mode Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap touch-manipulation ${
               viewMode === 'list'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             <List className="w-4 h-4" />
-            List View
+            <span className="text-xs sm:text-sm">List</span>
           </button>
           <button
             onClick={() => setViewMode('kanban')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap touch-manipulation ${
               viewMode === 'kanban'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
-            Kanban Board
+            <span className="text-xs sm:text-sm">Kanban</span>
           </button>
           <button
             onClick={() => setViewMode('analytics')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap touch-manipulation ${
               viewMode === 'analytics'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             <BarChart3 className="w-4 h-4" />
-            Analytics
+            <span className="text-xs sm:text-sm">Analytics</span>
           </button>
           <button
             onClick={() => setViewMode('templates')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap touch-manipulation ${
               viewMode === 'templates'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             <FileText className="w-4 h-4" />
-            Templates
+            <span className="text-xs sm:text-sm">Templates</span>
           </button>
         </div>
       </div>
 
       {/* Toolbar */}
       {(viewMode === 'list' || viewMode === 'kanban') && (
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             {/* Search */}
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 sm:max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -289,13 +277,13 @@ export function TaskManagerEnhanced({
                   placeholder="Search tasks..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -335,7 +323,7 @@ export function TaskManagerEnhanced({
 
           {/* Advanced Filters Panel */}
           {showFilters && (
-            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-750 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-750 rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Category
@@ -425,7 +413,7 @@ export function TaskManagerEnhanced({
                 selectedTaskIds={selectedTaskIds}
                 onSelectTasks={setSelectedTaskIds}
                 onTaskClick={setSelectedTask}
-                onTaskUpdate={handleTaskUpdated}
+                onTaskEdit={handleTaskEdit}
                 onTaskDelete={handleTaskDeleted}
                 sort={sort}
                 onSortChange={setSort}
@@ -460,6 +448,20 @@ export function TaskManagerEnhanced({
           sectionId={sectionId}
           onClose={() => setShowCreateForm(false)}
           onTaskCreated={handleTaskCreated}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <TaskEnhancedForm
+          userId={userId}
+          sectionId={sectionId}
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onTaskUpdated={(updatedTask) => {
+            handleTaskUpdated(updatedTask);
+            setEditingTask(null);
+          }}
         />
       )}
 

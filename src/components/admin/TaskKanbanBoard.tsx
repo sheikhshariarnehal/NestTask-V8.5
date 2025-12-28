@@ -12,7 +12,7 @@ import {
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Clock, User, Calendar, Tag, AlertCircle, GripVertical } from 'lucide-react';
+import { Clock, Calendar, AlertCircle, GripVertical } from 'lucide-react';
 import type { EnhancedTask } from '../../types/taskEnhanced';
 import { TaskStatus } from '../../types/task';
 import { updateTaskEnhanced } from '../../services/taskEnhanced.service';
@@ -29,9 +29,8 @@ const STATUS_COLUMNS: Array<{ id: TaskStatus; title: string; color: string }> = 
   { id: 'completed', title: 'Completed', color: 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600' },
 ];
 
-export function TaskKanbanBoard({ tasks, onTaskUpdate, onTaskClick }: TaskKanbanBoardProps) {
+export const TaskKanbanBoard = React.memo(function TaskKanbanBoard({ tasks, onTaskUpdate, onTaskClick }: TaskKanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<EnhancedTask | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -50,13 +49,11 @@ export function TaskKanbanBoard({ tasks, onTaskUpdate, onTaskClick }: TaskKanban
     const task = tasks.find(t => t.id === event.active.id);
     if (task) {
       setActiveTask(task);
-      setIsDragging(true);
     }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    setIsDragging(false);
     setActiveTask(null);
 
     if (!over) return;
@@ -82,7 +79,7 @@ export function TaskKanbanBoard({ tasks, onTaskUpdate, onTaskClick }: TaskKanban
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4 min-h-[600px]">
+      <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 min-h-[500px] sm:min-h-[600px] px-2 sm:px-0">
         {STATUS_COLUMNS.map(column => (
           <KanbanColumn
             key={column.id}
@@ -98,7 +95,7 @@ export function TaskKanbanBoard({ tasks, onTaskUpdate, onTaskClick }: TaskKanban
       </DragOverlay>
     </DndContext>
   );
-}
+});
 
 interface KanbanColumnProps {
   status: { id: TaskStatus; title: string; color: string };
@@ -108,8 +105,8 @@ interface KanbanColumnProps {
 
 function KanbanColumn({ status, tasks, onTaskClick }: KanbanColumnProps) {
   return (
-    <div className="flex-shrink-0 w-80">
-      <div className={`${status.color} border-2 rounded-lg p-4 h-full`}>
+    <div className="flex-shrink-0 w-72 sm:w-80">
+      <div className={`${status.color} border-2 rounded-lg p-3 sm:p-4 h-full`}>
         {/* Column Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -191,8 +188,8 @@ function TaskCard({ task, onClick, isDragging, dragHandleProps }: TaskCardProps)
   return (
     <div
       className={`
-        bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600
-        hover:shadow-md transition-all cursor-pointer group
+        bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 shadow-sm border border-gray-200 dark:border-gray-600
+        hover:shadow-md transition-all cursor-pointer group touch-manipulation
         ${isDragging ? 'rotate-3 shadow-xl' : ''}
         ${isOverdue ? 'border-l-4 border-l-red-500' : ''}
       `}
@@ -236,26 +233,6 @@ function TaskCard({ task, onClick, isDragging, dragHandleProps }: TaskCardProps)
             )}
           </div>
 
-          {/* Tags */}
-          {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {task.tags.slice(0, 3).map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded text-xs"
-                >
-                  <Tag className="w-3 h-3" />
-                  {tag}
-                </span>
-              ))}
-              {task.tags.length > 3 && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  +{task.tags.length - 3} more
-                </span>
-              )}
-            </div>
-          )}
-
           {/* Metadata */}
           <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
             {/* Due Date */}
@@ -263,14 +240,6 @@ function TaskCard({ task, onClick, isDragging, dragHandleProps }: TaskCardProps)
               <Calendar className="w-3 h-3" />
               <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
             </div>
-
-            {/* Assigned To */}
-            {task.assignedToUser && (
-              <div className="flex items-center gap-2">
-                <User className="w-3 h-3" />
-                <span>{task.assignedToUser.name}</span>
-              </div>
-            )}
 
             {/* Category */}
             <div className="flex items-center gap-2">

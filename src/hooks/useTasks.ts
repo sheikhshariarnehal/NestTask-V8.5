@@ -91,11 +91,12 @@ export function useTasks(userId: string | undefined) {
           throw new Error('Unable to connect to database');
         }
 
-        // Check session
+        // Check session - if no session, just return without reloading
+        // The auth flow will handle redirecting to login if needed
         const { data: session } = await supabase.auth.getSession();
         if (!session.session) {
-          window.location.reload();
-          return;
+          console.log('No session found during task fetch, skipping reload');
+          throw new Error('Session expired - please refresh the page');
         }
       }
 

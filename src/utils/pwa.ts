@@ -299,10 +299,8 @@ function setupKeepAlive() {
           }
           saveServiceWorkerMetadata(metadata);
           
-          // Force refresh as last resort
-          if (document.visibilityState === 'visible') {
-            window.location.reload();
-          }
+          // Don't force reload - just log the error and let the user refresh manually if needed
+          console.warn('[PWA] Service worker issues detected, manual refresh may be needed');
         }
       }
     }
@@ -604,10 +602,9 @@ export async function initPWA() {
   } catch (error) {
     console.error('Error during PWA initialization:', error);
     
-    // Fallback - force a page reload as last resort
+    // Don't force reload on recovery failure - just log and return
     if (needsRecovery) {
-      console.log('[PWA] Recovery failed, forcing page reload');
-      window.location.reload();
+      console.warn('[PWA] Recovery failed, user may need to manually refresh');
     }
     
     return false;
@@ -660,10 +657,9 @@ function setupOfflineDetection(): void {
             await reinstallServiceWorker();
           }
           
-          // Reload if we've been offline for more than an hour
+          // Don't force reload after extended offline - just log and let user refresh if needed
           if (offlineTime > OFFLINE_DURATION_THRESHOLD) {
-            console.log('[PWA] Coming online after extended offline period, reloading');
-            window.location.reload();
+            console.log('[PWA] Coming online after extended offline period, service worker recovered');
           }
         }
       }
