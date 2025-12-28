@@ -54,18 +54,18 @@ export function TaskCategories({ onCategorySelect, selectedCategory, categoryCou
 
       {/* Mobile: Fully scrollable categories */}
       <div className="block sm:hidden">
-        <div className="flex mobile-category-gap-xs gap-2 xs:gap-3 overflow-x-auto pb-3 mobile-category-compact px-1 sm:px-0 scrollbar-hide mobile-category-scroll">
+        <div className="flex mobile-category-gap-xs gap-2.5 xs:gap-3 overflow-x-auto pb-3 mobile-category-compact px-1 sm:px-0 scrollbar-hide mobile-category-scroll">
           {allCategories.map(({ id, label, icon: Icon, count }) => (
             <button
               key={id || 'total'}
               onClick={() => onCategorySelect(id)}
               className={`
-                flex-shrink-0 px-2.5 xs:px-3 sm:px-4 py-2 xs:py-2.5 sm:py-3 rounded-full
+                flex-shrink-0 px-3.5 xs:px-4 sm:px-4 py-2.5 xs:py-3 sm:py-3 rounded-lg
                 mobile-category-text-xs text-sm font-medium whitespace-nowrap
                 min-h-[44px] mobile-touch-target mobile-category-item transition-all duration-200
                 ${selectedCategory === id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-blue-600 text-white shadow-md scale-[1.02]'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-sm'
                 }
               `}
             >
@@ -85,27 +85,28 @@ export function TaskCategories({ onCategorySelect, selectedCategory, categoryCou
                 key={id || 'total'}
                 onClick={() => onCategorySelect(id)}
                 className={`
-                  group flex items-center gap-2 p-3 sm:p-4 rounded-xl transition-all duration-200
+                  group flex items-center gap-3 p-3.5 sm:p-4 rounded-lg transition-all duration-200
+                  border border-transparent
                   ${selectedCategory === id
-                    ? 'bg-blue-600 text-white shadow-lg scale-[1.02]'
-                    : `bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ${count === 0 ? 'opacity-60 hover:opacity-100' : ''}`
+                    ? 'bg-blue-600 text-white shadow-md scale-[1.02] border-blue-500'
+                    : `bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-200 dark:hover:border-gray-700 ${count === 0 ? 'opacity-60 hover:opacity-100' : ''}`
                   }
-                  hover:shadow-md hover:-translate-y-0.5
+                  hover:shadow-sm hover:-translate-y-0.5
                 `}
               >
                 <div className={`
-                  p-2 rounded-lg transition-colors duration-200 flex-shrink-0
+                  p-2 rounded-md transition-colors duration-200 flex-shrink-0
                   ${selectedCategory === id
-                    ? 'bg-blue-500/20'
+                    ? 'bg-white/20'
                     : 'bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30'
                   }
                 `}>
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <div className="text-sm font-medium truncate">{label}</div>
-                  <div className={`text-xs ${selectedCategory === id ? 'opacity-80' : (count === 0 ? 'opacity-60 group-hover:opacity-80' : 'opacity-80')}`}>
-                    {count} tasks
+                  <div className="text-sm font-semibold truncate">{label}</div>
+                  <div className={`text-xs font-medium ${selectedCategory === id ? 'opacity-90' : (count === 0 ? 'opacity-60 group-hover:opacity-80' : 'opacity-70')}`}>
+                    {count} {count === 1 ? 'task' : 'tasks'}
                   </div>
                 </div>
               </button>

@@ -138,7 +138,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 sm:p-8 text-white overflow-hidden">
         <div
@@ -191,14 +191,14 @@ export const HomePage: React.FC<HomePageProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <button
           onClick={() => setStatFilter('all')}
-          className={`rounded-xl p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-105 focus:scale-105 ${
+          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
             statFilter === 'all' 
-              ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-gray-700' 
-              : 'bg-white dark:bg-gray-800'
+              ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-gray-700 border-blue-200 dark:border-blue-600' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
               <ListTodo className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -210,14 +210,14 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         <button
           onClick={() => setStatFilter('overdue')}
-          className={`rounded-xl p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-105 focus:scale-105 ${
+          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
             statFilter === 'overdue' 
-              ? 'ring-2 ring-red-500 dark:ring-red-400 bg-red-50 dark:bg-gray-700' 
-              : 'bg-white dark:bg-gray-800'
+              ? 'ring-2 ring-red-500 dark:ring-red-400 bg-red-50 dark:bg-gray-700 border-red-200 dark:border-red-600' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
               <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -229,14 +229,14 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         <button
           onClick={() => setStatFilter('in-progress')}
-          className={`rounded-xl p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-105 focus:scale-105 ${
+          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
             statFilter === 'in-progress' 
-              ? 'ring-2 ring-indigo-500 dark:ring-indigo-400 bg-indigo-50 dark:bg-gray-700' 
-              : 'bg-white dark:bg-gray-800'
+              ? 'ring-2 ring-yellow-500 dark:ring-yellow-400 bg-yellow-50 dark:bg-gray-700 border-yellow-200 dark:border-yellow-600' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+            <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
               <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -248,14 +248,14 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         <button
           onClick={() => setStatFilter('completed')}
-          className={`rounded-xl p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-105 focus:scale-105 ${
+          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
             statFilter === 'completed' 
-              ? 'ring-2 ring-green-500 dark:ring-green-400 bg-green-50 dark:bg-gray-700' 
-              : 'bg-white dark:bg-gray-800'
+              ? 'ring-2 ring-green-500 dark:ring-green-400 bg-green-50 dark:bg-gray-700 border-green-200 dark:border-green-600' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
               <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <span className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -297,7 +297,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             showDeleteButton={false}
           />
         ) : (
-          <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+          <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
             <ListTodo className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No tasks</h3>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">

@@ -22,22 +22,23 @@ export function TaskCategoryBadge({ category, icon, isActive, count }: TaskCateg
   return (
     <div 
       className={`
-        flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200
+        flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200
+        border border-transparent
         ${isActive 
-          ? 'bg-primary-600 text-white shadow-sm scale-102' 
-          : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-primary-600 shadow-sm'
+          ? 'bg-primary-600 text-white shadow-md scale-[1.02] border-primary-500' 
+          : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-primary-600 shadow-sm hover:shadow hover:border-gray-200'
         }
       `}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         {getIcon()}
-        <span className="font-medium text-sm">{category}</span>
+        <span className="font-semibold text-sm">{category}</span>
       </div>
       <span className={`
-        px-2 py-0.5 text-xs font-medium rounded-full
+        px-2.5 py-0.5 text-xs font-semibold rounded-md
         ${isActive 
-          ? 'bg-white/10' 
-          : 'bg-primary-50/80 text-primary-700'
+          ? 'bg-white/20 text-white' 
+          : 'bg-primary-50 text-primary-700'
         }
       `}>
         {count}

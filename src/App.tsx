@@ -415,10 +415,7 @@ export default function App() {
       />
       
       <main 
-        className="max-w-7xl mx-auto px-2 sm:px-4 pb-24" 
-        style={{ 
-          paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))'
-        }}
+        className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-24"
       >
         {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />
