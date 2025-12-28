@@ -20,6 +20,9 @@ const config: CapacitorConfig = {
       style: 'dark',
       backgroundColor: '#1e293b',
       overlaysWebView: false
+    },
+    Network: {
+      // Network monitoring is enabled by default
     }
   }
 };

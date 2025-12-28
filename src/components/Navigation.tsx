@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ProfileMenu } from './profile/ProfileMenu';
-import { Moon, Sun, Calendar } from 'lucide-react';
+import { Moon, Sun, Calendar, WifiOff } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { useOfflineStatus } from '../hooks/useOfflineStatus';
 import { MonthlyCalendar } from './MonthlyCalendar';
 import type { NavPage } from '../types/navigation';
 import type { Task } from '../types/task';
@@ -37,6 +38,7 @@ export function Navigation({
   tasks = []
 }: NavigationProps) {
   const { isDark, toggle } = useTheme();
+  const isOffline = useOfflineStatus();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -97,6 +99,12 @@ export function Navigation({
                   <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-300">
                     NestTask
                   </h1>
+                  {isOffline && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
+                      <WifiOff className="w-3 h-3 text-red-600 dark:text-red-400\" />
+                      <span className="text-xs font-medium text-red-600 dark:text-red-400\">Offline</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

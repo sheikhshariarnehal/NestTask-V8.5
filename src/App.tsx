@@ -8,6 +8,8 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { Navigation } from './components/Navigation';
 import { BottomNavigation } from './components/BottomNavigation';
 import { InstallPWA } from './components/InstallPWA';
+import { OfflineToast } from './components/ui/OfflineToast';
+import { OfflineBanner } from './components/ui/OfflineBanner';
 import { isSameDay } from './utils/dateUtils';
 import { InstantTransition } from './components/InstantTransition';
 import type { NavPage } from './types/navigation';
@@ -399,6 +401,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container">
+      <OfflineBanner />
       <Navigation 
         onLogout={logout}
         hasUnreadNotifications={hasUnreadNotifications}
@@ -432,6 +435,7 @@ export default function App() {
       />
 
       <InstallPWA />
+      <OfflineToast />
     </div>
   );
 }
