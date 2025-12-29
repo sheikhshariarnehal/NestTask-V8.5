@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAppLifecycle } from './useAppLifecycle';
 import type { Task } from '../types';
 import type { Announcement } from '../types/announcement';
 
@@ -18,6 +19,8 @@ export interface Notification {
 export function useNotifications(userId: string | undefined) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const subscriptionsRef = useRef<{ tasks?: any; announcements?: any }>({});
+  const isSubscribedRef = useRef(false);
 
   const sortNotifications = (notifs: Notification[]): Notification[] => {
     return [...notifs].sort((a, b) => {
@@ -26,60 +29,82 @@ export function useNotifications(userId: string | undefined) {
     });
   };
 
-  useEffect(() => {
+  /**
+   * Load existing notifications from database
+   */
+  const loadExistingItems = useCallback(async () => {
     if (!userId) return;
 
-    const loadExistingItems = async () => {
-      const [{ data: tasks }, { data: announcements }] = await Promise.all([
-        supabase
-          .from('tasks')
-          .select('*')
-          .or(`user_id.eq.${userId},is_admin_task.eq.true`)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('announcements')
-          .select('*')
-          .order('created_at', { ascending: false })
-      ]);
+    console.log('[Notifications] Loading existing items...');
+    const [{ data: tasks }, { data: announcements }] = await Promise.all([
+      supabase
+        .from('tasks')
+        .select('*')
+        .or(`user_id.eq.${userId},is_admin_task.eq.true`)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false })
+    ]);
 
-      const newNotifications: Notification[] = [];
+    const newNotifications: Notification[] = [];
 
-      if (tasks) {
-        tasks.forEach(task => {
-          newNotifications.push({
-            id: crypto.randomUUID(),
-            title: task.is_admin_task ? 'New Admin Task' : 'New Task',
-            message: `Task "${task.name}" has been created`,
-            timestamp: new Date(task.created_at),
-            read: false,
-            taskId: task.id,
-            isAdminTask: task.is_admin_task,
-            isAnnouncement: false
-          });
+    if (tasks) {
+      tasks.forEach(task => {
+        newNotifications.push({
+          id: crypto.randomUUID(),
+          title: task.is_admin_task ? 'New Admin Task' : 'New Task',
+          message: `Task "${task.name}" has been created`,
+          timestamp: new Date(task.created_at),
+          read: false,
+          taskId: task.id,
+          isAdminTask: task.is_admin_task,
+          isAnnouncement: false
         });
-      }
+      });
+    }
 
-      if (announcements) {
-        announcements.forEach(announcement => {
-          newNotifications.push({
-            id: crypto.randomUUID(),
-            title: announcement.title,
-            message: announcement.content, // Use the content field from announcement
-            timestamp: new Date(announcement.created_at),
-            read: false,
-            announcementId: announcement.id,
-            isAdminTask: false,
-            isAnnouncement: true
-          });
+    if (announcements) {
+      announcements.forEach(announcement => {
+        newNotifications.push({
+          id: crypto.randomUUID(),
+          title: announcement.title,
+          message: announcement.content,
+          timestamp: new Date(announcement.created_at),
+          read: false,
+          announcementId: announcement.id,
+          isAdminTask: false,
+          isAnnouncement: true
         });
-      }
+      });
+    }
 
-      const sortedNotifications = sortNotifications(newNotifications);
-      setNotifications(sortedNotifications);
-      setUnreadCount(newNotifications.filter(n => !n.read).length);
-    };
+    const sortedNotifications = sortNotifications(newNotifications);
+    setNotifications(sortedNotifications);
+    setUnreadCount(newNotifications.filter(n => !n.read).length);
+    console.log('[Notifications] Loaded', newNotifications.length, 'notifications');
+  }, [userId]);
 
-    loadExistingItems();
+  /**
+   * Setup Realtime subscriptions
+   */
+  const setupSubscriptions = useCallback(() => {
+    if (!userId || isSubscribedRef.current) {
+      console.log('[Notifications] Skipping subscription setup:', !userId ? 'no userId' : 'already subscribed');
+      return;
+    }
+
+    console.log('[Notifications] Setting up Realtime subscriptions...');
+    isSubscribedRef.current = true;
+
+    // Unsubscribe from any existing subscriptions first
+    if (subscriptionsRef.current.tasks) {
+      subscriptionsRef.current.tasks.unsubscribe();
+    }
+    if (subscriptionsRef.current.announcements) {
+      subscriptionsRef.current.announcements.unsubscribe();
+    }
 
     const taskSubscription = supabase
       .channel('tasks')
@@ -107,7 +132,9 @@ export function useNotifications(userId: string | undefined) {
           handleNewTask(payload.new as any);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[Notifications] Task subscription status:', status);
+      });
 
     const announcementSubscription = supabase
       .channel('announcements')
@@ -122,13 +149,74 @@ export function useNotifications(userId: string | undefined) {
           handleNewAnnouncement(payload.new as any);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[Notifications] Announcement subscription status:', status);
+      });
 
-    return () => {
-      taskSubscription.unsubscribe();
-      announcementSubscription.unsubscribe();
+    // Store subscription references for cleanup
+    subscriptionsRef.current = {
+      tasks: taskSubscription,
+      announcements: announcementSubscription
     };
   }, [userId]);
+
+  /**
+   * Cleanup subscriptions
+   */
+  const cleanupSubscriptions = useCallback(() => {
+    console.log('[Notifications] Cleaning up subscriptions...');
+    isSubscribedRef.current = false;
+
+    if (subscriptionsRef.current.tasks) {
+      subscriptionsRef.current.tasks.unsubscribe();
+      subscriptionsRef.current.tasks = undefined;
+    }
+    if (subscriptionsRef.current.announcements) {
+      subscriptionsRef.current.announcements.unsubscribe();
+      subscriptionsRef.current.announcements = undefined;
+    }
+  }, []);
+
+  /**
+   * Handle app resume - reload data and reconnect subscriptions
+   */
+  const handleResume = useCallback(() => {
+    console.log('[Notifications] App resumed, reloading data and reconnecting...');
+
+    // Cleanup old subscriptions
+    cleanupSubscriptions();
+
+    // Reload data
+    loadExistingItems();
+
+    // Re-setup subscriptions
+    setupSubscriptions();
+  }, [cleanupSubscriptions, loadExistingItems, setupSubscriptions]);
+
+  // Use app lifecycle hook to handle resume
+  useAppLifecycle({
+    onResume: handleResume
+  });
+
+  // Initial load and subscription setup
+  useEffect(() => {
+    if (!userId) {
+      // Clear subscriptions if no user
+      cleanupSubscriptions();
+      return;
+    }
+
+    // Load initial data
+    loadExistingItems();
+
+    // Setup subscriptions
+    setupSubscriptions();
+
+    // Cleanup on unmount
+    return () => {
+      cleanupSubscriptions();
+    };
+  }, [userId, loadExistingItems, setupSubscriptions, cleanupSubscriptions]);
 
   const handleNewTask = (task: any) => {
     if (task.is_admin_task || task.user_id === userId) {

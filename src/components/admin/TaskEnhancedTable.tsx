@@ -93,7 +93,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
         </div>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Tasks Found</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 text-center max-w-md">
-          {filters.search ? 'Try adjusting your search or filters' : 'Get started by creating your first task'}
+          Try adjusting your search or filters, or create your first task to get started
         </p>
       </div>
     );

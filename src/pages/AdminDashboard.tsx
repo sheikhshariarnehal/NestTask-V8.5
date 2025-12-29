@@ -429,7 +429,7 @@ export function AdminDashboard({
               showTaskForm={showTaskForm}
               sectionId={sectionId}
               isSectionAdmin={isSectionAdmin}
-              isLoading={tasksLoading || isRefreshing}
+              isLoading={isRefreshing}
               isCreatingTask={isCreatingTask}
               onTaskCreateStart={() => setIsCreatingTask(true)}
               onTaskCreateEnd={() => setIsCreatingTask(false)}

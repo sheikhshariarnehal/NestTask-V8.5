@@ -1,11 +1,13 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, memo, lazy, Suspense } from 'react';
 import { ListTodo, CheckCircle2, Clock, AlertCircle, Sparkles, CalendarDays } from 'lucide-react';
 import { TaskList } from '../components/TaskList';
-import { TaskCategories } from '../components/task/TaskCategories';
 import { isOverdue } from '../utils/dateUtils';
 import { formatUpcomingDueDate } from '../utils/dateUtils';
 import type { Task, TaskCategory } from '../types/task';
 import type { User } from '../types/user';
+
+// Lazy load TaskCategories for better initial load performance
+const TaskCategories = lazy(() => import('../components/task/TaskCategories').then(m => ({ default: m.TaskCategories })));
 
 type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
 
@@ -23,7 +25,7 @@ interface UpcomingTaskDisplayData extends Task {
   formattedDueDate: string;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({
+export const HomePage: React.FC<HomePageProps> = memo(({
   user,
   tasks,
   selectedCategory,
@@ -45,19 +47,18 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
   }, []);
 
-  // Compute task stats
+  // Compute task stats - optimized to do single pass through tasks
   const taskStats = useMemo(() => {
-    // Make sure we have a valid tasks array before calculating
     const validTasks = tasks && Array.isArray(tasks) ? tasks : [];
-    const totalTasks = validTasks.length;
     
-    // Count all tasks regardless of status or category
-    return {
-      total: totalTasks,
-      inProgress: validTasks.filter(t => t.status === 'in-progress').length,
-      completed: validTasks.filter(t => t.status === 'completed').length,
-      overdue: validTasks.filter(t => isOverdue(t.dueDate) && t.status !== 'completed').length
-    };
+    // Single pass through tasks for better performance
+    return validTasks.reduce((stats, task) => {
+      stats.total++;
+      if (task.status === 'in-progress') stats.inProgress++;
+      if (task.status === 'completed') stats.completed++;
+      if (isOverdue(task.dueDate) && task.status !== 'completed') stats.overdue++;
+      return stats;
+    }, { total: 0, inProgress: 0, completed: 0, overdue: 0 });
   }, [tasks]);
 
   // Pre-calculate upcoming tasks with their formatted due dates
@@ -86,22 +87,19 @@ export const HomePage: React.FC<HomePageProps> = ({
     return () => clearInterval(timer);
   }, [upcomingTasksData.length]);
 
-  // Compute category counts
+  // Compute category counts - optimized
   const categoryCounts = useMemo(() => {
     const validTasks = tasks && Array.isArray(tasks) ? tasks : [];
     
     return validTasks.reduce((acc: Record<string, number>, task) => {
       const category = task.category || 'others';
-      if (!acc[category]) {
-        acc[category] = 0;
-      }
       acc[category] = (acc[category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
   }, [tasks]);
 
-  // Filter tasks based on selected stat
-  const getFilteredTasks = () => {
+  // Filter tasks based on selected stat - memoized for performance
+  const filteredTasks = useMemo(() => {
     let filtered = tasks;
 
     // First apply category filter if selected
@@ -120,9 +118,10 @@ export const HomePage: React.FC<HomePageProps> = ({
       default:
         return filtered;
     }
-  };
+  }, [tasks, selectedCategory, statFilter]);
 
-  const getStatTitle = () => {
+  // Memoize stat title to avoid recalculation
+  const statTitle = useMemo(() => {
     switch (statFilter) {
       case 'overdue':
         return 'Due Tasks';
@@ -135,10 +134,22 @@ export const HomePage: React.FC<HomePageProps> = ({
           ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1).replace('-', ' ')} Tasks`
           : 'All Tasks';
     }
-  };
+  }, [statFilter, selectedCategory]);
+
+  // Memoized event handlers for stat filter buttons
+  const handleAllFilter = useCallback(() => setStatFilter('all'), [setStatFilter]);
+  const handleOverdueFilter = useCallback(() => setStatFilter('overdue'), [setStatFilter]);
+  const handleInProgressFilter = useCallback(() => setStatFilter('in-progress'), [setStatFilter]);
+  const handleCompletedFilter = useCallback(() => setStatFilter('completed'), [setStatFilter]);
+  
+  // Memoized handler for category selection
+  const handleCategorySelect = useCallback((category: TaskCategory | null) => {
+    setSelectedCategory(category);
+    setStatFilter('all');
+  }, [setSelectedCategory, setStatFilter]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-6 sm:pb-8 lg:pb-10">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 sm:p-8 text-white overflow-hidden">
         <div
@@ -188,119 +199,118 @@ export const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       {/* Task Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
         <button
-          onClick={() => setStatFilter('all')}
-          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
+          onClick={handleAllFilter}
+          className={`rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-lg transition-all duration-200 transform hover:scale-[1.03] active:scale-[0.98] border border-transparent ${
             statFilter === 'all' 
-              ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-gray-700 border-blue-200 dark:border-blue-600' 
-              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+              ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-600 border-blue-300 dark:border-blue-500 shadow-lg' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-              <ListTodo className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 sm:p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-sm">
+              <ListTodo className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
               {taskStats.total}
             </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Tasks</p>
+          <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-400">Total Tasks</p>
         </button>
 
         <button
-          onClick={() => setStatFilter('overdue')}
-          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
+          onClick={handleOverdueFilter}
+          className={`rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-lg transition-all duration-200 transform hover:scale-[1.03] active:scale-[0.98] border border-transparent ${
             statFilter === 'overdue' 
-              ? 'ring-2 ring-red-500 dark:ring-red-400 bg-red-50 dark:bg-gray-700 border-red-200 dark:border-red-600' 
-              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+              ? 'ring-2 ring-red-500 dark:ring-red-400 bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-700 dark:to-gray-600 border-red-300 dark:border-red-500 shadow-lg' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <div className="p-2 sm:p-2.5 bg-red-50 dark:bg-red-900/20 rounded-lg shadow-sm">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />
             </div>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
               {taskStats.overdue}
             </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Due Tasks</p>
+          <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-400">Due Tasks</p>
         </button>
 
         <button
-          onClick={() => setStatFilter('in-progress')}
-          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
+          onClick={handleInProgressFilter}
+          className={`rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-lg transition-all duration-200 transform hover:scale-[1.03] active:scale-[0.98] border border-transparent ${
             statFilter === 'in-progress' 
-              ? 'ring-2 ring-yellow-500 dark:ring-yellow-400 bg-yellow-50 dark:bg-gray-700 border-yellow-200 dark:border-yellow-600' 
-              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+              ? 'ring-2 ring-yellow-500 dark:ring-yellow-400 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-gray-700 dark:to-gray-600 border-yellow-300 dark:border-yellow-500 shadow-lg' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-              <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-2 sm:p-2.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg shadow-sm">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
               {taskStats.inProgress}
             </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
+          <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-400">In Progress</p>
         </button>
 
         <button
-          onClick={() => setStatFilter('completed')}
-          className={`rounded-lg p-4 shadow-sm hover:shadow-md transition-all transform hover:scale-[1.02] focus:scale-[1.02] border border-transparent ${
+          onClick={handleCompletedFilter}
+          className={`rounded-lg p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-lg transition-all duration-200 transform hover:scale-[1.03] active:scale-[0.98] border border-transparent ${
             statFilter === 'completed' 
-              ? 'ring-2 ring-green-500 dark:ring-green-400 bg-green-50 dark:bg-gray-700 border-green-200 dark:border-green-600' 
-              : 'bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+              ? 'ring-2 ring-green-500 dark:ring-green-400 bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-700 dark:to-gray-600 border-green-300 dark:border-green-500 shadow-lg' 
+              : 'bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-750'
           }`}
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
-              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className="p-2 sm:p-2.5 bg-green-50 dark:bg-green-900/20 rounded-lg shadow-sm">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
             </div>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
               {taskStats.completed}
             </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
+          <p className="text-sm sm:text-base font-medium text-gray-600 dark:text-gray-400">Completed</p>
         </button>
       </div>
 
       {/* Task Categories */}
-      <TaskCategories
-        onCategorySelect={(category) => {
-          setSelectedCategory(category);
-          setStatFilter('all');
-        }}
-        selectedCategory={selectedCategory}
-        categoryCounts={categoryCounts}
-      />
+      <Suspense fallback={<div className="h-32 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-lg" />}>
+        <TaskCategories
+          onCategorySelect={handleCategorySelect}
+          selectedCategory={selectedCategory}
+          categoryCounts={categoryCounts}
+        />
+      </Suspense>
 
       {/* Task List */}
-      <div>
+      <div className="pb-4 sm:pb-6">
         {statFilter !== 'all' && (
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-              {getStatTitle()}
+              {statTitle}
             </h2>
             <button
-              onClick={() => setStatFilter('all')}
-              className="px-2 py-1 text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 rounded-md"
+              onClick={handleAllFilter}
+              className="px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
             >
               View All Tasks
             </button>
           </div>
         )}
-        {getFilteredTasks().length > 0 ? (
+        {filteredTasks.length > 0 ? (
           <TaskList
-            tasks={getFilteredTasks()}
+            tasks={filteredTasks}
             showDeleteButton={false}
           />
         ) : (
-          <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-            <ListTodo className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No tasks</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 sm:py-16 lg:py-20 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+            <ListTodo className="mx-auto h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 text-gray-400 dark:text-gray-500" />
+            <h3 className="mt-3 sm:mt-4 text-sm sm:text-base font-medium text-gray-900 dark:text-white">No tasks</h3>
+            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-500 dark:text-gray-400 max-w-md mx-auto px-4">
               {selectedCategory || statFilter !== 'all'
                 ? "No tasks match your current filters."
                 : "You don't have any tasks yet. Get started by adding one!"}
@@ -310,4 +320,4 @@ export const HomePage: React.FC<HomePageProps> = ({
       </div>
     </div>
   );
-};
+});

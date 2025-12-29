@@ -19,24 +19,32 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please click "Connect to Supabase" to set up your project.');
 }
 
-// Create optimized Supabase client with retry logic
+// Create optimized Supabase client with retry logic and lifecycle management
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
-    autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
     storage: localStorage,
     storageKey: 'nesttask_supabase_auth',
+    // Note: Session refresh is handled by useSupabaseLifecycle hook
+    // We refresh proactively (5 minutes before expiry) to prevent RLS failures
   },
   global: {
     headers: {
       'X-Client-Info': 'nesttask@1.0.0',
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
     }
   },
   db: {
     schema: 'public'
+  },
+  realtime: {
+    // Configure realtime to automatically reconnect on network changes
+    params: {
+      eventsPerSecond: 10
+    }
   }
 });
 
@@ -76,28 +84,89 @@ let lastConnectionTime = 0;
 // Track connection health
 let lastActiveTime = Date.now();
 let visibilityChangeCount = 0;
+let isRefreshingSession = false;
+
+/**
+ * Session refresh handler - called when app becomes visible
+ * Ensures session is valid and refreshes if needed
+ */
+async function refreshSessionOnResume() {
+  if (isRefreshingSession) {
+    console.log('[Supabase] Session refresh already in progress');
+    return;
+  }
+
+  isRefreshingSession = true;
+  
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.warn('[Supabase] Failed to get session:', error.message);
+      return;
+    }
+    
+    if (!session) {
+      console.log('[Supabase] No active session to refresh');
+      return;
+    }
+    
+    // Check if session is expired or about to expire
+    const expiresAt = session.expires_at;
+    if (expiresAt) {
+      const timeUntilExpiry = (expiresAt * 1000) - Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (timeUntilExpiry <= fiveMinutes) {
+        console.log('[Supabase] Session expiring soon, refreshing...');
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('[Supabase] Session refresh failed:', refreshError.message);
+        } else {
+          console.log('[Supabase] Session refreshed successfully');
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Supabase] Error during session refresh:', err);
+  } finally {
+    isRefreshingSession = false;
+  }
+}
 
 // Listen for page visibility changes to detect potential connection issues
 if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
+  document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible') {
-      // Reset connection if we've been away for a while
       const now = Date.now();
       const inactiveTime = now - lastActiveTime;
       
-      // Only reset if we were inactive for more than 10 minutes (increased from 5)
-      // This reduces unnecessary connection resets that cause blank screens
-      if (inactiveTime > 10 * 60 * 1000) {
-        console.log(`Resetting connection state after ${Math.round(inactiveTime/1000)}s inactivity`);
+      console.log(`[Supabase] Tab visible after ${Math.round(inactiveTime/1000)}s`);
+      
+      // Refresh session when returning to tab
+      await refreshSessionOnResume();
+      
+      // Reset connection state if inactive for more than 2 minutes
+      if (inactiveTime > 2 * 60 * 1000) {
+        console.log(`[Supabase] Resetting connection state after ${Math.round(inactiveTime/1000)}s inactivity`);
         connectionPromise = null;
         isInitialized = false;
-        // Don't force reconnection immediately - let it happen naturally
-        // This prevents race conditions that can cause blank screens
       }
       
       visibilityChangeCount++;
       lastActiveTime = now;
+      
+      // Dispatch custom event to notify app components to refresh data
+      window.dispatchEvent(new CustomEvent('supabase-visibility-refresh'));
     }
+  });
+  
+  // Listen for online/offline events
+  window.addEventListener('online', async () => {
+    console.log('[Supabase] Network reconnected, validating session...');
+    await refreshSessionOnResume();
+    window.dispatchEvent(new CustomEvent('supabase-network-reconnect'));
   });
 }
 

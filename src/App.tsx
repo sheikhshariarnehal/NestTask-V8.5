@@ -25,9 +25,6 @@ const importAdminDashboard = () => import('./pages/AdminDashboard').then(module 
 const importSuperAdminDashboard = () => import('./components/admin/super/SuperAdminDashboard').then(module => ({ default: module.SuperAdminDashboard }));
 const importUpcomingPage = () => import('./pages/UpcomingPage').then(module => ({ default: module.UpcomingPage }));
 const importSearchPage = () => import('./pages/SearchPage').then(module => ({ default: module.SearchPage }));
-const importCoursePage = () => import('./pages/CoursePage').then(module => ({ default: module.CoursePage }));
-const importStudyMaterialsPage = () => import('./pages/StudyMaterialsPage').then(module => ({ default: module.StudyMaterialsPage }));
-const importRoutinePage = () => import('./pages/RoutinePage').then(module => ({ default: module.RoutinePage }));
 const importLectureSlidesPage = () => import('./pages/LectureSlidesPage').then(module => ({ default: module.LectureSlidesPage }));
 
 // Lazy-loaded components
@@ -35,9 +32,6 @@ const AdminDashboard = lazy(importAdminDashboard);
 const SuperAdminDashboard = lazy(importSuperAdminDashboard);
 const UpcomingPage = lazy(importUpcomingPage);
 const SearchPage = lazy(importSearchPage);
-const CoursePage = lazy(importCoursePage);
-const StudyMaterialsPage = lazy(importStudyMaterialsPage);
-const RoutinePage = lazy(importRoutinePage);
 const LectureSlidesPage = lazy(importLectureSlidesPage);
 
 type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
@@ -282,24 +276,6 @@ export default function App() {
             <SearchPage tasks={tasks || []} />
           </Suspense>
         );
-      case 'courses':
-        return (
-          <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
-            <CoursePage />
-          </Suspense>
-        );
-      case 'study-materials':
-        return (
-          <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
-            <StudyMaterialsPage />
-          </Suspense>
-        );
-      case 'routine':
-        return (
-          <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
-            <RoutinePage />
-          </Suspense>
-        );
       case 'lecture-slides':
         return (
           <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
@@ -426,7 +402,7 @@ export default function App() {
       />
       
       <main 
-        className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-24"
+        className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-32 lg:pb-12"
       >
         {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />

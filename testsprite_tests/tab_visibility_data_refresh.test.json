@@ -1,0 +1,374 @@
+{
+  "test_suite_name": "Tab Visibility Data Refresh Fix",
+  "description": "Tests to verify that data properly refreshes when user returns to the app after minimizing, switching tabs, or switching browser windows",
+  "test_cases": [
+    {
+      "test_id": "TAB_SWITCH_001",
+      "name": "Data refreshes after short tab switch (< 30 seconds)",
+      "description": "Verify that task data is fetched and updates are visible after switching to another tab for a short time",
+      "priority": "high",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Login to the application",
+          "expected": "User is authenticated and home page loads with task list"
+        },
+        {
+          "step": 2,
+          "action": "Note the current task list state",
+          "expected": "Tasks are displayed correctly"
+        },
+        {
+          "step": 3,
+          "action": "Switch to another browser tab for 10 seconds",
+          "expected": "Tab becomes hidden (document.visibilityState === 'hidden')"
+        },
+        {
+          "step": 4,
+          "action": "In another session/device, create a new task or update an existing task",
+          "expected": "Database is updated with new task data"
+        },
+        {
+          "step": 5,
+          "action": "Switch back to the NestTask tab",
+          "expected": "Tab becomes visible, session refresh is triggered, data refresh is initiated"
+        },
+        {
+          "step": 6,
+          "action": "Check console for 'Tab visible after Xs - refreshing session' log",
+          "expected": "Console shows session refresh and task refresh logs"
+        },
+        {
+          "step": 7,
+          "action": "Verify task list updates with new/modified tasks",
+          "expected": "New or updated tasks are visible in the UI within 1-2 seconds"
+        }
+      ],
+      "validation": {
+        "session_refresh": "supabase.auth.refreshSession() should be called when tab becomes visible",
+        "data_refresh": "refreshTasks() should be called automatically",
+        "ui_update": "UI should reflect database changes without manual refresh"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_002",
+      "name": "Data refreshes after long inactivity (> 2 minutes)",
+      "description": "Verify that data and session refresh after extended period of tab inactivity",
+      "priority": "high",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Login to the application",
+          "expected": "User is authenticated and home page loads"
+        },
+        {
+          "step": 2,
+          "action": "Switch to another tab or minimize browser for 3 minutes",
+          "expected": "Tab is hidden for >2 minutes"
+        },
+        {
+          "step": 3,
+          "action": "In another session, create or modify tasks",
+          "expected": "Database has new data"
+        },
+        {
+          "step": 4,
+          "action": "Return to NestTask tab",
+          "expected": "Session refresh triggered, connection state reset, data refresh initiated with 100ms delay"
+        },
+        {
+          "step": 5,
+          "action": "Check console logs",
+          "expected": "Should see: 'Tab visible after Xs - refreshing session', 'Session refreshed successfully', 'Resetting connection state after Xs inactivity'"
+        },
+        {
+          "step": 6,
+          "action": "Verify UI shows updated data",
+          "expected": "All database changes are reflected in the UI"
+        }
+      ],
+      "validation": {
+        "session_refresh": "Session must be refreshed to prevent JWT expiration",
+        "connection_reset": "Connection state should be reset after 2+ minutes",
+        "data_sync": "All changes from database should be visible"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_003",
+      "name": "User can update/create tasks after returning from tab switch",
+      "description": "Verify that user can perform CRUD operations after returning from another tab",
+      "priority": "critical",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Login and view task list",
+          "expected": "Tasks displayed normally"
+        },
+        {
+          "step": 2,
+          "action": "Switch to another browser tab for 20 seconds",
+          "expected": "Tab hidden"
+        },
+        {
+          "step": 3,
+          "action": "Return to NestTask tab",
+          "expected": "Data refreshes automatically"
+        },
+        {
+          "step": 4,
+          "action": "Immediately try to create a new task",
+          "expected": "Task creation form opens and works"
+        },
+        {
+          "step": 5,
+          "action": "Submit the new task",
+          "expected": "Task is created successfully without errors"
+        },
+        {
+          "step": 6,
+          "action": "Try to update an existing task",
+          "expected": "Task update works without errors"
+        },
+        {
+          "step": 7,
+          "action": "Try to delete a task",
+          "expected": "Task deletion works without errors"
+        }
+      ],
+      "validation": {
+        "no_stale_session": "Session should be fresh and valid for all operations",
+        "crud_operations": "All CRUD operations should work immediately after tab return",
+        "no_errors": "No JWT or authentication errors should occur"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_004",
+      "name": "Browser window minimize and restore triggers refresh",
+      "description": "Verify that minimizing the entire browser window and restoring it triggers data refresh",
+      "priority": "high",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Login to the application",
+          "expected": "User authenticated, tasks loaded"
+        },
+        {
+          "step": 2,
+          "action": "Minimize the entire browser window for 15 seconds",
+          "expected": "document.visibilityState changes to 'hidden'"
+        },
+        {
+          "step": 3,
+          "action": "Restore the browser window",
+          "expected": "document.visibilityState changes to 'visible', visibility change event fires"
+        },
+        {
+          "step": 4,
+          "action": "Check for refresh logs in console",
+          "expected": "Session refresh and data refresh should be triggered"
+        },
+        {
+          "step": 5,
+          "action": "Verify task data is current",
+          "expected": "Any database changes should be visible"
+        }
+      ],
+      "validation": {
+        "visibility_api": "Page Visibility API should detect minimize/restore",
+        "automatic_refresh": "Refresh should happen automatically without user action"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_005",
+      "name": "Switching between browser windows triggers refresh",
+      "description": "Verify that switching focus to another browser window and back triggers refresh",
+      "priority": "medium",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Open NestTask in one browser window",
+          "expected": "Application loads normally"
+        },
+        {
+          "step": 2,
+          "action": "Open another browser window or application",
+          "expected": "NestTask window loses focus"
+        },
+        {
+          "step": 3,
+          "action": "Wait 10 seconds",
+          "expected": "Window remains in background"
+        },
+        {
+          "step": 4,
+          "action": "Switch back to NestTask window",
+          "expected": "Window regains focus, visibility change event triggers"
+        },
+        {
+          "step": 5,
+          "action": "Verify session and data refresh",
+          "expected": "Console shows refresh logs, data is current"
+        }
+      ],
+      "validation": {
+        "window_focus": "Browser should detect window focus changes",
+        "refresh_trigger": "Visibility change should trigger refresh even for window switches"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_006",
+      "name": "Rapid tab switching doesn't cause multiple refresh calls",
+      "description": "Verify that rapidly switching tabs doesn't cause race conditions or duplicate refresh calls",
+      "priority": "medium",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Login to the application",
+          "expected": "User authenticated"
+        },
+        {
+          "step": 2,
+          "action": "Rapidly switch to another tab and back 5 times within 10 seconds",
+          "expected": "Multiple visibility change events fire"
+        },
+        {
+          "step": 3,
+          "action": "Check console logs",
+          "expected": "Throttling prevents excessive refresh calls"
+        },
+        {
+          "step": 4,
+          "action": "Verify no errors in console",
+          "expected": "No race conditions, abort signals, or duplicate request errors"
+        },
+        {
+          "step": 5,
+          "action": "Verify app remains functional",
+          "expected": "Tasks display correctly, no loading spinners stuck"
+        }
+      ],
+      "validation": {
+        "throttling": "Refresh calls should be throttled to prevent excessive requests",
+        "abort_handling": "Previous requests should be properly aborted",
+        "no_race_conditions": "No conflicting state updates"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_007",
+      "name": "Custom event 'supabase-visibility-refresh' is dispatched",
+      "description": "Verify that the custom event is properly dispatched and can be listened to",
+      "priority": "medium",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Open browser console and add event listener: window.addEventListener('supabase-visibility-refresh', () => console.log('REFRESH EVENT RECEIVED'))",
+          "expected": "Event listener registered"
+        },
+        {
+          "step": 2,
+          "action": "Login to the application",
+          "expected": "User authenticated"
+        },
+        {
+          "step": 3,
+          "action": "Switch to another tab for 5 seconds",
+          "expected": "Tab becomes hidden"
+        },
+        {
+          "step": 4,
+          "action": "Switch back to NestTask tab",
+          "expected": "Tab becomes visible"
+        },
+        {
+          "step": 5,
+          "action": "Check console",
+          "expected": "Should see 'REFRESH EVENT RECEIVED' log from custom event listener"
+        }
+      ],
+      "validation": {
+        "event_dispatch": "Custom event should be dispatched from supabase.ts",
+        "event_listening": "App.tsx should receive and handle the event"
+      }
+    },
+    {
+      "test_id": "TAB_SWITCH_008",
+      "name": "No blank screen after tab switch",
+      "description": "Verify that users don't see a blank screen when returning to the tab",
+      "priority": "critical",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Login and view tasks",
+          "expected": "Tasks displayed"
+        },
+        {
+          "step": 2,
+          "action": "Switch to another tab for 30 seconds",
+          "expected": "Tab hidden"
+        },
+        {
+          "step": 3,
+          "action": "Quickly switch back to NestTask tab",
+          "expected": "Tab becomes visible"
+        },
+        {
+          "step": 4,
+          "action": "Observe the UI immediately upon tab switch",
+          "expected": "Previous task data should remain visible during refresh, no blank screen"
+        },
+        {
+          "step": 5,
+          "action": "Wait for refresh to complete",
+          "expected": "UI smoothly updates with fresh data without flickering or going blank"
+        }
+      ],
+      "validation": {
+        "no_blank_screen": "UI should never show a blank/empty state during refresh",
+        "smooth_update": "Data should update smoothly without jarring transitions",
+        "existing_data_visible": "Old data should remain visible until new data arrives"
+      }
+    }
+  ],
+  "regression_tests": [
+    {
+      "test_id": "REGRESSION_001",
+      "name": "Normal page load still works",
+      "description": "Verify that initial page load without tab switching still works correctly"
+    },
+    {
+      "test_id": "REGRESSION_002",
+      "name": "Manual refresh still works",
+      "description": "Verify that pull-to-refresh and manual refresh actions still function"
+    },
+    {
+      "test_id": "REGRESSION_003",
+      "name": "Offline mode not affected",
+      "description": "Verify that offline mode and cached user functionality still works"
+    }
+  ],
+  "automated_test_hooks": {
+    "visibility_change_spy": "document.addEventListener('visibilitychange', handler)",
+    "session_refresh_spy": "Monitor supabase.auth.refreshSession() calls",
+    "task_refresh_spy": "Monitor refreshTasks() function calls",
+    "custom_event_spy": "window.addEventListener('supabase-visibility-refresh', handler)"
+  },
+  "bug_fix_summary": {
+    "issue": "When users minimize the app, switch browser tabs, or switch to another browser, returning to the app results in stale data that doesn't update and prevents CRUD operations",
+    "root_cause": [
+      "Session was not being refreshed when returning to tab, causing JWT to become stale",
+      "Data refresh only triggered after 5+ minutes of inactivity, not on every tab return",
+      "No coordination between supabase session refresh and app data refresh"
+    ],
+    "solution": [
+      "Added automatic session refresh in supabase.ts when tab becomes visible",
+      "Updated App.tsx to always refresh data when returning to tab, regardless of inactivity duration",
+      "Reduced connection reset threshold from 10 minutes to 2 minutes for fresher data",
+      "Added custom event system for coordinating refresh across components",
+      "Implemented smart delay: immediate refresh for short absences, 100ms delay for longer ones"
+    ],
+    "files_modified": [
+      "src/lib/supabase.ts: Added session refresh and custom event dispatch in visibility handler",
+      "src/App.tsx: Updated visibility handler to always refresh, added custom event listener"
+    ]
+  }
+}
