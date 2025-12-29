@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
-import { X, Upload, Link as LinkIcon, Calendar, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Upload, Link as LinkIcon, AlertCircle, RefreshCw, FileText, Trash2, CheckCircle } from 'lucide-react';
 import type { EnhancedTask, CreateTaskInput, UpdateTaskInput, TaskPriority } from '../../types/taskEnhanced';
 import type { TaskCategory } from '../../types/task';
 import { createTaskEnhanced, updateTaskEnhanced, uploadTaskAttachment } from '../../services/taskEnhanced.service';
@@ -11,6 +11,13 @@ interface TaskEnhancedFormProps {
   onClose: () => void;
   onTaskCreated?: (task: EnhancedTask) => void;
   onTaskUpdated?: (task: EnhancedTask) => void;
+}
+
+interface UploadedFile {
+  url: string;
+  name: string;
+  size: number;
+  progress?: number;
 }
 
 const TaskEnhancedFormComponent = ({
@@ -37,7 +44,15 @@ const TaskEnhancedFormComponent = ({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>(task?.attachments || []);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
+    task?.attachments?.map(url => ({
+      url,
+      name: url.split('/').pop()?.split('_').slice(0, -2).join('_') || 'file',
+      size: 0,
+    })) || []
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track component mount state and reset saving state on unmount
   useEffect(() => {
@@ -56,25 +71,73 @@ const TaskEnhancedFormComponent = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Validate total number of files
+    const totalFiles = uploadedFiles.length + files.length;
+    if (totalFiles > 10) {
+      setError(`Maximum 10 files allowed. You're trying to upload ${totalFiles} files.`);
+      return;
+    }
+
     setUploading(true);
     setError(null);
+    const progressMap: Record<string, number> = {};
+
     try {
-      const uploadPromises = Array.from(files).map(file =>
-        uploadTaskAttachment(file, task?.id)
-      );
-      const urls = await Promise.all(uploadPromises);
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileId = `${file.name}-${Date.now()}`;
+        progressMap[fileId] = 0;
+        setUploadProgress({ ...progressMap });
+
+        try {
+          const result = await uploadTaskAttachment(
+            file,
+            task?.id,
+            (progress) => {
+              if (isMountedRef.current) {
+                progressMap[fileId] = progress;
+                setUploadProgress({ ...progressMap });
+              }
+            }
+          );
+          return result;
+        } catch (err: any) {
+          throw new Error(`${file.name}: ${err.message}`);
+        }
+      });
+
+      const results = await Promise.all(uploadPromises);
+      
       if (isMountedRef.current) {
-        setUploadedFiles([...uploadedFiles, ...urls]);
+        setUploadedFiles(prev => [...prev, ...results]);
+        setUploadProgress({});
+        
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     } catch (err: any) {
       if (isMountedRef.current) {
         setError(err?.message || 'Failed to upload files. Please try again.');
+        setUploadProgress({});
       }
     } finally {
       if (isMountedRef.current) {
         setUploading(false);
       }
     }
+  };
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return 'Unknown size';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -100,7 +163,7 @@ const TaskEnhancedFormComponent = ({
           category: formData.category,
           dueDate: formData.dueDate,
           priority: formData.priority,
-          attachments: uploadedFiles,
+          attachments: uploadedFiles.map(f => f.url),
           googleDriveLinks,
         };
         const updatedTask = await updateTaskEnhanced(task.id, updates);
@@ -115,7 +178,7 @@ const TaskEnhancedFormComponent = ({
           dueDate: formData.dueDate,
           priority: formData.priority,
           sectionId,
-          attachments: uploadedFiles,
+          attachments: uploadedFiles.map(f => f.url),
           googleDriveLinks,
         };
         const newTask = await createTaskEnhanced(
@@ -284,33 +347,79 @@ const TaskEnhancedFormComponent = ({
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               <Upload className="w-4 h-4 inline mr-2" />
-              Attachments
+              Attachments <span className="text-xs text-gray-500">(Max 10 files, 50MB each)</span>
             </label>
             <div className="relative">
               <input
+                ref={fileInputRef}
                 type="file"
                 multiple
                 onChange={handleFileUpload}
-                disabled={uploading}
-                className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300 disabled:opacity-50 transition-colors"
+                disabled={uploading || uploadedFiles.length >= 10}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.svg,.zip,.rar,.7z,.mp4,.mp3,.wav"
+                className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               />
             </div>
-            {uploading && (
-              <p className="text-sm text-blue-600 dark:text-blue-400 mt-2 flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Uploading files...
-              </p>
+            
+            {/* Upload Progress */}
+            {uploading && Object.keys(uploadProgress).length > 0 && (
+              <div className="mt-3 space-y-2">
+                {Object.entries(uploadProgress).map(([fileId, progress]) => (
+                  <div key={fileId} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600 dark:text-gray-400 truncate flex-1">
+                        {fileId.split('-')[0]}
+                      </span>
+                      <span className="text-blue-600 dark:text-blue-400 font-semibold ml-2">
+                        {progress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-blue-600 dark:bg-blue-500 h-full transition-all duration-300 ease-out"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
+            
+            {/* Uploaded Files List */}
             {uploadedFiles.length > 0 && (
-              <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-750 rounded-xl border border-gray-200 dark:border-gray-600">
-                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                  Uploaded Files ({uploadedFiles.length})
-                </p>
-                <div className="space-y-1.5">
+              <div className="mt-3 p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    Uploaded Files ({uploadedFiles.length}/10)
+                  </p>
+                </div>
+                <div className="space-y-2">
                   {uploadedFiles.map((file, index) => (
-                    <div key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2 bg-white dark:bg-gray-700 px-3 py-2 rounded-lg">
-                      <span className="text-blue-600 dark:text-blue-400">📄</span>
-                      <span className="truncate flex-1">{file.split('/').pop()}</span>
+                    <div
+                      key={index}
+                      className="group flex items-center gap-3 bg-white dark:bg-gray-700 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
+                    >
+                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {file.name}
+                        </p>
+                        {file.size > 0 && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatFileSize(file.size)}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        disabled={saving}
+                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Remove file"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   ))}
                 </div>

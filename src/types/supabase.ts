@@ -14,6 +14,8 @@ export interface Database {
           is_admin_task: boolean;
           section_id?: string;
           google_drive_links?: string[];
+          attachments?: string[];
+          original_file_names?: string[];
         };
         Insert: {
           id?: string;
@@ -27,6 +29,8 @@ export interface Database {
           is_admin_task?: boolean;
           section_id?: string;
           google_drive_links?: string[];
+          attachments?: string[];
+          original_file_names?: string[];
         };
         Update: {
           id?: string;
@@ -40,6 +44,8 @@ export interface Database {
           is_admin_task?: boolean;
           section_id?: string;
           google_drive_links?: string[];
+          attachments?: string[];
+          original_file_names?: string[];
         };
       };
       users: {

@@ -34,6 +34,8 @@ export interface Task {
   assignedById?: string;
   updatedAt?: string;
   googleDriveLinks?: string[];
+  attachments?: string[]; // Array of file URLs
+  originalFileNames?: string[]; // Array of original file names corresponding to attachments
 }
 
 export type NewTask = Omit<Task, 'id' | 'createdAt' | 'isAdminTask'> & {

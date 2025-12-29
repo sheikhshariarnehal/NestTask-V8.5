@@ -1,4 +1,4 @@
-export type AdminTab = 'dashboard' | 'users' | 'tasks' | 'task-management-v2' | 'announcements' | 'courses' | 'study-materials' | 'lecture-slides' | 'routine' | 'teachers' | 'super-admin';
+export type AdminTab = 'dashboard' | 'users' | 'tasks' | 'task-management-v2' | 'announcements' | 'lecture-slides' | 'super-admin';
 
 /**
  * Admin User type definition
@@ -27,14 +27,14 @@ export interface AdminUser {
 /**
  * Admin Permission type
  */
-export type AdminPermission = 
-  | 'viewUsers' 
-  | 'createUsers' 
-  | 'editUsers' 
-  | 'deleteUsers' 
-  | 'viewSettings' 
-  | 'editSettings' 
-  | 'viewReports' 
+export type AdminPermission =
+  | 'viewUsers'
+  | 'createUsers'
+  | 'editUsers'
+  | 'deleteUsers'
+  | 'viewSettings'
+  | 'editSettings'
+  | 'viewReports'
   | 'exportData'
   | 'manageAdmins'
   | 'viewLogs';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
+import {
   Users, ListTodo, Settings, LogOut, Megaphone, Moon, Sun,
   Book, GraduationCap, FileText, CalendarDays, User, LayoutDashboard,
   BarChart2, Bell, HelpCircle, Globe, AlertCircle, ChevronLeft,
@@ -21,10 +21,10 @@ interface SideNavigationProps {
   onCreateTask?: () => void;
 }
 
-export const SideNavigation = React.memo(function SideNavigation({ 
-  activeTab, 
-  onTabChange, 
-  onLogout, 
+export const SideNavigation = React.memo(function SideNavigation({
+  activeTab,
+  onTabChange,
+  onLogout,
   onCollapse,
   isSectionAdmin = false,
   onCreateTask
@@ -42,7 +42,7 @@ export const SideNavigation = React.memo(function SideNavigation({
       const now = new Date();
       setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     };
-    
+
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
@@ -70,22 +70,18 @@ export const SideNavigation = React.memo(function SideNavigation({
     { id: 'tasks' as const, label: 'Tasks (Legacy)', icon: ListTodo, badge: 56 },
     { id: 'task-management-v2' as const, label: 'Task Management', icon: CheckCircle, badge: null },
   ], []);
-  
+
   // Full list of management items
   const allManagementItems = useMemo(() => [
     { id: 'announcements' as const, label: 'Announcements', icon: Megaphone },
-    { id: 'teachers' as const, label: 'Teachers', icon: User },
-    { id: 'courses' as const, label: 'Courses', icon: GraduationCap },
-    { id: 'study-materials' as const, label: 'Study Materials', icon: Book },
-    { id: 'lecture-slides' as const, label: 'Lecture Slides', icon: FileText },
-    { id: 'routine' as const, label: 'Routine', icon: CalendarDays }
+    { id: 'lecture-slides' as const, label: 'Lecture Slides', icon: FileText }
   ], []);
-  
-  // Section admin can only manage announcements, study materials, lecture slides, and routines
+
+  // Section admin can only manage announcements and lecture slides
   const managementNavItems = useMemo(() => {
     if (isSectionAdmin) {
       return allManagementItems.filter(item =>
-        ['announcements', 'teachers', 'courses', 'study-materials', 'lecture-slides', 'routine'].includes(item.id)
+        ['announcements', 'lecture-slides'].includes(item.id)
       );
     }
     return allManagementItems;
@@ -138,7 +134,7 @@ export const SideNavigation = React.memo(function SideNavigation({
       <MobileMenuButton isOpen={isMobileMenuOpen} onClick={toggleMobileMenu} />
 
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden dark:bg-opacity-70 backdrop-blur-sm will-change-transform"
           onClick={closeMobileMenu}
         />
@@ -165,15 +161,15 @@ export const SideNavigation = React.memo(function SideNavigation({
                 </div>
               </div>
             )}
-            
+
             {isCollapsed && (
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
                 <Settings className="w-5 h-5 text-white" />
               </div>
             )}
-            
-            <button 
-              onClick={toggleCollapse} 
+
+            <button
+              onClick={toggleCollapse}
               className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors`}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -188,7 +184,7 @@ export const SideNavigation = React.memo(function SideNavigation({
                 <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Main</h2>
               </div>
             )}
-            
+
             <nav className="space-y-1">
               {mainNavItems.map((item) => (
                 <SideNavLink
@@ -208,9 +204,9 @@ export const SideNavigation = React.memo(function SideNavigation({
                 <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Management</h2>
               </div>
             )}
-            
+
             {isCollapsed && <div className="my-3 border-t border-gray-100 dark:border-gray-800 mx-2"></div>}
-            
+
             <nav className="space-y-1">
               {managementNavItems.map((item) => (
                 <SideNavLink
@@ -223,10 +219,10 @@ export const SideNavigation = React.memo(function SideNavigation({
                 />
               ))}
             </nav>
-            
+
             {!isCollapsed && (
               <div className="mt-6 mx-2">
-                <button 
+                <button
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors shadow-sm"
                   onClick={() => {
                     if (onCreateTask) {
@@ -240,10 +236,10 @@ export const SideNavigation = React.memo(function SideNavigation({
                 </button>
               </div>
             )}
-            
+
             {isCollapsed && (
               <div className="mt-6 flex justify-center">
-                <button 
+                <button
                   className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-colors shadow-sm"
                   onClick={() => {
                     if (onCreateTask) {
@@ -263,15 +259,15 @@ export const SideNavigation = React.memo(function SideNavigation({
           <div className="p-3 border-t border-gray-100 dark:border-gray-800 relative profile-menu-container">
             {!isCollapsed ? (
               <div className="flex items-center justify-between">
-                <button 
+                <button
                   onClick={toggleProfileMenu}
                   className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full group"
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
                     {user?.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt={user.name} 
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -290,15 +286,15 @@ export const SideNavigation = React.memo(function SideNavigation({
                 </button>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={toggleProfileMenu}
                 className="w-full flex justify-center group"
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800 group-hover:ring-blue-200 dark:group-hover:ring-blue-900 transition-all">
                   {user?.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt={user.name} 
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -318,9 +314,9 @@ export const SideNavigation = React.memo(function SideNavigation({
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
                       {user?.avatar ? (
-                        <img 
-                          src={user.avatar} 
-                          alt={user.name} 
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -333,9 +329,9 @@ export const SideNavigation = React.memo(function SideNavigation({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="py-1">
-                  <button 
+                  <button
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     onClick={() => handleNavigation('profile' as AdminTab)}
                   >
@@ -343,7 +339,7 @@ export const SideNavigation = React.memo(function SideNavigation({
                     <span>Profile Settings</span>
                   </button>
 
-                  <button 
+                  <button
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     onClick={handleThemeToggle}
                   >
@@ -351,17 +347,17 @@ export const SideNavigation = React.memo(function SideNavigation({
                     <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
 
-                  <button 
+                  <button
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     onClick={() => window.open('/help', '_blank')}
                   >
                     <HelpCircle className="w-4 h-4" />
                     <span>Help Center</span>
                   </button>
-                  
+
                   <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                  
-                  <button 
+
+                  <button
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                     onClick={handleLogout}
                   >

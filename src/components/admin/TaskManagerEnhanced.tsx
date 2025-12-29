@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import {
   Plus,
   BarChart3,
@@ -10,6 +10,8 @@ import {
   Trash2,
   CheckSquare,
   FileText,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import type { EnhancedTask, TaskFilters, TaskSortOptions } from '../../types/taskEnhanced';
 import type { TaskStatus } from '../../types/task';
@@ -20,7 +22,7 @@ import { TaskTemplateManager } from './TaskTemplateManager';
 import { TaskEnhancedForm } from './TaskEnhancedForm';
 import { TaskEnhancedTable } from './TaskEnhancedTable';
 import { TaskDetailsModal } from './TaskDetailsModal';
-import { LoadingSpinner } from '../LoadingSpinner';
+import { TaskTableSkeleton, TaskKanbanSkeleton, TaskAnalyticsSkeleton } from './TaskSkeleton';
 
 interface TaskManagerEnhancedProps {
   userId: string;
@@ -50,10 +52,17 @@ const TaskManagerEnhancedComponent = ({
   // Data State
   const [tasks, setTasks] = useState<EnhancedTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [page] = useState(1);
   const [total, setTotal] = useState(0);
 
+  // Refs for cleanup and optimization
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
   // Filter & Sort State
+  const [searchInput, setSearchInput] = useState('');
   const [filters, setFilters] = useState<TaskFilters>({
     search: '',
     category: 'all',
@@ -67,12 +76,23 @@ const TaskManagerEnhancedComponent = ({
 
   // Bulk Operations
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [isBulkOperationLoading, setIsBulkOperationLoading] = useState(false);
 
   const loadTasks = useCallback(async (refresh = false) => {
+    // Cancel any pending requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
       if (!refresh) {
         setLoading(true);
       }
+      setError(null);
 
       const response = await fetchTasksEnhanced(userId, {
         page,
@@ -82,24 +102,72 @@ const TaskManagerEnhancedComponent = ({
         sectionId,
       });
 
-      setTasks(response.tasks);
-      setTotal(response.total);
-    } catch (error) {
-      // Silent fail - could add toast notification
+      // Only update state if component is still mounted and request wasn't cancelled
+      if (isMountedRef.current && !abortController.signal.aborted) {
+        setTasks(response.tasks);
+        setTotal(response.total);
+        setError(null);
+      }
+    } catch (err: any) {
+      // Only set error if not cancelled and component is mounted
+      if (isMountedRef.current && !abortController.signal.aborted && err.message !== 'Operation cancelled') {
+        const errorMessage = err.message || 'Failed to load tasks';
+        setError(errorMessage);
+        console.error('Error loading tasks:', err);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && !abortController.signal.aborted) {
+        setLoading(false);
+      }
+      // Clear the ref if this was our controller
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
     }
   }, [userId, page, filters, sort, sectionId]);
 
+  // Debounced search effect
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput }));
+    }, 300); // 300ms debounce
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchInput]);
+
+  // Load tasks when filters/sort changes
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
 
-  // Reset form key when component unmounts or remounts
+  // Cleanup on unmount
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
+      isMountedRef.current = false;
+      
+      // Cancel any pending requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      
+      // Clear search timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
+      }
+      
       setShowCreateForm(false);
-      setFormKey(prev => prev + 1);
     };
   }, []);
 
@@ -111,17 +179,23 @@ const TaskManagerEnhancedComponent = ({
     }
   }, [openCreateForm]);
 
-  const handleTaskCreated = useCallback((task: EnhancedTask) => {
-    setTasks(prev => [task, ...prev]);
-    setTotal(prev => prev + 1);
+  const handleTaskCreated = useCallback((_task: EnhancedTask) => {
     setShowCreateForm(false);
     setFormKey(prev => prev + 1);
+    // Reload tasks to get fresh data from server
     loadTasks(true);
   }, [loadTasks]);
 
   const handleTaskUpdated = useCallback((updatedTask: EnhancedTask) => {
-    setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
-    setSelectedTask(prev => prev?.id === updatedTask.id ? updatedTask : prev);
+    if (!isMountedRef.current) return;
+    
+    setTasks(prev => 
+      prev.map(t => t.id === updatedTask.id ? updatedTask : t)
+    );
+    
+    setSelectedTask(prev => 
+      prev?.id === updatedTask.id ? updatedTask : prev
+    );
   }, []);
 
   const handleTaskEdit = useCallback((task: EnhancedTask) => {
@@ -129,6 +203,8 @@ const TaskManagerEnhancedComponent = ({
   }, []);
 
   const handleTaskDeleted = useCallback((taskId: string) => {
+    if (!isMountedRef.current) return;
+    
     setTasks(prev => prev.filter(t => t.id !== taskId));
     setTotal(prev => prev - 1);
     setSelectedTaskIds(prev => prev.filter(id => id !== taskId));
@@ -136,32 +212,56 @@ const TaskManagerEnhancedComponent = ({
   }, []);
 
   const handleBulkDelete = useCallback(async () => {
-    if (selectedTaskIds.length === 0) return;
-    if (!confirm(`Delete ${selectedTaskIds.length} selected tasks?`)) return;
+    if (selectedTaskIds.length === 0 || isBulkOperationLoading) return;
+    if (!confirm(`Delete ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''}?`)) return;
 
+    setIsBulkOperationLoading(true);
     try {
       await bulkDeleteTasks(selectedTaskIds);
-      setTasks(prev => prev.filter(t => !selectedTaskIds.includes(t.id)));
-      setTotal(prev => prev - selectedTaskIds.length);
-      setSelectedTaskIds([]);
-      alert('Tasks deleted successfully');
-    } catch (error) {
-      alert('Failed to delete tasks');
+      
+      if (isMountedRef.current) {
+        // Optimistically update UI
+        setTasks(prev => prev.filter(t => !selectedTaskIds.includes(t.id)));
+        setTotal(prev => prev - selectedTaskIds.length);
+        setSelectedTaskIds([]);
+        
+        // Reload to ensure consistency
+        loadTasks(true);
+      }
+    } catch (err: any) {
+      if (isMountedRef.current) {
+        setError(err.message || 'Failed to delete tasks');
+        // Reload on error to restore correct state
+        loadTasks(true);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsBulkOperationLoading(false);
+      }
     }
-  }, [selectedTaskIds]);
+  }, [selectedTaskIds, isBulkOperationLoading, loadTasks]);
 
   const handleBulkStatusUpdate = useCallback(async (status: TaskStatus) => {
-    if (selectedTaskIds.length === 0) return;
+    if (selectedTaskIds.length === 0 || isBulkOperationLoading) return;
 
+    setIsBulkOperationLoading(true);
     try {
       await bulkUpdateTaskStatus(selectedTaskIds, status);
-      await loadTasks(true);
-      setSelectedTaskIds([]);
-      alert('Tasks updated successfully');
-    } catch (error) {
-      alert('Failed to update tasks');
+      
+      if (isMountedRef.current) {
+        setSelectedTaskIds([]);
+        await loadTasks(true);
+      }
+    } catch (err: any) {
+      if (isMountedRef.current) {
+        setError(err.message || 'Failed to update tasks');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsBulkOperationLoading(false);
+      }
     }
-  }, [selectedTaskIds, loadTasks]);
+  }, [selectedTaskIds, isBulkOperationLoading, loadTasks]);
 
   const handleExportCSV = useCallback(() => {
     const headers = ['Name', 'Category', 'Status', 'Priority', 'Due Date', 'Created At'];
@@ -185,17 +285,14 @@ const TaskManagerEnhancedComponent = ({
   }, [tasks]);
 
   const filteredTasks = useMemo(() => {
+    if (!filters.search) return tasks;
+    
+    const searchLower = filters.search.toLowerCase();
     return tasks.filter(task => {
-      if (filters.search) {
-        const search = filters.search.toLowerCase();
-        if (
-          !task.name.toLowerCase().includes(search) &&
-          !task.description.toLowerCase().includes(search)
-        ) {
-          return false;
-        }
-      }
-      return true;
+      return (
+        task.name.toLowerCase().includes(searchLower) ||
+        task.description.toLowerCase().includes(searchLower)
+      );
     });
   }, [tasks, filters.search]);
 
@@ -223,17 +320,17 @@ const TaskManagerEnhancedComponent = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="hidden lg:flex items-center gap-2">
             <button
               onClick={() => {
                 setFormKey(prev => prev + 1);
                 setShowCreateForm(true);
               }}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 flex-1 sm:flex-initial touch-manipulation active:scale-95"
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 active:scale-95"
               aria-label="Create new task"
             >
               <Plus className="w-5 h-5" />
-              <span className="text-sm sm:text-base">Create Task</span>
+              <span>Create Task</span>
             </button>
           </div>
         </div>
@@ -275,8 +372,8 @@ const TaskManagerEnhancedComponent = ({
                 <input
                   type="text"
                   placeholder="Search tasks by name or description..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 text-sm border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors shadow-sm focus:shadow-md outline-none"
                   aria-label="Search tasks"
                 />
@@ -301,17 +398,19 @@ const TaskManagerEnhancedComponent = ({
                 <>
                   <button
                     onClick={() => handleBulkStatusUpdate('completed')}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation whitespace-nowrap active:scale-95"
+                    disabled={isBulkOperationLoading}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed font-medium transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation whitespace-nowrap active:scale-95"
                   >
                     <CheckSquare className="w-4 h-4" />
-                    <span className="text-sm">Complete</span>
+                    <span className="text-sm">{isBulkOperationLoading ? 'Processing...' : 'Complete'}</span>
                   </button>
                   <button
                     onClick={handleBulkDelete}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation whitespace-nowrap active:scale-95"
+                    disabled={isBulkOperationLoading}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation whitespace-nowrap active:scale-95"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span className="text-sm">Delete</span>
+                    <span className="text-sm">{isBulkOperationLoading ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </>
               )}
@@ -388,14 +487,15 @@ const TaskManagerEnhancedComponent = ({
 
                 <div className="flex items-end">
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      setSearchInput('');
                       setFilters({
                         search: '',
                         category: 'all',
                         status: 'all',
                         priority: 'all',
-                      })
-                    }
+                      });
+                    }}
                     className="w-full px-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 font-medium transition-all duration-200 active:scale-95"
                   >
                     Reset Filters
@@ -408,11 +508,37 @@ const TaskManagerEnhancedComponent = ({
       )}
 
       {/* Content Area */}
-      <div className="flex-1 overflow-auto admin-scrollbar">\n        {loading ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4">
-            <LoadingSpinner />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading tasks...</p>
+      <div className="flex-1 overflow-auto admin-scrollbar">
+        {error ? (
+          <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30">
+              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Failed to Load Tasks</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">{error}</p>
+            </div>
+            <button
+              onClick={() => loadTasks(false)}
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>Retry</span>
+            </button>
           </div>
+        ) : loading ? (
+          <>
+            {viewMode === 'list' && <TaskTableSkeleton />}
+            {viewMode === 'kanban' && <TaskKanbanSkeleton />}
+            {viewMode === 'analytics' && <TaskAnalyticsSkeleton />}
+            {viewMode === 'templates' && (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <div className="w-16 h-16 border-4 border-blue-600/20 dark:border-blue-400/20 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Loading templates...</p>
+              </div>
+            )}
+          </>
         ) : (
           <>
             {viewMode === 'list' && (
@@ -484,18 +610,6 @@ const TaskManagerEnhancedComponent = ({
           onTaskDeleted={handleTaskDeleted}
         />
       )}
-
-      {/* Mobile FAB - Create Task */}
-      <button
-        onClick={() => {
-          setFormKey(prev => prev + 1);
-          setShowCreateForm(true);
-        }}
-        className="lg:hidden fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 flex items-center justify-center z-50 active:scale-90 hover:scale-110"
-        aria-label="Create Task"
-      >
-        <Plus className="w-7 h-7" />
-      </button>
     </div>
   );
 };

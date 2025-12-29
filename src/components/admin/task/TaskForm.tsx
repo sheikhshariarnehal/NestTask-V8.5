@@ -217,23 +217,47 @@ const ProgressBar = ({ progress }: { progress: number }) => (
 );
 
 // File Item Component
-const FileItem = ({ file, onRemove }: { file: File; onRemove: () => void }) => (
-  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-    <div className="flex items-center gap-2 truncate max-w-[85%]">
-      <Paperclip className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
-      <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+const FileItem = ({ file, onRemove }: { file: File; onRemove: () => void }) => {
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || '')) return '🖼️';
+    if (['pdf'].includes(ext || '')) return '📄';
+    if (['doc', 'docx'].includes(ext || '')) return '📝';
+    if (['xls', 'xlsx'].includes(ext || '')) return '📊';
+    if (['zip', 'rar', '7z'].includes(ext || '')) return '🗜️';
+    return '📎';
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  return (
+    <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-200 group">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <span className="text-2xl flex-shrink-0">{getFileIcon(file.name)}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
+            {file.name}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {formatFileSize(file.size)}
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+        aria-label="Remove file"
+      >
+        <X className="w-4 h-4" />
+      </button>
     </div>
-    <button
-      type="button"
-      onClick={onRemove}
-      className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 ml-2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 touch-manipulation"
-      aria-label={`Remove ${file.name}`}
-    >
-      <X className="w-4 h-4" />
-    </button>
-  </div>
-);
+  );
+};
 
 // Google Drive Link Item Component
 const GoogleDriveLinkItem = ({ url, onRemove }: { url: string; onRemove: () => void }) => (
@@ -789,18 +813,24 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
               <div className="flex items-center justify-center w-full">
                 <label 
                   htmlFor="file-upload" 
-                  className="w-full flex flex-col items-center justify-center px-4 py-5 bg-white dark:bg-gray-800 text-gray-500 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 touch-manipulation"
+                  className="w-full flex flex-col items-center justify-center px-6 py-8 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-750 text-gray-600 dark:text-gray-400 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-all duration-200 touch-manipulation group"
                   aria-label="Upload files - tap to select files"
                 >
-                  <Upload className="w-7 h-7 text-blue-500 dark:text-blue-400 mb-2" />
-                  <p className="text-sm text-center">
-                    {isMobile() ? 
-                      'Tap to select files' : 
-                      'Drag & drop files here, or click to select files'}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Maximum file size: 50MB
-                  </p>
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform duration-200">
+                      <Upload className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {isMobile() ? 
+                          'Tap to select files' : 
+                          'Click to upload or drag & drop'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        PDF, DOC, Images, etc. (Max 50MB per file)
+                      </p>
+                    </div>
+                  </div>
                   <input 
                     id="file-upload" 
                     type="file" 
@@ -814,7 +844,12 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
               </div>
 
               {fileUrls.length > 0 && (
-                <div className="mt-3 space-y-2 max-h-40 overflow-y-auto pr-1">
+                <div className="mt-4 space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                      Attached Files ({files.length})
+                    </p>
+                  </div>
                   {files.map((file, index) => (
                     <FileItem 
                       key={`${file.name}-${index}`}

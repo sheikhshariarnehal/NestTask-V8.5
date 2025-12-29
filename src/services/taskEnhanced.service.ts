@@ -808,24 +808,86 @@ export async function getTaskAnalytics(sectionId?: string): Promise<TaskAnalytic
 // ==================== FILE UPLOAD ====================
 
 /**
- * Upload task attachment
+ * Upload task attachment with original filename preservation
  */
-export async function uploadTaskAttachment(file: File, taskId?: string): Promise<string> {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-  const filePath = taskId ? `${taskId}/${fileName}` : `temp/${fileName}`;
+export async function uploadTaskAttachment(
+  file: File,
+  taskId?: string,
+  onProgress?: (progress: number) => void
+): Promise<{ url: string; name: string; size: number }> {
+  // Validation
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  const ALLOWED_EXTENSIONS = [
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+    'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'svg',
+    'zip', 'rar', '7z', 'mp4', 'mp3', 'wav'
+  ];
 
-  const { data, error } = await supabase.storage
-    .from('task-attachments')
-    .upload(filePath, file);
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File size exceeds 50MB limit. Your file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+  }
 
-  if (error) throw new Error(`Failed to upload file: ${error.message}`);
+  // Validate file extension
+  const fileExt = file.name.split('.').pop()?.toLowerCase();
+  if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
+    throw new Error(`File type .${fileExt} is not allowed. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`);
+  }
 
-  const { data: urlData } = supabase.storage
-    .from('task-attachments')
-    .getPublicUrl(data.path);
+  // Sanitize filename: remove special characters but keep original name
+  const sanitizeFilename = (name: string): string => {
+    const nameWithoutExt = name.substring(0, name.lastIndexOf('.'));
+    const sanitized = nameWithoutExt
+      .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
+      .replace(/_+/g, '_') // Replace multiple underscores with single
+      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+    return sanitized || 'file'; // Fallback if name becomes empty
+  };
 
-  return urlData.publicUrl;
+  // Create unique filename while preserving original name
+  const timestamp = Date.now();
+  const sanitizedName = sanitizeFilename(file.name);
+  const uniqueId = Math.random().toString(36).substring(2, 8);
+  const fileName = `${sanitizedName}_${timestamp}_${uniqueId}.${fileExt}`;
+  
+  // Organize files by task or temp folder
+  const filePath = taskId ? `tasks/${taskId}/${fileName}` : `temp/${fileName}`;
+
+  try {
+    // Upload with progress tracking if available
+    const { data, error } = await supabase.storage
+      .from('task-attachments')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false, // Don't overwrite existing files
+      });
+
+    if (error) {
+      // Handle specific storage errors
+      if (error.message.includes('already exists')) {
+        throw new Error('A file with this name already exists. Please rename and try again.');
+      }
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('task-attachments')
+      .getPublicUrl(data.path);
+
+    if (onProgress) {
+      onProgress(100);
+    }
+
+    // Return structured data with original filename preserved
+    return {
+      url: urlData.publicUrl,
+      name: file.name, // Original filename for display
+      size: file.size,
+    };
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to upload file. Please try again.');
+  }
 }
 
 // ==================== HELPER FUNCTIONS ====================

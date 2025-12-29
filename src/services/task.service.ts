@@ -91,7 +91,12 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
   }
 };
 
-async function uploadFile(file: File): Promise<string> {
+/**
+ * Upload a single file to Supabase storage
+ * @param file - The file to upload
+ * @returns Promise with URL and original filename
+ */
+async function uploadFile(file: File): Promise<{ url: string; originalName: string; path: string }> {
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -99,7 +104,11 @@ async function uploadFile(file: File): Promise<string> {
 
     const { error: uploadError } = await supabase.storage
       .from('task-attachments')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: false
+      });
 
     if (uploadError) throw uploadError;
 
@@ -107,7 +116,11 @@ async function uploadFile(file: File): Promise<string> {
       .from('task-attachments')
       .getPublicUrl(filePath);
 
-    return publicUrl;
+    return {
+      url: publicUrl,
+      originalName: file.name,
+      path: filePath
+    };
   } catch (error) {
     console.error('Error uploading file:', error);
     throw error;
@@ -264,21 +277,22 @@ export const createTask = async (
             console.log(`[Debug] Uploading mobile file: ${file.name} (${Math.round(file.size/1024)}KB)`);
             
             // Try up to 3 times with exponential backoff
-            let permanentUrl = '';
+            let fileData: { url: string; originalName: string; path: string } | null = null;
             let attempts = 0;
             let lastError: Error | null = null;
             
-            while (attempts < 3 && !permanentUrl) {
+            while (attempts < 3 && !fileData) {
               try {
                 attempts++;
                 // Increase timeout for larger files
                 const timeout = Math.min(30000 + (file.size / 1024 / 10), 60000); // 30s base + 1s per 10KB, max 60s
-                permanentUrl = await uploadFileWithTimeout(file, timeout);
-                uploadedFiles.push({
+                const permanentUrl = await uploadFileWithTimeout(file, timeout);
+                fileData = {
                   url: permanentUrl,
-                  name: file.name,
+                  originalName: file.name,
                   path: new URL(permanentUrl).pathname.split('/').pop() || ''
-                });
+                };
+                uploadedFiles.push(fileData);
                 totalUploadSize += file.size;
                 break;
               } catch (uploadError) {
@@ -292,15 +306,14 @@ export const createTask = async (
               }
             }
             
-            if (!permanentUrl) {
+            if (!fileData) {
               fileUploadError = lastError || new Error(`Failed to upload file after 3 attempts: ${file.name}`);
               throw fileUploadError;
             }
             
             // Update description to replace attachment references with permanent URLs
-            // Enhanced pattern matching with better handling for section admin mobile uploads
             const attachmentPattern = new RegExp(`\\[${file.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\(attachment:${file.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)`, 'g');
-            const permanentRef = `[${file.name}](${permanentUrl})`;
+            const permanentRef = `[${file.name}](${fileData.url})`;
             
             const oldDescription = description;
             description = description.replace(attachmentPattern, permanentRef);
@@ -310,7 +323,7 @@ export const createTask = async (
               console.warn('[Warning] Failed to find exact attachment reference, trying general pattern');
               description = description.replace(/\[(.*?)\]\(attachment:(.*?)\)/g, (match, fileName, ref) => {
                 if (fileName === file.name) {
-                  return `[${fileName}](${permanentUrl})`;
+                  return `[${fileName}](${fileData!.url})`;
                 }
                 return match;
               });
@@ -320,7 +333,7 @@ export const createTask = async (
                 console.log('[Debug] Using fallback for section admin mobile file:', file.name);
                 // Add the attachment at the end if we couldn't find a match
                 if (!description.includes(`[${file.name}]`)) {
-                  description += `\n[${file.name}](${permanentUrl})`;
+                  description += `\n[${file.name}](${fileData.url})`;
                 }
               }
             }
@@ -390,59 +403,48 @@ export const createTask = async (
     } else {
       // Standard desktop file processing
       // Extract file information from description
-      // Extract file information from description with improved regex
-      const fileMatches = description.match(/\[([^\]]+)\]\((blob:.*?|attachment:.*?)\)/g) || [];
+      const fileMatches = description.match(/\[([^\]]+)\]\((blob:.*?)\)/g) || [];
       console.log('[Debug] Found file matches in description:', fileMatches);
 
       // Upload each file and update description with permanent URLs
       for (const match of fileMatches) {
         try {
-          // Updated regex to handle both blob: URLs (desktop) and attachment: references (mobile)
-          const matchResult = match.match(/\[(.*?)\]\((blob:(.*?)|attachment:(.*?))\)/);
+          const matchResult = match.match(/\[(.*?)\]\((blob:(.*?))\)/);
           if (!matchResult) continue;
           
-          const [, fileName, urlWithPrefix] = matchResult;
-          const isBlob = urlWithPrefix?.startsWith('blob:');
-          console.log('[Debug] Processing file match:', { match, fileName, isBlob });
+          const [, fileName, blobUrl] = matchResult;
+          console.log('[Debug] Processing file match:', { match, fileName, blobUrl });
           
-          if (fileName) {
+          if (fileName && blobUrl) {
             try {
-              // If it's already an attachment reference without a blob URL, preserve it
-              if (!isBlob) {
-                console.log('[Debug] Skipping non-blob URL:', urlWithPrefix);
-                continue;
-              }
-              
-              // For blob URLs, process normally with timeout
-              if (isBlob) {
-                const fetchPromise = new Promise<Blob>(async (resolve, reject) => {
-                  try {
-                    console.log('[Debug] Fetching blob URL:', urlWithPrefix);
-                    const response = await fetch(urlWithPrefix);
-                    if (!response.ok) {
-                      reject(new Error(`Failed to fetch blob: ${response.status}`));
-                      return;
-                    }
-                    const blob = await response.blob();
-                    resolve(blob);
-                  } catch (error) {
-                    reject(error);
+              const fetchPromise = new Promise<Blob>(async (resolve, reject) => {
+                try {
+                  console.log('[Debug] Fetching blob URL:', blobUrl);
+                  const response = await fetch(blobUrl);
+                  if (!response.ok) {
+                    reject(new Error(`Failed to fetch blob: ${response.status}`));
+                    return;
                   }
-                });
-                
-                // Set up a timeout
-                const timeoutPromise = new Promise<never>((_, reject) => {
-                  setTimeout(() => reject(new Error('Blob fetch timed out')), 10000);
-                });
-                
-                // Race the fetch against the timeout
-                const blob = await Promise.race([fetchPromise, timeoutPromise]);
-                
-                const file = new File([blob], fileName, { type: blob.type });
-                const permanentUrl = await uploadFile(file);
-                description = description.replace(match, `[${fileName}](${permanentUrl})`);
-                console.log('[Debug] Uploaded file and replaced URL with:', permanentUrl);
-              }
+                  const blob = await response.blob();
+                  resolve(blob);
+                } catch (error) {
+                  reject(error);
+                }
+              });
+              
+              // Set up a timeout
+              const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error('Blob fetch timed out')), 10000);
+              });
+              
+              // Race the fetch against the timeout
+              const blob = await Promise.race([fetchPromise, timeoutPromise]);
+              
+              const file = new File([blob], fileName, { type: blob.type });
+              const fileData = await uploadFile(file);
+              uploadedFiles.push(fileData);
+              description = description.replace(match, `[${fileName}](${fileData.url})`);
+              console.log('[Debug] Uploaded file and replaced URL with:', fileData.url);
             } catch (error) {
               console.error('[Error] Processing file failed:', { fileName, error });
             }
@@ -463,6 +465,16 @@ export const createTask = async (
       user_id: userId,
       is_admin_task: userRole === 'admin' || userRole === 'section_admin' || userRole === 'section-admin' || false,
     };
+
+    // Add attachments and original file names if any files were uploaded
+    if (uploadedFiles.length > 0) {
+      taskInsertData.attachments = uploadedFiles.map(f => f.url);
+      taskInsertData.original_file_names = uploadedFiles.map(f => f.name);
+      console.log('[Debug] Added attachments to task:', {
+        count: uploadedFiles.length,
+        files: uploadedFiles.map(f => ({ name: f.name, url: f.url.slice(-30) }))
+      });
+    }
 
     // Only add google_drive_links if the column exists and there are links to add
     if (task.googleDriveLinks && task.googleDriveLinks.length > 0) {
