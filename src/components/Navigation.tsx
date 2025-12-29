@@ -100,9 +100,9 @@ export function Navigation({
                     NestTask
                   </h1>
                   {isOffline && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
-                      <WifiOff className="w-3 h-3 text-red-600 dark:text-red-400\" />
-                      <span className="text-xs font-medium text-red-600 dark:text-red-400\">Offline</span>
+                    <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm animate-pulse">
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-400"></div>
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300 tracking-wide">Offline</span>
                     </div>
                   )}
                 </div>

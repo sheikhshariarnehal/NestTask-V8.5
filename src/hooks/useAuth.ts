@@ -3,6 +3,8 @@ import { supabase, testConnection } from '../lib/supabase';
 import { loginUser, signupUser, logoutUser, resetPassword } from '../services/auth.service';
 import { forceCleanReload, updateAuthStatus } from '../utils/auth';
 import type { User, LoginCredentials, SignupCredentials } from '../types/auth';
+import { Network } from '@capacitor/network';
+import { Capacitor } from '@capacitor/core';
 
 const REMEMBER_ME_KEY = 'nesttask_remember_me';
 const SAVED_EMAIL_KEY = 'nesttask_saved_email';
@@ -16,11 +18,24 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
   const [savedEmail, setSavedEmail] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem(SAVED_EMAIL_KEY);
     if (savedEmail) {
       setSavedEmail(savedEmail);
+    }
+    
+    // Check for cached user immediately before doing anything else
+    const cachedUser = localStorage.getItem('nesttask_cached_user');
+    if (cachedUser) {
+      try {
+        const parsedUser = JSON.parse(cachedUser);
+        console.log('Found cached user on mount:', parsedUser.email);
+        setUser(parsedUser);
+      } catch (err) {
+        console.error('Failed to parse cached user on mount:', err);
+      }
     }
     
     checkSession();
@@ -32,45 +47,123 @@ export function useAuth() {
 
   const checkSession = async () => {
     try {
-      // Test connection before checking session
-      const isConnected = await testConnection();
-      
-      // Continue even if the connection test failed - just log it
-      if (!isConnected) {
-        console.warn('Database connection test failed, but continuing anyway');
-        // Using a warning instead of an error to reduce panic
-        // Don't throw error here to avoid blocking the app
+      // Check network status first
+      let isOnline = navigator.onLine;
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const status = await Network.getStatus();
+          isOnline = status.connected;
+        } catch (err) {
+          console.warn('Failed to get network status, using navigator.onLine');
+        }
       }
 
-      // Try to get the session regardless of connection test
+      // If offline, try to load cached user from localStorage
+      if (!isOnline) {
+        console.log('Offline mode: Loading cached user data');
+        const cachedUser = localStorage.getItem('nesttask_cached_user');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+            console.log('Successfully loaded cached user:', parsedUser.email);
+            setIsInitialLoad(false);
+            setLoading(false);
+            return;
+          } catch (err) {
+            console.error('Failed to parse cached user:', err);
+          }
+        }
+        // No cached user, proceed to show login
+        console.log('No cached user found for offline mode');
+        setIsInitialLoad(false);
+        setLoading(false);
+        return;
+      }
+
+      // Online: proceed with normal authentication check
+      const isConnected = await testConnection();
+      
+      if (!isConnected) {
+        console.warn('Database connection test failed');
+        // Try cached user as fallback
+        const cachedUser = localStorage.getItem('nesttask_cached_user');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+            console.log('Using cached user due to connection issues');
+            setLoading(false);
+            return;
+          } catch (err) {
+            console.error('Failed to parse cached user:', err);
+          }
+        }
+      }
+
+      // Try to get the session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('Error getting auth session:', sessionError.message);
-        return; // Just return instead of throwing
+        // Try cached user as fallback
+        const cachedUser = localStorage.getItem('nesttask_cached_user');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+            console.log('Using cached user due to session error');
+          } catch (err) {
+            console.error('Failed to parse cached user:', err);
+          }
+        }
+        setLoading(false);
+        return;
       }
       
       if (session?.user) {
         await updateUserState(session.user);
       } else {
         console.log('No active session found');
+        setIsInitialLoad(false);
       }
     } catch (err: any) {
       console.error('Session check error:', err);
-      setError('Failed to check authentication status');
       
-      if (retryCount < 3) {
-        const timeout = Math.min(1000 * Math.pow(2, retryCount), 10000);
-        console.log(`Will retry session check in ${timeout}ms`);
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-          checkSession();
-        }, timeout);
+      // Only show error if we're online
+      let isOnline = navigator.onLine;
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const status = await Network.getStatus();
+          isOnline = status.connected;
+        } catch {}
+      }
+
+      if (isOnline) {
+        setError('Failed to check authentication status');
+        
+        if (retryCount < 3) {
+          const timeout = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          console.log(`Will retry session check in ${timeout}ms`);
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            checkSession();
+          }, timeout);
+          return;
+        }
       } else {
-        // After 3 retries, just set loading to false but don't call handleInvalidSession
-        // This allows the app to show the login page instead of being stuck
-        console.warn('Maximum retries reached for session check');
-        setLoading(false);
+        // Offline: Try to use cached user
+        console.log('Offline mode: Attempting to load cached user');
+        const cachedUser = localStorage.getItem('nesttask_cached_user');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+            console.log('Loaded cached user for offline use');
+          } catch (err) {
+            console.error('Failed to parse cached user:', err);
+          }
+        }
       }
     } finally {
       setLoading(false);
@@ -78,15 +171,68 @@ export function useAuth() {
   };
 
   const handleAuthChange = async (_event: string, session: any) => {
+    // Don't clear user on initial load if offline and we have cached user
+    if (!session?.user && isInitialLoad) {
+      console.log('No session on initial load, checking if we should preserve cached user');
+      
+      // Check if we're offline
+      let isOnline = navigator.onLine;
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const status = await Network.getStatus();
+          isOnline = status.connected;
+        } catch {}
+      }
+      
+      // If offline and we have a user (from cache), don't clear it
+      if (!isOnline && user) {
+        console.log('Preserving cached user while offline');
+        setIsInitialLoad(false);
+        setLoading(false);
+        return;
+      }
+    }
+    
+    setIsInitialLoad(false);
+    
     if (session?.user) {
       try {
         await updateUserState(session.user);
       } catch (err) {
         console.error('Error updating user state:', err);
-        await handleInvalidSession();
+        
+        // Check if offline before invalidating session
+        let isOnline = navigator.onLine;
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const status = await Network.getStatus();
+            isOnline = status.connected;
+          } catch {}
+        }
+        
+        // Only invalidate if online
+        if (isOnline) {
+          await handleInvalidSession();
+        } else {
+          console.log('Error updating user state while offline, keeping cached user');
+        }
       }
     } else {
-      setUser(null);
+      // Only clear user if we're online
+      let isOnline = navigator.onLine;
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const status = await Network.getStatus();
+          isOnline = status.connected;
+        } catch {}
+      }
+      
+      if (isOnline) {
+        console.log('No session and online, clearing user');
+        setUser(null);
+      } else {
+        console.log('No session but offline, keeping cached user');
+      }
     }
     setLoading(false);
   };
@@ -97,6 +243,7 @@ export function useAuth() {
     
     localStorage.removeItem('supabase.auth.token');
     localStorage.removeItem('nesttask_user');
+    localStorage.removeItem('nesttask_cached_user');
     sessionStorage.removeItem('supabase.auth.token');
     
     if (localStorage.getItem(REMEMBER_ME_KEY) !== 'true') {
@@ -150,11 +297,11 @@ export function useAuth() {
         if (!fullUserError && fullUserData) {
           console.log('Full user data for super admin:', fullUserData);
           
-          setUser({
+          const superAdminUser = {
             id: authUser.id,
             email: authUser.email!,
             name: fullUserData.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
-            role: 'super-admin',
+            role: 'super-admin' as const,
             createdAt: fullUserData.createdAt || authUser.created_at,
             avatar: fullUserData.avatar,
             phone: fullUserData.phone,
@@ -165,12 +312,23 @@ export function useAuth() {
             departmentName: fullUserData.departmentName,
             batchName: fullUserData.batchName,
             sectionName: fullUserData.sectionName
-          });
+          };
+          
+          setUser(superAdminUser);
+          
+          // Cache super-admin user for offline access
+          try {
+            localStorage.setItem('nesttask_cached_user', JSON.stringify(superAdminUser));
+            console.log('Super-admin user cached for offline access');
+          } catch (err) {
+            console.warn('Failed to cache super-admin user:', err);
+          }
+          
           return;
         }
       }
       
-      setUser({
+      const userObj = {
         id: authUser.id,
         email: authUser.email!,
         name: authUser.user_metadata?.name || userData?.name || authUser.email?.split('@')[0] || '',
@@ -182,7 +340,17 @@ export function useAuth() {
         departmentId: userData?.department_id || authUser.user_metadata?.departmentId,
         batchId: userData?.batch_id || authUser.user_metadata?.batchId,
         sectionId: userData?.section_id || authUser.user_metadata?.sectionId
-      });
+      };
+      
+      setUser(userObj);
+      
+      // Cache user for offline access
+      try {
+        localStorage.setItem('nesttask_cached_user', JSON.stringify(userObj));
+        console.log('User data cached for offline access');
+      } catch (err) {
+        console.warn('Failed to cache user data:', err);
+      }
     } catch (err) {
       console.error('Error updating user state:', err);
       throw err;
@@ -269,6 +437,14 @@ export function useAuth() {
         
         setUser(user);
         
+        // Cache super-admin user for offline access
+        try {
+          localStorage.setItem('nesttask_cached_user', JSON.stringify(user));
+          console.log('Super-admin user cached after login for offline access');
+        } catch (cacheErr) {
+          console.warn('Failed to cache super-admin user after login:', cacheErr);
+        }
+        
         return user;
       }
       
@@ -318,6 +494,14 @@ export function useAuth() {
       }
       
       setUser(user);
+      
+      // Cache user for offline access
+      try {
+        localStorage.setItem('nesttask_cached_user', JSON.stringify(user));
+        console.log('User cached after login for offline access');
+      } catch (cacheErr) {
+        console.warn('Failed to cache user after login:', cacheErr);
+      }
       
       // Clear caches without page reload
       forceCleanReload();
@@ -386,6 +570,7 @@ export function useAuth() {
       
       localStorage.removeItem('supabase.auth.token');
       localStorage.removeItem('nesttask_user');
+      localStorage.removeItem('nesttask_cached_user'); // Clear cached user on logout
       
       document.cookie.split(";").forEach(function(c) {
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
