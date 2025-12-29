@@ -59,6 +59,13 @@ export function TaskEnhancedForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (saving) {
+      console.log('Already saving, ignoring duplicate submission');
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -99,15 +106,18 @@ export function TaskEnhancedForm({
           attachments: uploadedFiles,
           googleDriveLinks,
         };
+        console.log('[TaskForm] Creating task...');
         const newTask = await createTaskEnhanced(userId, taskInput, sectionId);
+        console.log('[TaskForm] Task created successfully:', newTask.id);
         onTaskCreated?.(newTask);
       }
+      // Close form on success
       onClose();
     } catch (error: any) {
-      console.error('Failed to save task:', error);
+      console.error('[TaskForm] Failed to save task:', error);
       const errorMessage = error?.message || 'Failed to save task. Please check the console for details.';
       alert(`Error: ${errorMessage}`);
-    } finally {
+      // Reset saving state on error so user can retry
       setSaving(false);
     }
   };
@@ -295,7 +305,10 @@ export function TaskEnhancedForm({
           <div className="flex gap-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                setSaving(false);
+                onClose();
+              }}
               className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
               disabled={saving}
             >

@@ -19,9 +19,6 @@ export function useTeachers() {
   const loadTeachers = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
-      
-      // Always fetch fresh data for admin dashboard
-      console.log('Admin dashboard: Fetching fresh teacher data');
       const data = await fetchTeachers();
       setTeachers(data);
     } catch (err: any) {

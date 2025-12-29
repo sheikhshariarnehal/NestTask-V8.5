@@ -908,14 +908,44 @@ async function sendFCMPushNotification(task: EnhancedTask): Promise<void> {
       year: 'numeric'
     });
 
+    // Category emoji mapping
+    const categoryEmoji: Record<string, string> = {
+      'presentation': '📊',
+      'assignment': '📝',
+      'quiz': '❓',
+      'lab-report': '🔬',
+      'lab-final': '🧪',
+      'lab-performance': '⚗️',
+      'task': '✓',
+      'documents': '📄',
+      'blc': '📚',
+      'groups': '👥',
+      'project': '🚀',
+      'midterm': '📖',
+      'final-exam': '🎓',
+      'others': '📌'
+    };
+
+    // Format category name
+    const categoryName = task.category
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
+    const emoji = categoryEmoji[task.category] || '📌';
+
     const payload = {
       taskId: task.id,
-      title: 'New Task',
-      body: `${task.name} - Due: ${dueDate}`,
+      title: `${emoji} New ${categoryName}`,
+      body: `${task.name}\n📅 Due: ${dueDate}`,
       sectionId: task.sectionId || undefined,
       data: {
+        taskId: task.id,
         category: task.category,
-        priority: task.priority || 'medium'
+        categoryName: categoryName,
+        priority: task.priority || 'medium',
+        dueDate: task.dueDate,
+        taskName: task.name
       }
     };
 

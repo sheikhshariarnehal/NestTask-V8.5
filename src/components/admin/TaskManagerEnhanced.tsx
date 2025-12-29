@@ -102,10 +102,13 @@ export function TaskManagerEnhanced({
   }, [openCreateForm]);
 
   const handleTaskCreated = useCallback((task: EnhancedTask) => {
+    console.log('[TaskManager] Task created, updating list');
     setTasks(prev => [task, ...prev]);
     setTotal(prev => prev + 1);
     setShowCreateForm(false);
-  }, []);
+    // Immediately refresh to ensure we have the latest data
+    loadTasks(true);
+  }, [loadTasks]);
 
   const handleTaskUpdated = useCallback((updatedTask: EnhancedTask) => {
     setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));

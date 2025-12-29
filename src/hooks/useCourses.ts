@@ -22,9 +22,6 @@ export function useCourses() {
   const loadCourses = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
-      
-      // Always fetch fresh data for admin dashboard
-      console.log('Admin dashboard: Fetching fresh course data');
       const data = await fetchCourses();
       setCourses(data);
     } catch (err: any) {
@@ -38,9 +35,6 @@ export function useCourses() {
   const loadMaterials = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
-      
-      // Always fetch fresh data for admin dashboard
-      console.log('Admin dashboard: Fetching fresh materials data');
       const data = await fetchStudyMaterials();
       setMaterials(data);
     } catch (err: any) {

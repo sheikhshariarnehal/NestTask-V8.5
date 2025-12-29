@@ -27,11 +27,7 @@ export function useRoutines(userId?: string) {
     try {
       setLoading(true);
       setError(null);
-
-      // Always fetch fresh data from server
-      console.log('[Debug] Fetching fresh routines from server');
       const data = await fetchRoutines();
-      console.log(`[Debug] Received ${data.length} routines from server`);
       setRoutines(data);
     } catch (err: any) {
       console.error('Error fetching routines:', err);
