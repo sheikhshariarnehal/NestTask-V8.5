@@ -106,24 +106,36 @@ export interface Database {
           created_by?: string;
         };
       };
-      push_subscriptions: {
+      fcm_tokens: {
         Row: {
           id: string;
           user_id: string;
-          subscription: any;
+          token: string;
+          platform: 'android' | 'ios' | 'web';
+          device_info: Record<string, any>;
+          is_active: boolean;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          subscription: any;
+          token: string;
+          platform: 'android' | 'ios' | 'web';
+          device_info?: Record<string, any>;
+          is_active?: boolean;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          subscription?: any;
+          token?: string;
+          platform?: 'android' | 'ios' | 'web';
+          device_info?: Record<string, any>;
+          is_active?: boolean;
           created_at?: string;
+          updated_at?: string;
         };
       };
       departments: {

@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth';
 import { useTasks } from './hooks/useTasks';
 import { useUsers } from './hooks/useUsers';
 import { useNotifications } from './hooks/useNotifications';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import { AuthPage } from './pages/AuthPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { Navigation } from './components/Navigation';
@@ -73,6 +74,17 @@ export default function App() {
   }, [user]);
   
   const { users, loading: usersLoading, deleteUser } = useUsers();
+  
+  // Initialize push notifications for native platforms
+  const { isRegistered: isPushRegistered, register: registerPush } = usePushNotifications();
+  
+  // Auto-register for push notifications when user logs in on native platform
+  useEffect(() => {
+    if (user && Capacitor.isNativePlatform() && !isPushRegistered) {
+      registerPush();
+    }
+  }, [user, isPushRegistered, registerPush]);
+  
   const { 
     tasks, 
     loading: tasksLoading, 

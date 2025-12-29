@@ -1,110 +1,279 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { useAuth } from './useAuth';
-import { 
-  requestNotificationPermission, 
-  subscribeToPushNotifications,
-  unsubscribeFromPushNotifications
-} from '../utils/pushNotifications';
+import { supabase } from '../lib/supabase';
+
+interface PushNotificationState {
+  isSupported: boolean;
+  isRegistered: boolean;
+  permissionStatus: 'prompt' | 'granted' | 'denied' | 'unknown';
+  token: string | null;
+  error: string | null;
+  loading: boolean;
+}
+
+interface DeviceInfo {
+  platform: string;
+  model?: string;
+  osVersion?: string;
+  appVersion?: string;
+}
 
 export function usePushNotifications() {
   const { user } = useAuth();
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<PushNotificationState>({
+    isSupported: false,
+    isRegistered: false,
+    permissionStatus: 'unknown',
+    token: null,
+    error: null,
+    loading: true
+  });
 
+  // Check if push notifications are supported
+  const isNativePlatform = Capacitor.isNativePlatform();
+
+  // Save FCM token to Supabase
+  const saveFCMToken = useCallback(async (token: string) => {
+    if (!user?.id) return;
+
+    try {
+      const deviceInfo: DeviceInfo = {
+        platform: Capacitor.getPlatform(),
+        model: undefined,
+        osVersion: undefined
+      };
+
+      // Upsert token (insert or update if exists)
+      const { error } = await supabase
+        .from('fcm_tokens')
+        .upsert({
+          user_id: user.id,
+          token: token,
+          platform: Capacitor.getPlatform() as 'android' | 'ios' | 'web',
+          device_info: deviceInfo,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'token'
+        });
+
+      if (error) {
+        console.error('Error saving FCM token:', error);
+        throw error;
+      }
+
+      console.log('FCM token saved successfully');
+    } catch (error: any) {
+      console.error('Failed to save FCM token:', error);
+      setState(prev => ({ ...prev, error: error.message }));
+    }
+  }, [user?.id]);
+
+  // Remove FCM token from Supabase
+  const removeFCMToken = useCallback(async (token: string) => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('fcm_tokens')
+        .update({ is_active: false })
+        .eq('token', token)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      console.log('FCM token deactivated');
+    } catch (error: any) {
+      console.error('Failed to remove FCM token:', error);
+    }
+  }, [user?.id]);
+
+  // Register for push notifications
+  const register = useCallback(async () => {
+    if (!isNativePlatform) {
+      setState(prev => ({ 
+        ...prev, 
+        isSupported: false, 
+        loading: false,
+        error: 'Push notifications are only supported on native platforms'
+      }));
+      return false;
+    }
+
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      // Check current permission status
+      let permStatus = await PushNotifications.checkPermissions();
+      
+      // Request permission if not determined
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+
+      if (permStatus.receive !== 'granted') {
+        setState(prev => ({ 
+          ...prev, 
+          permissionStatus: permStatus.receive as 'denied' | 'prompt',
+          loading: false,
+          error: 'Push notification permission denied'
+        }));
+        return false;
+      }
+
+      // Register with FCM
+      await PushNotifications.register();
+
+      setState(prev => ({ 
+        ...prev, 
+        isSupported: true,
+        permissionStatus: 'granted',
+        loading: false 
+      }));
+
+      return true;
+    } catch (error: any) {
+      console.error('Push registration error:', error);
+      setState(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: error.message || 'Failed to register for push notifications'
+      }));
+      return false;
+    }
+  }, [isNativePlatform]);
+
+  // Unregister from push notifications
+  const unregister = useCallback(async () => {
+    if (!isNativePlatform || !state.token) return false;
+
+    try {
+      // Deactivate token in database
+      await removeFCMToken(state.token);
+      
+      setState(prev => ({ 
+        ...prev, 
+        isRegistered: false, 
+        token: null 
+      }));
+
+      return true;
+    } catch (error: any) {
+      console.error('Push unregistration error:', error);
+      return false;
+    }
+  }, [isNativePlatform, state.token, removeFCMToken]);
+
+  // Initialize push notification listeners
   useEffect(() => {
-    if (!user) {
-      setIsSubscribed(false);
-      setLoading(false);
+    if (!isNativePlatform) {
+      setState(prev => ({ ...prev, isSupported: false, loading: false }));
       return;
     }
 
-    checkSubscriptionStatus();
-  }, [user]);
-
-  const checkSubscriptionStatus = async () => {
-    try {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        setError('Push notifications are not supported in this browser');
-        setLoading(false);
-        return;
+    // Set up event listeners
+    const registrationListener = PushNotifications.addListener(
+      'registration',
+      async (token: Token) => {
+        console.log('Push registration success, token:', token.value);
+        setState(prev => ({ 
+          ...prev, 
+          isRegistered: true, 
+          token: token.value,
+          loading: false 
+        }));
+        
+        // Save token to database
+        await saveFCMToken(token.value);
       }
+    );
 
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-    } catch (error: any) {
-      console.error('Error checking subscription status:', error);
-      setError(getNotificationErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const subscribe = async () => {
-    if (!user) return false;
-
-    try {
-      setError(null);
-      setLoading(true);
-
-      const permissionGranted = await requestNotificationPermission();
-      if (!permissionGranted) {
-        setError('Please allow notifications in your browser settings to receive updates');
-        return false;
+    const registrationErrorListener = PushNotifications.addListener(
+      'registrationError',
+      (error: any) => {
+        console.error('Push registration error:', error);
+        setState(prev => ({ 
+          ...prev, 
+          isRegistered: false, 
+          loading: false,
+          error: error.error || 'Registration failed'
+        }));
       }
+    );
 
-      const subscription = await subscribeToPushNotifications(user.id);
-      if (!subscription) {
-        setError('Failed to subscribe to notifications. Please try again.');
-        return false;
+    // Handle push received when app is in foreground
+    const pushReceivedListener = PushNotifications.addListener(
+      'pushNotificationReceived',
+      (notification: PushNotificationSchema) => {
+        console.log('Push notification received:', notification);
+        // The notification will be shown automatically based on presentationOptions
+        // You can also handle in-app display here if needed
       }
+    );
 
-      setIsSubscribed(true);
-      return true;
-    } catch (error: any) {
-      console.error('Error subscribing to notifications:', error);
-      setError(getNotificationErrorMessage(error));
-      return false;
-    } finally {
-      setLoading(false);
+    // Handle push notification action (user tapped notification)
+    const pushActionListener = PushNotifications.addListener(
+      'pushNotificationActionPerformed',
+      (action: ActionPerformed) => {
+        console.log('Push notification action performed:', action);
+        
+        // Extract task ID from notification data
+        const data = action.notification.data;
+        if (data?.taskId) {
+          // Navigate to task - you can emit an event or use navigation here
+          console.log('Navigate to task:', data.taskId);
+          // For now, just log - we'll integrate with navigation later
+          window.dispatchEvent(new CustomEvent('navigate-to-task', { 
+            detail: { taskId: data.taskId } 
+          }));
+        }
+      }
+    );
+
+    // Check initial status
+    const checkInitialStatus = async () => {
+      try {
+        const permStatus = await PushNotifications.checkPermissions();
+        setState(prev => ({ 
+          ...prev, 
+          isSupported: true,
+          permissionStatus: permStatus.receive as any,
+          loading: false
+        }));
+
+        // Auto-register if permission already granted
+        if (permStatus.receive === 'granted') {
+          await PushNotifications.register();
+        }
+      } catch (error) {
+        console.error('Error checking push permissions:', error);
+        setState(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    checkInitialStatus();
+
+    // Cleanup listeners
+    return () => {
+      registrationListener.then(l => l.remove());
+      registrationErrorListener.then(l => l.remove());
+      pushReceivedListener.then(l => l.remove());
+      pushActionListener.then(l => l.remove());
+    };
+  }, [isNativePlatform, saveFCMToken]);
+
+  // Re-register when user changes
+  useEffect(() => {
+    if (user?.id && isNativePlatform && state.permissionStatus === 'granted') {
+      register();
     }
-  };
-
-  const unsubscribe = async () => {
-    if (!user) return false;
-
-    try {
-      setError(null);
-      setLoading(true);
-
-      const success = await unsubscribeFromPushNotifications(user.id);
-      setIsSubscribed(!success);
-      return success;
-    } catch (error: any) {
-      console.error('Error unsubscribing from notifications:', error);
-      setError(getNotificationErrorMessage(error));
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getNotificationErrorMessage = (error: any): string => {
-    if (error.name === 'NotAllowedError') {
-      return 'Notification permission denied. Please enable notifications in your browser settings.';
-    }
-    if (error.name === 'InvalidStateError') {
-      return 'Push notification subscription is in an invalid state. Please try again.';
-    }
-    return error.message || 'An error occurred with push notifications. Please try again.';
-  };
+  }, [user?.id, isNativePlatform, state.permissionStatus, register]);
 
   return {
-    isSubscribed,
-    loading,
-    error,
-    subscribe,
-    unsubscribe
+    ...state,
+    register,
+    unregister,
+    isNativePlatform
   };
 }

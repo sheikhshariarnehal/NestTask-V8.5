@@ -181,7 +181,22 @@ export async function createTaskEnhanced(
 
     if (error) throw new Error(`Failed to create task: ${error.message}`);
 
-    return transformTaskFromDB(data);
+    const newTask = transformTaskFromDB(data);
+
+    // Send FCM push notification if it's an admin task
+    if (newTask.isAdminTask) {
+      console.log('[FCM Enhanced] Task is admin task, sending notifications...');
+      try {
+        await sendFCMPushNotification(newTask);
+        console.log('[FCM Enhanced] Push notification sent successfully');
+      } catch (error) {
+        console.error('[FCM Enhanced] Failed to send push notification:', error);
+      }
+    } else {
+      console.log('[FCM Enhanced] Task is not admin task, skipping push notification');
+    }
+
+    return newTask;
   });
 }
 
@@ -866,4 +881,67 @@ function transformTemplateFromDB(data: any): TaskTemplate {
     useCount: data.use_count || 0,
     section: data.section,
   };
+}
+
+/**
+ * Send FCM push notification to mobile app users
+ * This calls the Supabase Edge Function to send notifications via Firebase Cloud Messaging
+ */
+async function sendFCMPushNotification(task: EnhancedTask): Promise<void> {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    console.log('[FCM Enhanced] Sending push notification for task:', task.id);
+    console.log('[FCM Enhanced] Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
+    console.log('[FCM Enhanced] Supabase Anon Key:', supabaseAnonKey ? 'Set' : 'Missing');
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('[FCM Enhanced] Supabase configuration missing, skipping FCM push notification');
+      return;
+    }
+
+    // Format due date for notification
+    const dueDate = new Date(task.dueDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    const payload = {
+      taskId: task.id,
+      title: 'New Task',
+      body: `${task.name} - Due: ${dueDate}`,
+      sectionId: task.sectionId || undefined,
+      data: {
+        category: task.category,
+        priority: task.priority || 'medium'
+      }
+    };
+
+    console.log('[FCM Enhanced] Calling edge function with payload:', JSON.stringify(payload));
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-fcm-push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('[FCM Enhanced] Edge function response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[FCM Enhanced] Push notification failed:', errorData);
+      throw new Error(`FCM push failed: ${JSON.stringify(errorData)}`);
+    }
+
+    const result = await response.json();
+    console.log('[FCM Enhanced] Push notification result:', result);
+  } catch (error) {
+    console.error('[FCM Enhanced] Error sending push notification:', error);
+    throw error;
+  }
 }

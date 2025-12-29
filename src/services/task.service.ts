@@ -542,8 +542,18 @@ export const createTask = async (
     
     // Send notifications if it's an admin task
     if (newTask.isAdminTask) {
-      await sendPushNotifications(newTask);
+      console.log('[FCM] Task is admin task, sending notifications...');
+      // Send FCM push notification to mobile users
+      try {
+        await sendFCMPushNotification(newTask);
+        console.log('[FCM] Push notification sent successfully');
+      } catch (error) {
+        console.error('[FCM] Failed to send push notification:', error);
+      }
+      // Send Telegram notification (existing)
       await sendTaskNotification(newTask);
+    } else {
+      console.log('[FCM] Task is not admin task, skipping push notification');
     }
     
     return newTask;
@@ -552,67 +562,6 @@ export const createTask = async (
     throw new Error(`Task creation failed: ${error.message}`);
   }
 };
-
-async function sendPushNotifications(task: Task) {
-  try {
-    // Get all push subscriptions
-    const { data: subscriptions, error } = await supabase
-      .from('push_subscriptions')
-      .select('subscription');
-
-    if (error) throw error;
-    if (!subscriptions?.length) return;
-
-    // Prepare notification payload
-    const payload = {
-      title: 'New Admin Task',
-      body: `${task.name} - Due: ${new Date(task.dueDate).toLocaleDateString()}`,
-      tag: `admin-task-${task.id}`,
-      data: {
-        url: '/',
-        taskId: task.id,
-        type: 'admin-task'
-      },
-      requireInteraction: true,
-      actions: [
-        {
-          action: 'view',
-          title: 'View Task'
-        }
-      ]
-    };
-
-    // Send push notification to each subscription
-    const notifications = subscriptions.map(async ({ subscription }) => {
-      try {
-        const parsedSubscription = JSON.parse(subscription);
-        
-        // Send notification using the Supabase Edge Function
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-notification`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({
-            subscription: parsedSubscription,
-            payload: JSON.stringify(payload)
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to send push notification');
-        }
-      } catch (error) {
-        console.error('Error sending push notification:', error);
-      }
-    });
-
-    await Promise.allSettled(notifications);
-  } catch (error) {
-    console.error('Error sending notifications:', error);
-  }
-}
 
 export async function updateTask(taskId: string, updates: Partial<Task>) {
   try {
@@ -703,5 +652,69 @@ export async function deleteTask(taskId: string) {
   } catch (error: any) {
     console.error('Error deleting task:', error);
     throw new Error(error.message || 'Failed to delete task');
+  }
+}
+
+/**
+ * Send FCM push notification to mobile app users
+ * This calls the Supabase Edge Function to send notifications via Firebase Cloud Messaging
+ */
+async function sendFCMPushNotification(task: Task): Promise<void> {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    console.log('[FCM] Sending push notification for task:', task.id);
+    console.log('[FCM] Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
+    console.log('[FCM] Supabase Anon Key:', supabaseAnonKey ? 'Set' : 'Missing');
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('[FCM] Supabase configuration missing, skipping FCM push notification');
+      return;
+    }
+
+    // Format due date for notification
+    const dueDate = new Date(task.dueDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    const payload = {
+      taskId: task.id,
+      title: 'New Task',
+      body: `${task.name} - Due: ${dueDate}`,
+      sectionId: task.sectionId || undefined,
+      data: {
+        category: task.category,
+        priority: task.priority || 'medium'
+      }
+    };
+
+    console.log('[FCM] Calling edge function with payload:', JSON.stringify(payload));
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-fcm-push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('[FCM] Edge function response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[FCM] Push notification failed:', errorData);
+      throw new Error(`FCM push failed: ${JSON.stringify(errorData)}`);
+    }
+
+    const result = await response.json();
+    console.log(`[FCM] Push notification sent: ${result.sent}/${result.total} devices`, result);
+  } catch (error) {
+    // Don't throw - push notification failure shouldn't break task creation
+    console.error('[FCM] Error sending FCM push notification:', error);
+    throw error; // Re-throw to see in logs
   }
 }

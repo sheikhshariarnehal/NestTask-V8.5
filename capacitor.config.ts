@@ -23,6 +23,9 @@ const config: CapacitorConfig = {
     },
     Network: {
       // Network monitoring is enabled by default
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
     }
   }
 };
