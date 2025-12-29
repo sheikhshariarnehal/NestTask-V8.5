@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, Megaphone } from 'lucide-react';
 import type { NewAnnouncement } from '../../../types/announcement';
 
@@ -13,8 +13,18 @@ export function AnnouncementForm({ onSubmit }: AnnouncementFormProps) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Reset submitting state on unmount
+  useEffect(() => {
+    return () => {
+      setIsSubmitting(false);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return; // Prevent double submission
+    
     setIsSubmitting(true);
     try {
       await onSubmit(announcement);

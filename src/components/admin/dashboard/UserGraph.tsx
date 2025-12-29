@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, memo } from 'react';
 import {
   LineChart,
   Line,
@@ -69,7 +69,7 @@ interface UserGraphProps {
   timeRange?: 'year' | '6months' | '30days';
 }
 
-export function UserGraph({ 
+export const UserGraph = memo(function UserGraph({ 
   users, 
   chartType = 'line',
   timeRange = 'year' 
@@ -82,15 +82,25 @@ export function UserGraph({
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
   const infoButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Check if mobile view and update when window resizes
+  // Check if mobile view and update when window resizes with debounce
   useEffect(() => {
+    let timeoutId: number | null = null;
+    
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
     
+    const debouncedCheckMobile = () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(checkMobile, 150);
+    };
+    
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener('resize', debouncedCheckMobile);
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      window.removeEventListener('resize', debouncedCheckMobile);
+    };
   }, []);
 
   // Map timeRange prop to timeFilter when it changes
@@ -109,11 +119,11 @@ export function UserGraph({
     setAnimationActive(true);
     setIsInitialLoad(false);
     
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setAnimationActive(false);
     }, 2000);
     
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [timeFilter]);
 
   // Handle clicks outside the info tooltip to close it
@@ -744,4 +754,4 @@ export function UserGraph({
       </div>
     </div>
   );
-} 
+});

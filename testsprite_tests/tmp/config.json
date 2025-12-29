@@ -1,0 +1,8 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "diff",
+  "localEndpoint": "http://localhost:5173/admin/tasks",
+  "loginUser": "admin@diu.edu.bd",
+  "loginPassword": "Admin123!"
+}

@@ -260,86 +260,39 @@ export function useAuth() {
 
   const updateUserState = async (authUser: any) => {
     try {
-      console.log('Auth user from Supabase:', authUser);
-      console.log('User metadata:', authUser.user_metadata);
-      console.log('Role from metadata:', authUser.user_metadata?.role);
-      console.log('Auth role:', authUser.role);
-      
-      const { data: userData, error: userError } = await supabase
-        .from('users')
+      // Fetch full user data with department/batch/section names using the view
+      const { data: fullUserData, error: userError } = await supabase
+        .from('users_with_full_info')
         .select('*')
         .eq('id', authUser.id)
         .single();
         
-      console.log('User data from database:', userData);
-      
       if (userError) {
         console.error('Error fetching user data:', userError);
         throw userError;
       }
       
-      let role = userData?.role || authUser.user_metadata?.role || 'user';
+      let role = fullUserData?.role || authUser.user_metadata?.role || 'user';
       
       if (role === 'super_admin' || role === 'super-admin') {
         role = 'super-admin';
       }
       
-      console.log('Final determined role:', role);
-      
-      if (role === 'super-admin') {
-        console.log('Super admin detected, getting complete info');
-        const { data: fullUserData, error: fullUserError } = await supabase
-          .from('users_with_full_info')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-          
-        if (!fullUserError && fullUserData) {
-          console.log('Full user data for super admin:', fullUserData);
-          
-          const superAdminUser = {
-            id: authUser.id,
-            email: authUser.email!,
-            name: fullUserData.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
-            role: 'super-admin' as const,
-            createdAt: fullUserData.createdAt || authUser.created_at,
-            avatar: fullUserData.avatar,
-            phone: fullUserData.phone,
-            studentId: fullUserData.studentId,
-            departmentId: fullUserData.departmentId,
-            batchId: fullUserData.batchId,
-            sectionId: fullUserData.sectionId,
-            departmentName: fullUserData.departmentName,
-            batchName: fullUserData.batchName,
-            sectionName: fullUserData.sectionName
-          };
-          
-          setUser(superAdminUser);
-          
-          // Cache super-admin user for offline access
-          try {
-            localStorage.setItem('nesttask_cached_user', JSON.stringify(superAdminUser));
-            console.log('Super-admin user cached for offline access');
-          } catch (err) {
-            console.warn('Failed to cache super-admin user:', err);
-          }
-          
-          return;
-        }
-      }
-      
       const userObj = {
         id: authUser.id,
         email: authUser.email!,
-        name: authUser.user_metadata?.name || userData?.name || authUser.email?.split('@')[0] || '',
+        name: fullUserData?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
         role: role as 'user' | 'admin' | 'super-admin' | 'section_admin',
-        createdAt: authUser.created_at,
-        avatar: userData?.avatar,
-        phone: userData?.phone || authUser.user_metadata?.phone,
-        studentId: userData?.student_id || authUser.user_metadata?.studentId,
-        departmentId: userData?.department_id || authUser.user_metadata?.departmentId,
-        batchId: userData?.batch_id || authUser.user_metadata?.batchId,
-        sectionId: userData?.section_id || authUser.user_metadata?.sectionId
+        createdAt: fullUserData?.createdAt || authUser.created_at,
+        avatar: fullUserData?.avatar,
+        phone: fullUserData?.phone,
+        studentId: fullUserData?.studentId,
+        departmentId: fullUserData?.departmentId,
+        batchId: fullUserData?.batchId,
+        sectionId: fullUserData?.sectionId,
+        departmentName: fullUserData?.departmentName,
+        batchName: fullUserData?.batchName,
+        sectionName: fullUserData?.sectionName
       };
       
       setUser(userObj);
@@ -347,7 +300,6 @@ export function useAuth() {
       // Cache user for offline access
       try {
         localStorage.setItem('nesttask_cached_user', JSON.stringify(userObj));
-        console.log('User data cached for offline access');
       } catch (err) {
         console.warn('Failed to cache user data:', err);
       }

@@ -43,8 +43,18 @@ export function CourseForm({ onSubmit, teachers, sectionId, isSectionAdmin = fal
     }
   }, [sectionId, isSectionAdmin]);
 
+  // Reset submitting state on unmount
+  useEffect(() => {
+    return () => {
+      setIsSubmitting(false);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return; // Prevent double submission
+    
     setIsSubmitting(true);
     try {
       // If a teacher is selected, use their name as the teacher field

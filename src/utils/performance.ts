@@ -79,18 +79,6 @@ export const trackMetrics = () => {
   }
 };
 
-// Cache API wrapper for response caching
-export const cacheResponse = async (
-  request: Request,
-  response: Response,
-  cacheName: string = 'api-cache'
-): Promise<void> => {
-  if ('caches' in window) {
-    const cache = await caches.open(cacheName);
-    await cache.put(request, response.clone());
-  }
-};
-
 // Memory usage monitoring
 export const monitorMemoryUsage = async () => {
   if ('memory' in performance) {

@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import compression from 'vite-plugin-compression';
-import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 // Define algorithm type to avoid type errors
@@ -23,43 +22,6 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: false, // Use manual manifest.json in public folder
-      workbox: {
-        // Minimal configuration for Capacitor compatibility
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
-        
-        // Basic runtime caching for assets
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ],
-        
-        // Clean old caches
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        
-        // Navigation fallback for SPA
-        navigateFallback: '/index.html'
-      },
-      devOptions: {
-        enabled: false
-      }
-    }),
     // Disable compression for Capacitor builds to avoid duplicate resources
     ...(!isCapacitorBuild ? [
       compression({

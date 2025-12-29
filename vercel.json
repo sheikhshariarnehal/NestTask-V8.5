@@ -28,11 +28,6 @@
       "headers": { "content-type": "application/json" },
       "continue": true
     },
-    {
-      "src": "/service-worker.js",
-      "headers": { "cache-control": "public, max-age=0, must-revalidate" },
-      "continue": true
-    },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

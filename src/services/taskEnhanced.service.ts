@@ -19,35 +19,105 @@ import type {
 } from '../types/taskEnhanced';
 import type { TaskCategory, TaskStatus } from '../types/task';
 
-// ==================== AUTH HELPER ====================
+// ==================== CONFIGURATION ====================
+const CONFIG = {
+  MAX_RETRIES: 2,         // Two retries on failure
+  RETRY_DELAY_MS: 1000,   // 1 second delay between retries
+} as const;
+
+// ==================== SUPABASE CLIENT WRAPPER ====================
 
 /**
- * Wrapper to handle JWT expiration and auto-refresh
+ * Simple, clean wrapper for Supabase operations with retry logic.
+ * No custom timeout - Supabase handles its own timeouts and browser tab
+ * throttling can cause false timeout errors.
  */
-async function withAuthRefresh<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation();
-  } catch (error: any) {
-    // Check if error is JWT expiration
-    if (error?.message?.includes('JWT') && error?.message?.includes('expired')) {
-      console.log('JWT expired, attempting to refresh token...');
-      
-      // Try to refresh the session
-      const { data, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError || !data?.session) {
-        // Refresh failed - user needs to log in again
-        throw new Error('Your session has expired. Please log in again.');
+class SupabaseService {
+  /**
+   * Execute a Supabase operation with automatic retry
+   */
+  static async execute<T>(
+    operation: () => Promise<{ data: T | null; error: any }>,
+    operationName: string = 'Operation',
+    abortSignal?: AbortSignal
+  ): Promise<T> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+      try {
+        // Check if operation was cancelled
+        if (abortSignal?.aborted) {
+          throw new Error('Operation cancelled');
+        }
+
+        const { data, error } = await operation();
+        
+        if (error) {
+          throw new Error(error.message || `${operationName} failed`);
+        }
+        
+        if (data === null) {
+          throw new Error(`${operationName}: No data returned`);
+        }
+        
+        return data;
+      } catch (error: any) {
+        lastError = error;
+        
+        // Don't retry if cancelled
+        if (error.message === 'Operation cancelled' || abortSignal?.aborted) {
+          throw new Error('Operation cancelled');
+        }
+        
+        // Don't retry on auth errors
+        if (error.message?.includes('JWT') || error.message?.includes('session')) {
+          throw new Error('Session expired. Please refresh the page.');
+        }
+        
+        // Retry on network errors
+        if (attempt < CONFIG.MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, CONFIG.RETRY_DELAY_MS));
+          continue;
+        }
       }
-      
-      console.log('Token refreshed successfully, retrying operation...');
-      
-      // Retry the operation with fresh token
-      return await operation();
     }
-    
-    // Not a JWT expiration error, rethrow
-    throw error;
+
+    throw lastError || new Error(`${operationName} failed`);
+  }
+
+  /**
+   * Execute a Supabase operation that doesn't return data (delete, etc.)
+   */
+  static async executeVoid(
+    operation: () => Promise<{ error: any }>,
+    operationName: string = 'Operation'
+  ): Promise<void> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+      try {
+        const { error } = await operation();
+        
+        if (error) {
+          throw new Error(error.message || `${operationName} failed`);
+        }
+        
+        return;
+      } catch (error: any) {
+        lastError = error;
+        
+        if (error.message?.includes('JWT') || error.message?.includes('session')) {
+          throw new Error('Session expired. Please refresh the page.');
+        }
+        
+        if (attempt < CONFIG.MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, CONFIG.RETRY_DELAY_MS));
+          continue;
+        }
+      }
+    }
+
+    throw lastError || new Error(`${operationName} failed`);
   }
 }
 
@@ -146,58 +216,45 @@ export async function fetchTasksEnhanced(
 
 /**
  * Create a new task
- * Note: If is_admin_task=true and sectionId is provided, 
- * the task will be automatically assigned to ALL users in that section via database trigger
  */
 export async function createTaskEnhanced(
   userId: string,
   input: CreateTaskInput,
-  sectionId?: string
+  sectionId?: string,
+  abortSignal?: AbortSignal
 ): Promise<EnhancedTask> {
-  return withAuthRefresh(async () => {
-    const taskData = {
-      name: input.name,
-      description: input.description,
-      category: input.category,
-      due_date: input.dueDate,
-      priority: input.priority || 'medium',
-      tags: input.tags || [],
-      assigned_to: input.assignedTo || null,
-      assigned_by: input.assignedTo ? userId : null,
-      section_id: sectionId || input.sectionId || null,
-      attachments: input.attachments || [],
-      google_drive_links: input.googleDriveLinks || [],
-      status: input.status || 'pending',
-      user_id: userId,
-      is_admin_task: !!sectionId,
-      is_template: false,
-    };
+  const taskData = {
+    name: input.name,
+    description: input.description,
+    category: input.category,
+    due_date: input.dueDate,
+    priority: input.priority || 'medium',
+    tags: input.tags || [],
+    assigned_to: input.assignedTo || null,
+    assigned_by: input.assignedTo ? userId : null,
+    section_id: sectionId || input.sectionId || null,
+    attachments: input.attachments || [],
+    google_drive_links: input.googleDriveLinks || [],
+    status: input.status || 'pending',
+    user_id: userId,
+    is_admin_task: !!sectionId,
+    is_template: false,
+  };
 
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert(taskData)
-      .select('*')
-      .single();
+  const data = await SupabaseService.execute(
+    () => supabase.from('tasks').insert(taskData).select('*').single(),
+    'Create task',
+    abortSignal
+  );
 
-    if (error) throw new Error(`Failed to create task: ${error.message}`);
+  const newTask = transformTaskFromDB(data);
 
-    const newTask = transformTaskFromDB(data);
+  // Send push notification in background (non-blocking)
+  if (newTask.isAdminTask) {
+    sendFCMPushNotification(newTask).catch(() => {});
+  }
 
-    // Send FCM push notification if it's an admin task
-    if (newTask.isAdminTask) {
-      console.log('[FCM Enhanced] Task is admin task, sending notifications...');
-      try {
-        await sendFCMPushNotification(newTask);
-        console.log('[FCM Enhanced] Push notification sent successfully');
-      } catch (error) {
-        console.error('[FCM Enhanced] Failed to send push notification:', error);
-      }
-    } else {
-      console.log('[FCM Enhanced] Task is not admin task, skipping push notification');
-    }
-
-    return newTask;
-  });
+  return newTask;
 }
 
 /**
@@ -207,7 +264,7 @@ export async function updateTaskEnhanced(
   taskId: string,
   updates: UpdateTaskInput
 ): Promise<EnhancedTask> {
-  const updateData: any = {};
+  const updateData: Record<string, any> = {};
 
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.description !== undefined) updateData.description = updates.description;
@@ -225,14 +282,10 @@ export async function updateTaskEnhanced(
   if (updates.attachments !== undefined) updateData.attachments = updates.attachments;
   if (updates.googleDriveLinks !== undefined) updateData.google_drive_links = updates.googleDriveLinks;
 
-  const { data, error } = await supabase
-    .from('tasks')
-    .update(updateData)
-    .eq('id', taskId)
-    .select('*')
-    .single();
-
-  if (error) throw new Error(`Failed to update task: ${error.message}`);
+  const data = await SupabaseService.execute(
+    () => supabase.from('tasks').update(updateData).eq('id', taskId).select('*').single(),
+    'Update task'
+  );
 
   return transformTaskFromDB(data);
 }
@@ -241,24 +294,20 @@ export async function updateTaskEnhanced(
  * Delete a task
  */
 export async function deleteTaskEnhanced(taskId: string): Promise<void> {
-  const { error } = await supabase
-    .from('tasks')
-    .delete()
-    .eq('id', taskId);
-
-  if (error) throw new Error(`Failed to delete task: ${error.message}`);
+  await SupabaseService.executeVoid(
+    () => supabase.from('tasks').delete().eq('id', taskId),
+    'Delete task'
+  );
 }
 
 /**
  * Bulk delete tasks
  */
 export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
-  const { error } = await supabase
-    .from('tasks')
-    .delete()
-    .in('id', taskIds);
-
-  if (error) throw new Error(`Failed to bulk delete tasks: ${error.message}`);
+  await SupabaseService.executeVoid(
+    () => supabase.from('tasks').delete().in('id', taskIds),
+    'Bulk delete tasks'
+  );
 }
 
 /**
@@ -268,17 +317,15 @@ export async function bulkUpdateTaskStatus(
   taskIds: string[],
   status: TaskStatus
 ): Promise<void> {
-  const updateData: any = { status };
+  const updateData: Record<string, any> = { status };
   if (status === 'completed') {
     updateData.completed_at = new Date().toISOString();
   }
 
-  const { error } = await supabase
-    .from('tasks')
-    .update(updateData)
-    .in('id', taskIds);
-
-  if (error) throw new Error(`Failed to bulk update task status: ${error.message}`);
+  await SupabaseService.executeVoid(
+    () => supabase.from('tasks').update(updateData).in('id', taskIds),
+    'Bulk update status'
+  );
 }
 
 /**
@@ -288,12 +335,10 @@ export async function bulkUpdateTaskPriority(
   taskIds: string[],
   priority: TaskPriority
 ): Promise<void> {
-  const { error } = await supabase
-    .from('tasks')
-    .update({ priority })
-    .in('id', taskIds);
-
-  if (error) throw new Error(`Failed to bulk update task priority: ${error.message}`);
+  await SupabaseService.executeVoid(
+    () => supabase.from('tasks').update({ priority }).in('id', taskIds),
+    'Bulk update priority'
+  );
 }
 
 /**
@@ -301,25 +346,22 @@ export async function bulkUpdateTaskPriority(
  */
 export async function bulkAddTags(taskIds: string[], tags: string[]): Promise<void> {
   // Fetch existing tasks to merge tags
-  const { data: existingTasks, error: fetchError } = await supabase
-    .from('tasks')
-    .select('id, tags')
-    .in('id', taskIds);
-
-  if (fetchError) throw new Error(`Failed to fetch tasks: ${fetchError.message}`);
+  const existingTasks = await SupabaseService.execute(
+    () => supabase.from('tasks').select('id, tags').in('id', taskIds),
+    'Fetch tasks for tag update'
+  );
 
   // Update each task with merged tags
-  const updates = existingTasks?.map(task => ({
+  const updates = (existingTasks as any[])?.map(task => ({
     id: task.id,
     tags: Array.from(new Set([...(task.tags || []), ...tags])),
   }));
 
-  if (updates) {
-    const { error } = await supabase
-      .from('tasks')
-      .upsert(updates);
-
-    if (error) throw new Error(`Failed to bulk add tags: ${error.message}`);
+  if (updates?.length) {
+    await SupabaseService.executeVoid(
+      () => supabase.from('tasks').upsert(updates),
+      'Bulk add tags'
+    );
   }
 }
 

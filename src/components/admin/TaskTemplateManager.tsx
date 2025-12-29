@@ -242,8 +242,18 @@ function CreateTemplateModal({ userId, sectionId, onClose, onCreated }: CreateTe
   });
   const [saving, setSaving] = useState(false);
 
+  // Reset saving state on unmount
+  useEffect(() => {
+    return () => {
+      setSaving(false);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (saving) return; // Prevent double submission
+    
     setSaving(true);
 
     try {
@@ -258,11 +268,11 @@ function CreateTemplateModal({ userId, sectionId, onClose, onCreated }: CreateTe
         createdBy: userId,
         isActive: true,
       });
+      setSaving(false); // Reset before callback
       onCreated(template);
     } catch (error) {
       console.error('Failed to create template:', error);
       alert('Failed to create template');
-    } finally {
       setSaving(false);
     }
   };

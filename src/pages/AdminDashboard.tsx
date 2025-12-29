@@ -66,6 +66,7 @@ export function AdminDashboard({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [openTaskFormV2, setOpenTaskFormV2] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   const previousTabRef = useRef<AdminTab | null>(null);
   const lastVisibilityChangeRef = useRef<number>(Date.now());
   const isPageActiveRef = useRef<boolean>(true);
@@ -85,6 +86,7 @@ export function AdminDashboard({
   useEffect(() => {
     if (previousTabRef.current === 'tasks' && activeTab !== 'tasks') {
       // Clean up task form state when leaving tasks tab
+      setIsCreatingTask(false);
       setShowTaskForm(false);
       setError(null);
     }
@@ -100,8 +102,10 @@ export function AdminDashboard({
   // Reset openTaskFormV2 after it's been consumed by TaskManagerEnhanced
   useEffect(() => {
     if (openTaskFormV2 && activeTab === 'task-management-v2') {
-      // Immediately reset to prevent state issues
-      setOpenTaskFormV2(false);
+      const timer = setTimeout(() => {
+        setOpenTaskFormV2(false);
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [openTaskFormV2, activeTab]);
   
@@ -109,18 +113,20 @@ export function AdminDashboard({
   useEffect(() => {
     if (activeTab === 'tasks') {
       setShowTaskForm(true);
+      // Reset task creation states when entering the tab
+      setIsCreatingTask(false);
     }
   }, [activeTab]);
   
   // Filter tasks for section admin - memoized for performance
-  const filteredTasks = useMemo(() => {
+   const filteredTasks = useMemo(() => {
     if (!isSectionAdmin || !sectionId) {
       return tasks;
     }
     return tasks.filter(task => task.sectionId === sectionId);
   }, [tasks, isSectionAdmin, sectionId]);
   
-  // Load announcements data
+  // Conditionally load data based on active tab
   const {
     announcements,
     createAnnouncement,
@@ -128,15 +134,15 @@ export function AdminDashboard({
     refreshAnnouncements
   } = useAnnouncements();
   
-  // Filter announcements for section admin - only compute when on announcements tab
+  // Filter announcements for section admin - memoized for performance
   const filteredAnnouncements = useMemo(() => {
-    if (!isSectionAdmin || !sectionId) {
-      return announcements;
+    if (!isSectionAdmin || !sectionId || activeTab !== 'announcements') {
+      return []; // Only compute when needed
     }
     return announcements.filter(announcement => {
       return !announcement.sectionId || announcement.sectionId === sectionId;
     });
-  }, [announcements, isSectionAdmin, sectionId]);
+  }, [announcements, isSectionAdmin, sectionId, activeTab]);
   
   // Load course data only when needed
   const {
@@ -151,13 +157,16 @@ export function AdminDashboard({
     refreshCourses
   } = useCourses();
 
-  // Filter courses for section admin
+  // Filter courses for section admin - memoized and conditional
   const filteredCourses = useMemo(() => {
-    if (!isSectionAdmin || !sectionId) {
-      return courses;
+    // Only compute when courses tab is active or when needed by other components
+    if ((!isSectionAdmin || !sectionId) || 
+        (activeTab !== 'courses' && activeTab !== 'study-materials' && 
+         activeTab !== 'teachers' && activeTab !== 'routine')) {
+      return [];
     }
     return courses.filter(course => course.sectionId === sectionId);
-  }, [courses, isSectionAdmin, sectionId]);
+  }, [courses, isSectionAdmin, sectionId, activeTab]);
 
   // Load routine data only when needed
   const {
@@ -174,13 +183,13 @@ export function AdminDashboard({
     refreshRoutines
   } = useRoutines();
 
-  // Filter routines for section admin
+  // Filter routines for section admin - conditional loading
   const filteredRoutines = useMemo(() => {
-    if (!isSectionAdmin || !sectionId) {
-      return routines;
+    if ((!isSectionAdmin || !sectionId) || activeTab !== 'routine') {
+      return [];
     }
     return routines.filter(routine => routine.sectionId === sectionId);
-  }, [routines, isSectionAdmin, sectionId]);
+  }, [routines, isSectionAdmin, sectionId, activeTab]);
 
   // Load teacher data only when needed
   const {
@@ -192,16 +201,18 @@ export function AdminDashboard({
     refreshTeachers
   } = useTeachers();
   
-  // Filter teachers for section admin
+  // Filter teachers for section admin - memoized and conditional
   const filteredTeachers = useMemo(() => {
-    if (!isSectionAdmin || !sectionId) {
-      return teachers;
+    if ((!isSectionAdmin || !sectionId) || 
+        (activeTab !== 'teachers' && activeTab !== 'routine' && 
+         activeTab !== 'courses')) {
+      return [];
     }
     return teachers.filter(teacher => {
       if (teacher.sectionId === sectionId) return true;
       return teacher.courses?.some(course => course.sectionId === sectionId);
     });
-  }, [teachers, isSectionAdmin, sectionId]);
+  }, [teachers, isSectionAdmin, sectionId, activeTab]);
   
   // Load user data only when needed
   const { 
@@ -212,13 +223,15 @@ export function AdminDashboard({
     loading: usersLoading 
   } = useUsers();
   
-  // Filter users for section admin
+  // Filter users for section admin - memoized for performance
   const filteredUsers = useMemo(() => {
-    if (!isSectionAdmin || !sectionId) {
-      return users;
+    if (!sectionId || (activeTab !== 'users' && activeTab !== 'dashboard')) {
+      return []; // Only compute when needed
     }
     return users.filter(u => u.sectionId === sectionId);
-  }, [users, isSectionAdmin, sectionId]);
+  }, [users, sectionId, activeTab]);
+  
+
 
   // Track page visibility for internal state only - no auto-refresh
   useEffect(() => {
@@ -279,6 +292,7 @@ export function AdminDashboard({
 
     // Reset states when changing tabs
     setError(null);
+    setIsCreatingTask(false);
 
     setActiveTab(tab);
 
@@ -291,7 +305,13 @@ export function AdminDashboard({
         setShowTaskForm(false);
     }
   }, [
-    activeTab
+    activeTab,
+    refreshAnnouncements,
+    refreshCourses,
+    refreshRoutines,
+    refreshTasks,
+    refreshTeachers,
+    refreshUsers
   ]);
 
   // Optimized manual refresh with better error handling
@@ -301,6 +321,7 @@ export function AdminDashboard({
     try {
       setIsRefreshing(true);
       setError(null);
+      setIsCreatingTask(false); // Reset task creation state
 
       // Only refresh data for the active tab to reduce load
       switch (activeTab) {
@@ -331,7 +352,14 @@ export function AdminDashboard({
 
   // Create task with section ID assignment and better state management
   const handleCreateTask = useCallback(async (taskData: NewTask) => {
+    // Prevent multiple simultaneous task creation attempts
+    if (isCreatingTask) {
+      console.log('Task creation already in progress');
+      return;
+    }
+    
     try {
+      setIsCreatingTask(true);
       setError(null);
       
       // If section admin, automatically associate with section
@@ -347,13 +375,18 @@ export function AdminDashboard({
         await onCreateTask(taskData);
       }
       
+      // After creating a task, refresh the task list to show the new task
+      await refreshTasks(true); // Force refresh to ensure latest data
+      
       showSuccessToast('Task created successfully');
     } catch (error: any) {
       console.error('Error creating task:', error);
       showErrorToast(`Error creating task: ${error.message}`);
       setError(`Failed to create task: ${error.message}`);
+    } finally {
+      setIsCreatingTask(false);
     }
-  }, [isSectionAdmin, onCreateTask, sectionId]);
+  }, [isSectionAdmin, onCreateTask, refreshTasks, sectionId, isCreatingTask]);
 
   // Handle user promotion with memoization
   const handlePromoteUser = useCallback(async (userId: string) => {
@@ -493,17 +526,29 @@ export function AdminDashboard({
                   </div>
                 )}
                 
-                <TaskManager
-                  tasks={filteredTasks}
-                  onCreateTask={handleCreateTask}
-                  onDeleteTask={onDeleteTask}
-                  onUpdateTask={onUpdateTask}
-                  showTaskForm={showTaskForm}
-                  sectionId={sectionId}
-                  isSectionAdmin={isSectionAdmin}
-                  isLoading={tasksLoading || isRefreshing}
-                  onRefresh={handleManualRefresh}
-                />
+            {(tasksLoading || isCreatingTask) && (
+                  <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg px-4 py-3 flex items-center gap-3 z-50 border border-gray-200 dark:border-gray-700">
+                    <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                <span className="text-gray-700 dark:text-gray-300 text-sm">
+                  {isCreatingTask ? 'Creating task...' : 'Loading tasks...'}
+                </span>
+                  </div>
+                )}
+                
+              <TaskManager
+                tasks={filteredTasks}
+                onCreateTask={handleCreateTask}
+                onDeleteTask={onDeleteTask}
+                onUpdateTask={onUpdateTask}
+                showTaskForm={showTaskForm}
+                sectionId={sectionId}
+                isSectionAdmin={isSectionAdmin}
+                isLoading={tasksLoading || isRefreshing}
+                isCreatingTask={isCreatingTask}
+                onTaskCreateStart={() => setIsCreatingTask(true)}
+                onTaskCreateEnd={() => setIsCreatingTask(false)}
+                onRefresh={handleManualRefresh}
+              />
               </>
             )}
 

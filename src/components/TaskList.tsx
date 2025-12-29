@@ -1,9 +1,7 @@
 import { Task } from '../types';
-import { WifiOff } from 'lucide-react';
 import { isOverdue } from '../utils/dateUtils';
 import { useState, useMemo, memo, useCallback } from 'react';
 import { TaskDetailsPopup } from './task/TaskDetailsPopup';
-import { useOfflineStatus } from '../hooks/useOfflineStatus';
 import { TaskCard } from './task/TaskCard';
 
 interface TaskListProps {
@@ -15,7 +13,6 @@ interface TaskListProps {
 // Apply memo to the main component to prevent unnecessary re-renders
 export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = false }: TaskListProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const isOffline = useOfflineStatus();
 
   // Memoized task selection handler
   const handleSelectTask = useCallback((task: Task) => {
@@ -53,22 +50,12 @@ export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = fal
     </div>
   ), []);
 
-  // Memoize the offline notice to prevent recreation
-  const offlineNotice = useMemo(() => (
-    <div className="mb-4 p-3 bg-blue-50 rounded-lg flex items-center gap-2 text-sm text-blue-700 border border-blue-100">
-      <WifiOff className="h-4 w-4 text-blue-500" />
-      <p>You're offline. Showing cached tasks.</p>
-    </div>
-  ), []);
-
   if (sortedTasks.length === 0) {
     return emptyState;
   }
 
   return (
     <div>
-      {isOffline && offlineNotice}
-
       <div className="w-full max-w-7xl mx-auto">
         {/* Mobile-optimized container with improved spacing */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3

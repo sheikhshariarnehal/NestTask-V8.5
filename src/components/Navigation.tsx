@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ProfileMenu } from './profile/ProfileMenu';
-import { Moon, Sun, Calendar, WifiOff } from 'lucide-react';
+import { Moon, Sun, Calendar } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { useOfflineStatus } from '../hooks/useOfflineStatus';
 import { MonthlyCalendar } from './MonthlyCalendar';
 import type { NavPage } from '../types/navigation';
 import type { Task } from '../types/task';
@@ -38,7 +37,6 @@ export function Navigation({
   tasks = []
 }: NavigationProps) {
   const { isDark, toggle } = useTheme();
-  const isOffline = useOfflineStatus();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -95,17 +93,9 @@ export function Navigation({
             <div className="flex justify-between items-center h-12 sm:h-14">
               {/* Logo and Brand */}
               <div className="flex-shrink-0 flex items-center">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-300">
-                    NestTask
-                  </h1>
-                  {isOffline && (
-                    <div className="flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm animate-pulse">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-400"></div>
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300 tracking-wide">Offline</span>
-                    </div>
-                  )}
-                </div>
+                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-300">
+                  NestTask
+                </h1>
               </div>
 
               {/* Right Section - Action Icons */}

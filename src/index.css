@@ -171,6 +171,97 @@
   display: none;  /* Safari and Chrome */
 }
 
+/* Custom styled scrollbar for admin dashboard */
+.admin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 4px;
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #6366f1);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb, #4f46e5);
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #60a5fa, #818cf8);
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #3b82f6, #6366f1);
+}
+
+/* Firefox scrollbar styling */
+.admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 rgba(243, 244, 246, 0.5);
+}
+
+.dark .admin-scrollbar {
+  scrollbar-color: #60a5fa rgba(31, 41, 55, 0.5);
+}
+
+/* Professional fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Shimmer loading animation for professional look */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #e0e0e0 20%,
+    #f0f0f0 40%,
+    #f0f0f0 100%
+  );
+  background-size: 1000px 100%;
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    #2d3748 0%,
+    #4a5568 20%,
+    #2d3748 40%,
+    #2d3748 100%
+  );
+}
+
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out;
 }

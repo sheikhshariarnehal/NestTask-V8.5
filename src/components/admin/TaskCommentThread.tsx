@@ -27,6 +27,13 @@ export function TaskCommentThread({ taskId, userId, userName }: TaskCommentThrea
     loadComments();
   }, [taskId]);
 
+  // Reset submitting state on unmount
+  useEffect(() => {
+    return () => {
+      setSubmitting(false);
+    };
+  }, []);
+
   const loadComments = async () => {
     try {
       setLoading(true);

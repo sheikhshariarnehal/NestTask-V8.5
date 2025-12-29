@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { 
   Activity, Users, Filter, Calendar, PieChart, Zap, TrendingUp, BarChart2, 
   BookOpen, Clock, Star, Award, Briefcase, CreditCard, CheckCircle, FileText
@@ -17,7 +17,7 @@ interface DashboardProps {
   isLoading?: boolean;
 }
 
-export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
+export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
   const [filterValue, setFilterValue] = useState('All');
   const [currentDate, setCurrentDate] = useState('');
   const [currentMonth, setCurrentMonth] = useState('');
@@ -82,43 +82,43 @@ export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
     setGreetingTime(greeting);
   }, [isMobile]);
 
-  // Update tasks when initialTasks prop changes
   useEffect(() => {
     setTasks(initialTasks);
   }, [initialTasks]);
 
-  // Filter users based on selected filter
-  const getFilteredUsers = () => {
+  const filteredUsers = useMemo(() => {
     if (filterValue === 'All') return users;
     return users.filter(user => user.role === filterValue.toLowerCase());
-  };
-  
-  const filteredUsers = getFilteredUsers();
-  const adminUser = users.find(user => user.role === 'admin');
+  }, [filterValue, users]);
 
-  // Calculate stats
-  const activeUsers = users.filter(user => user.lastActive).length;
-  const activePercentage = Math.round((activeUsers / users.length) * 100) || 0;
-  const newUsersThisWeek = users.filter(user => {
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return new Date(user.createdAt) >= weekAgo;
-  }).length;
+  const adminUser = useMemo(() => users.find(user => user.role === 'admin'), [users]);
 
-  // Calculate completion rate change
-  const completionRate = tasks.length 
-    ? Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100) 
-    : 0;
-  const completionTrend = "+8%";
-  
-  // Calculate task categories distribution
-  const taskCategories = tasks.reduce((acc, task) => {
-    acc[task.category] = (acc[task.category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const { activeUsers, activePercentage, newUsersThisWeek } = useMemo(() => {
+    const active = users.filter(user => user.lastActive).length;
+    const percentage = Math.round((active / users.length) * 100) || 0;
+    const newUsers = users.filter(user => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(user.createdAt) >= weekAgo;
+    }).length;
+    return { activeUsers: active, activePercentage: percentage, newUsersThisWeek: newUsers };
+  }, [users]);
 
-  // Filter tasks based on the selected time range
-  const getFilteredTasksByTimeRange = () => {
+  const { completionRate, completionTrend } = useMemo(() => {
+    const rate = tasks.length 
+      ? Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100) 
+      : 0;
+    return { completionRate: rate, completionTrend: "+8%" };
+  }, [tasks]);
+
+  const taskCategories = useMemo(() => {
+    return tasks.reduce((acc, task) => {
+      acc[task.category] = (acc[task.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [tasks]);
+
+  const filteredTasksByTimeRange = useMemo(() => {
     const now = new Date();
     
     switch(selectedTimeRange) {
@@ -136,25 +136,22 @@ export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
       default:
         return tasks;
     }
-  };
+  }, [tasks, selectedTimeRange]);
 
-  // Get filtered tasks based on time range
-  const filteredTasksByTimeRange = getFilteredTasksByTimeRange();
+  const filteredTaskCategories = useMemo(() => {
+    return filteredTasksByTimeRange.reduce((acc, task) => {
+      acc[task.category] = (acc[task.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [filteredTasksByTimeRange]);
 
-  // Calculate filtered task categories
-  const filteredTaskCategories = filteredTasksByTimeRange.reduce((acc, task) => {
-    acc[task.category] = (acc[task.category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Handle task updates from TaskOverview
-  const handleTaskUpdated = (updatedTask: Task) => {
+  const handleTaskUpdated = useCallback((updatedTask: Task) => {
     setTasks((prevTasks: Task[]) => 
       prevTasks.map((task: Task) => 
         task.id === updatedTask.id ? updatedTask : task
       )
     );
-  };
+  }, []);
 
   return (
     <div className="space-y-6 pb-8">
@@ -162,15 +159,15 @@ export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
-          <div>
+            <div>
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</h3>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{users.length}</div>
             </div>
             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/10 flex items-center justify-center shadow-sm">
               <Users className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+            </div>
           </div>
         </div>
-      </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
@@ -213,7 +210,6 @@ export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Analytics Section - 2/3 width on desktop */}
         <div className="lg:col-span-2">
-          <div>
           {/* Analytics Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
             <div>
@@ -263,7 +259,6 @@ export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
             timeRange={analyticsTimeRange}
           />
         </div>
-          </div>
             
         {/* Tasks Overview Section - 1/3 width on desktop */}
         <div className="lg:col-span-1 animate-slide-up" style={{animationDelay: '0.3s'}}>
@@ -529,4 +524,4 @@ export function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
       </div>
     </div>
   );
-} 
+}); 

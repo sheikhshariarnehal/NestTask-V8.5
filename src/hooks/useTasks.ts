@@ -6,6 +6,16 @@ import type { Task, NewTask } from '../types/task';
 // Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
 const TASK_FETCH_TIMEOUT = 45000;
 
+// Cache for tasks to avoid refetching
+interface TasksCacheEntry {
+  tasks: Task[];
+  timestamp: number;
+}
+const tasksCache = new Map<string, TasksCacheEntry>();
+
+// Cache expiry time (5 minutes)
+const CACHE_EXPIRY_MS = 5 * 60 * 1000;
+
 // Maximum number of retries for task fetching
 const MAX_RETRIES_TIMEOUT = 5;
 const MAX_RETRIES_OTHER = 3;

@@ -296,6 +296,8 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
     // Cleanup function
     return () => {
       isMounted.current = false;
+      // Reset submitting state on unmount to prevent stuck state
+      dispatch({ type: 'SET_SUBMITTING', isSubmitting: false });
       if (submissionTimeoutRef.current) {
         clearTimeout(submissionTimeoutRef.current);
       }
@@ -309,7 +311,7 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
         }
       });
     };
-  }, [fileUrls]);
+  }, [fileUrls, dispatch]);
   
   // Check if device is mobile - memoized
   const isMobile = useCallback(() => {
@@ -502,6 +504,14 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prevent double submission
+    if (formIsSubmitting) {
+      console.log('[TaskForm] Already submitting, ignoring duplicate submission');
+      return;
+    }
+    
+    console.log('[TaskForm] Starting task submission');
+    
     // Clear any existing timeout
     if (submissionTimeoutRef.current) {
       clearTimeout(submissionTimeoutRef.current);
@@ -603,6 +613,8 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
       // Submit the task
       await onSubmit(finalTask);
       
+      console.log('[TaskForm] Task submitted successfully');
+      
       // Clear timeout on successful submission
       if (submissionTimeoutRef.current) {
         clearTimeout(submissionTimeoutRef.current);
@@ -610,6 +622,8 @@ export function TaskForm({ onSubmit, sectionId, isSectionAdmin = false, isSubmit
       
       // Reset form if component is still mounted
       if (isMounted.current) {
+        // Reset submitting state BEFORE resetting form
+        dispatch({ type: 'SET_SUBMITTING', isSubmitting: false });
         dispatch({ type: 'RESET_FORM', sectionId });
         dispatch({ type: 'SET_SUCCESS', success: true });
         
