@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
@@ -118,10 +118,14 @@ export function TaskViewPage() {
   // Show loading state
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading task...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+        <div className="text-center animate-fade-in">
+          <div className="relative mb-6">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
+            <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full bg-blue-400 opacity-20 mx-auto" />
+          </div>
+          <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">Loading task details...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Please wait a moment</p>
         </div>
       </div>
     );
@@ -130,22 +134,34 @@ export function TaskViewPage() {
   // Show error state
   if (error || !task) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+        <div className="text-center max-w-md animate-fade-in">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/20 animate-pulse mx-auto" />
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto relative" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
             {error || 'Task not found'}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
             The task you're looking for doesn't exist or you don't have permission to view it.
           </p>
-          <button
-            onClick={handleClose}
-            className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Go Back
-          </button>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Go Home
+            </button>
+            <button
+              onClick={handleClose}
+              className="inline-flex items-center px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all hover:scale-105"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -153,11 +169,14 @@ export function TaskViewPage() {
 
   // Show task details
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 animate-fade-in">
       <Suspense 
         fallback={
           <div className="flex items-center justify-center min-h-screen">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <div className="text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-blue-500 mx-auto mb-3" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">Opening task...</p>
+            </div>
           </div>
         }
       >
