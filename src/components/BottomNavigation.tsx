@@ -135,15 +135,15 @@ export function BottomNavigation({ activePage, onPageChange, hasUnreadNotificati
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 border-t border-gray-200 dark:border-gray-800"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 border-t border-gray-200 dark:border-gray-800 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]"
       style={{ 
-        paddingBottom: 'max(env(safe-area-inset-bottom), 0px)'
+        paddingBottom: 'env(safe-area-inset-bottom)'
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-4 h-14">
+        <div className="grid grid-cols-4 h-[50px]">
           {/* Active indicator line - simplified styling */}
           <div className="absolute top-0 h-0.5 bg-blue-500 dark:bg-blue-400 transition-all duration-150" 
             style={{

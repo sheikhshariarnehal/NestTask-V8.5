@@ -10,9 +10,7 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   android: {
-    // Allow mixed content for local development
     allowMixedContent: true,
-    // Use Material 3 theme
     useLegacyBridge: false
   },
   plugins: {
@@ -21,11 +19,8 @@ const config: CapacitorConfig = {
       backgroundColor: '#1e293b',
       overlaysWebView: false
     },
-    Network: {
-      // Network monitoring is enabled by default
-    },
     PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert']
+      presentationOptions: ['alert']
     }
   }
 };

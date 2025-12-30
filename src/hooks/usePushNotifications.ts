@@ -104,6 +104,22 @@ export function usePushNotifications() {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
 
+      // Create notification channel for Android (clean, optimized styling)
+      if (Capacitor.getPlatform() === 'android') {
+        await PushNotifications.createChannel({
+          id: 'tasks',
+          name: 'Task Notifications',
+          description: 'Notifications for new tasks and updates',
+          importance: 4, // High importance
+          visibility: 1, // Public
+          sound: 'default',
+          vibration: true,
+          lights: true,
+          lightColor: '#3b82f6', // Blue color
+        });
+        console.log('Created notification channel: tasks');
+      }
+
       // Check current permission status
       let permStatus = await PushNotifications.checkPermissions();
       
@@ -216,18 +232,22 @@ export function usePushNotifications() {
     const pushActionListener = PushNotifications.addListener(
       'pushNotificationActionPerformed',
       (action: ActionPerformed) => {
-        console.log('Push notification action performed:', action);
+        console.log('Push notification action performed');
+        console.log('Action:', action.actionId);
+        console.log('Notification data:', action.notification);
         
-        // Extract task ID from notification data
-        const data = action.notification.data;
-        if (data?.taskId) {
-          // Navigate to task - you can emit an event or use navigation here
-          console.log('Navigate to task:', data.taskId);
-          // For now, just log - we'll integrate with navigation later
-          window.dispatchEvent(new CustomEvent('navigate-to-task', { 
-            detail: { taskId: data.taskId } 
-          }));
-        }
+        // Dispatch event to notify the app
+        window.dispatchEvent(new CustomEvent('push-notification-clicked', { 
+          detail: { 
+            opened: true,
+            actionId: action.actionId,
+            data: action.notification.data,
+            notification: action.notification
+          } 
+        }));
+        
+        // If the app was in background, this will bring it to foreground
+        // The event listener in App.tsx can handle any navigation if needed
       }
     );
 

@@ -175,7 +175,14 @@ async function sendFCMMessage(
               notification: {
                 sound: 'default',
                 channelId: 'tasks',
-                clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+                clickAction: 'PUSH_NOTIFICATION_CLICK',
+                color: '#3b82f6',
+                icon: 'ic_notification',
+                defaultSound: true,
+                defaultVibrateTimings: true,
+                notificationPriority: 'PRIORITY_HIGH',
+                visibility: 'PUBLIC',
+                notificationCount: 1,
               },
             },
           },
@@ -272,7 +279,8 @@ serve(async (req) => {
     // Send notifications to all tokens
     const notificationData = {
       taskId,
-      type: 'new_task',
+      type: 'TASK',
+      route: `/task/view/${taskId}`,
       ...data,
     }
 

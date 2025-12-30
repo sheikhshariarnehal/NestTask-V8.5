@@ -19,6 +19,8 @@ import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
+import { PushNotifications, ActionPerformed } from '@capacitor/push-notifications';
+import { checkAndNavigate } from './services/pushNavigationService';
 
 // Page import functions
 const importAdminDashboard = () => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard }));
@@ -75,6 +77,71 @@ export default function App() {
       registerPush();
     }
   }, [user, isPushRegistered, registerPush]);
+  
+  // Handle push notification clicks (when user taps notification)
+  // This listener handles deep linking from push notifications
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    // Check for any pending navigation from killed state launch
+    // (notification that launched the app before React was ready)
+    checkAndNavigate();
+
+    let listenerHandle: { remove: () => void } | null = null;
+
+    const setupPushListener = async () => {
+      try {
+        // Listen for push notification action performed (user tapped notification)
+        // This handles notifications tapped while app is in background
+        listenerHandle = await PushNotifications.addListener(
+          'pushNotificationActionPerformed',
+          (action: ActionPerformed) => {
+            console.log('[Push] Notification tapped:', action);
+            console.log('[Push] Action ID:', action.actionId);
+            console.log('[Push] Notification data:', action.notification?.data);
+
+            // Extract route from notification data
+            const data = action.notification?.data;
+            const route = data?.route;
+            const taskId = data?.taskId;
+            const type = data?.type;
+
+            console.log('[Push] Route:', route, 'TaskId:', taskId, 'Type:', type);
+
+            // Navigate based on the route or type
+            if (route && typeof route === 'string') {
+              // Use window.location for reliable navigation that works from any state
+              // Small delay to ensure app is fully active
+              setTimeout(() => {
+                console.log('[Push] Navigating to:', route);
+                window.location.href = route;
+              }, 100);
+            } else if (taskId && typeof taskId === 'string') {
+              // Fallback: construct route from taskId
+              setTimeout(() => {
+                console.log('[Push] Navigating to task:', taskId);
+                window.location.href = `/task/view/${taskId}`;
+              }, 100);
+            } else {
+              // Default: go to home
+              console.log('[Push] No route found, going to home');
+              setActivePage('home');
+            }
+          }
+        );
+      } catch (error) {
+        console.error('[Push] Error setting up push listener:', error);
+      }
+    };
+
+    setupPushListener();
+
+    return () => {
+      if (listenerHandle) {
+        listenerHandle.remove();
+      }
+    };
+  }, []);
   
   const { 
     tasks, 
@@ -402,7 +469,7 @@ export default function App() {
       />
       
       <main 
-        className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-32 lg:pb-12"
+        className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-12"
       >
         {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />
