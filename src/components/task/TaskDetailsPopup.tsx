@@ -1,6 +1,7 @@
 import { X, Calendar, Tag, Clock, Crown, Download, CheckCircle2, Clipboard, Copy, Link, ExternalLink, Eye, FileText, FileSpreadsheet, Presentation, FileImage, Folder, AlertCircle, Loader2, Paperclip } from 'lucide-react';
 import { parseLinks } from '../../utils/linkParser';
 import { getGoogleDriveResourceType, extractGoogleDriveId, getGoogleDrivePreviewUrl, getGoogleDriveFilenames } from '../../utils/googleDriveUtils';
+import { supabase } from '../../lib/supabase';
 import type { Task } from '../../types';
 import type { TaskStatus } from '../../types/task';
 import { useState, useEffect } from 'react';
@@ -36,7 +37,7 @@ export function TaskDetailsPopup({
   // Filter out section ID text
   const filteredDescription = task.description.replace(/\*This task is assigned to section ID: [0-9a-f-]+\*/g, '').trim();
   
-  // Check for either "Attached Files:" or "**Attachments:**" format
+  // Check for either "Attached Files:" or "**Attachments:**" format in description
   let regularDescription = filteredDescription;
   let fileSection: string[] = [];
   
@@ -52,6 +53,44 @@ export function TaskDetailsPopup({
     regularDescription = parts[0];
     fileSection = parts[1]?.split('\n').filter(line => line.trim() && line.includes('](')) || [];
   }
+  
+  // Process database attachments
+  const dbAttachments = task.attachments && task.attachments.length > 0 
+    ? task.attachments.map((url, index) => {
+        // Extract filename from URL
+        const urlParts = url.split('/');
+        const encodedFilename = urlParts[urlParts.length - 1];
+        
+        // Decode URL encoding
+        let name = decodeURIComponent(encodedFilename);
+        
+        // Clean up timestamp and hash pattern (e.g., "1766884177681-0fvpnc.pdf")
+        // Match pattern: digits-alphanumeric.extension
+        const timestampHashMatch = name.match(/^(\d+)-([a-z0-9]+)\.([^.]+)$/i);
+        if (timestampHashMatch) {
+          // If it's just timestamp-hash.ext, use a generic name with the extension
+          name = `Attachment_${index + 1}.${timestampHashMatch[3]}`;
+        } else {
+          // Try to clean other timestamp patterns
+          const cleanMatch = name.match(/^(.+?)(?:_\d{13}_[a-z0-9]+)?(\.[^.]+)$/i);
+          if (cleanMatch) {
+            name = cleanMatch[1] + cleanMatch[2];
+          }
+        }
+        
+        return { url, name };
+      })
+    : [];
+  
+  console.log('📎 Attachments Debug:', {
+    'task.attachments exists': !!task.attachments,
+    'task.attachments array': task.attachments,
+    'dbAttachments count': dbAttachments.length,
+    'dbAttachments data': dbAttachments,
+    'fileSection count': fileSection.length,
+    'fileSection data': fileSection,
+    'Will render section': (fileSection.length > 0 || dbAttachments.length > 0)
+  });
   
   // Process description to preserve formatting while handling links
   const processDescription = (text: string) => {
@@ -70,38 +109,48 @@ export function TaskDetailsPopup({
     try {
       console.log('Downloading file:', { url, filename });
       
-      // Check if the URL is an attachment URL format
-      if (url.startsWith('attachment:')) {
-        // Extract the file path from the attachment URL
-        const filePath = url.replace('attachment:', '');
-        console.log('Attachment file path:', filePath);
+      // Check if it's a Supabase storage URL
+      if (url.includes('supabase.co/storage/v1/object/public/task-attachments/')) {
+        // Extract the file path from the URL
+        const urlParts = url.split('/task-attachments/');
+        const filePath = urlParts[1];
         
-        // In a real implementation, you would fetch from your backend
-        // For this demonstration, we'll create a simple CSV content
-        const csvContent = `id,name,value\n1,Item 1,100\n2,Item 2,200\n3,Item 3,300`;
-        
-        // Create a blob from the content
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        
-        // Create a download link and trigger the download
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(downloadUrl);
-        }, 100);
-      } else {
-        // For regular URLs, open in a new tab
-        window.open(url, '_blank', 'noopener,noreferrer');
+        if (filePath) {
+          // Download the file from Supabase storage
+          const { data, error } = await supabase.storage
+            .from('task-attachments')
+            .download(filePath);
+          
+          if (error) {
+            console.error('Error downloading from storage:', error);
+            throw error;
+          }
+          
+          if (data) {
+            // Create a blob URL and trigger download
+            const downloadUrl = URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(downloadUrl);
+            }, 100);
+            return;
+          }
+        }
       }
+      
+      // For other URLs (like Google Drive), open in new tab
+      window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error downloading file:', error);
+      // Fallback to opening in new tab
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -353,34 +402,67 @@ ${regularDescription}
             </div>
           )}
 
-          {/* Attached Files - improved touch targets for mobile */}
-          {fileSection.length > 0 && (
-            <div className="mb-4">
+          {/* Attached Files - Clean Professional Design */}
+          {(fileSection.length > 0 || dbAttachments.length > 0) && (
+            <div className="mb-5">
               <div className="flex items-center gap-2 mb-3">
-                <Paperclip className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                <div className="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                  <Paperclip className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                   Attached Files
                 </h3>
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                  {dbAttachments.length + fileSection.length}
+                </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
+                {/* Render database attachments first */}
+                {dbAttachments.map((attachment, index) => (
+                  <div 
+                    key={`db-${index}`} 
+                    className="group flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-white to-purple-50/30 dark:from-gray-800 dark:to-purple-900/10 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:scale-110 transition-transform">
+                        <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        {attachment.name}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDownload(attachment.url, attachment.name)}
+                      className="p-2.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all touch-manipulation flex-shrink-0 group-hover:scale-110"
+                      aria-label={`Download ${attachment.name}`}
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                
+                {/* Render description-based attachments */}
                 {fileSection.map((line, index) => {
                   const fileInfo = extractFileInfo(line);
                   if (!fileInfo) return null;
 
                   return (
-                    <div key={index} className="group flex items-center justify-between p-3 rounded-xl bg-white dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600/30 hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-sm transition-all">
-                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <div 
+                      key={`desc-${index}`} 
+                      className="group flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-white to-purple-50/30 dark:from-gray-800 dark:to-purple-900/10 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:scale-110 transition-transform">
+                          <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                           {fileInfo.filename}
                         </span>
                       </div>
                       <button
                         onClick={() => handleDownload(fileInfo.url, fileInfo.filename)}
-                        className="p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all touch-manipulation flex-shrink-0"
-                        aria-label="Download"
+                        className="p-2.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all touch-manipulation flex-shrink-0 group-hover:scale-110"
+                        aria-label={`Download ${fileInfo.filename}`}
                       >
                         <Download className="w-4 h-4" />
                       </button>

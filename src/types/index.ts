@@ -32,4 +32,6 @@ export interface Task {
   assignedById?: string;
   updatedAt?: string;
   googleDriveLinks?: string[];
+  attachments?: string[];
+  originalFileNames?: string[];
 }
