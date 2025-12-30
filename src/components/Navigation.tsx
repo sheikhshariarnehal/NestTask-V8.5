@@ -87,7 +87,16 @@ export function Navigation({
 
   return (
     <>
-      <nav className="relative z-50">
+      <nav 
+        className="sticky top-0 z-50 bg-white dark:bg-gray-900"
+        style={{ 
+          paddingTop: 'env(safe-area-inset-top)',
+          /* Extend background behind status bar */
+          marginTop: 'calc(-1 * env(safe-area-inset-top))',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)'
+        }}
+      >
         <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
           <div className="max-w-7xl mx-auto px-3 sm:px-6">
             <div className="flex justify-between items-center h-12 sm:h-14">

@@ -11,16 +11,27 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: true,
-    useLegacyBridge: false
+    useLegacyBridge: false,
+    // Ensure WebView respects status bar
+    backgroundColor: '#ffffff'
+  },
+  ios: {
+    // Ensure proper status bar handling on iOS
+    contentInset: 'automatic',
+    backgroundColor: '#ffffff'
   },
   plugins: {
     StatusBar: {
-      style: 'dark',
-      backgroundColor: '#1e293b',
+      style: 'LIGHT',
+      backgroundColor: '#ffffff',
       overlaysWebView: false
     },
     PushNotifications: {
       presentationOptions: ['alert']
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
     }
   }
 };

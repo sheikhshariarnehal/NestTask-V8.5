@@ -6,6 +6,7 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    /* Safe area inset CSS variables for native mobile */
     --safe-area-inset-top: env(safe-area-inset-top, 0px);
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-inset-left: env(safe-area-inset-left, 0px);
@@ -26,17 +27,44 @@
   html, body {
     touch-action: pan-x pan-y;
     -ms-touch-action: pan-x pan-y;
-    margin: 0;
-    padding: 0;
+  }
+
+  /* Safe area container for Capacitor/native apps */
+  .safe-area-container {
+    /* Ensure content respects safe areas on notched devices */
+    padding-left: var(--safe-area-inset-left);
+    padding-right: var(--safe-area-inset-right);
+  }
+
+  /* Sticky header with status bar awareness */
+  .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding-top: var(--safe-area-inset-top);
+    background-color: inherit;
+  }
+
+  /* Ensure proper scrolling behavior for sticky headers */
+  html {
+    scroll-behavior: smooth;
     overflow-x: hidden;
   }
 
-  /* Safe area handling for mobile devices */
+  /* Fix for iOS rubber-banding and safe area */
   body {
-    padding-top: var(--safe-area-inset-top);
-    padding-bottom: var(--safe-area-inset-bottom);
-    padding-left: var(--safe-area-inset-left);
-    padding-right: var(--safe-area-inset-right);
+    position: relative;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overscroll-behavior-y: none;
+  }
+
+  /* Prevent content from going under status bar */
+  #root {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -117,36 +145,6 @@
   }
 }
 
-/* Safe area utilities for notch/status bar handling */
-.safe-top {
-  padding-top: calc(var(--safe-area-inset-top) + 0.5rem);
-}
-
-.safe-bottom {
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 0.5rem);
-}
-
-.safe-left {
-  padding-left: calc(var(--safe-area-inset-left) + 0.5rem);
-}
-
-.safe-right {
-  padding-right: calc(var(--safe-area-inset-right) + 0.5rem);
-}
-
-.safe-area-all {
-  padding-top: calc(var(--safe-area-inset-top) + 0.5rem);
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 0.5rem);
-  padding-left: calc(var(--safe-area-inset-left) + 0.5rem);
-  padding-right: calc(var(--safe-area-inset-right) + 0.5rem);
-}
-
-/* App container for proper safe area handling */
-.app-container {
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-}
-
 /* Improved line clamping for mobile */
 .line-clamp-1 {
   overflow: hidden;
@@ -169,117 +167,6 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Safari and Chrome */
-}
-
-/* Custom styled scrollbar for admin dashboard */
-.admin-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.admin-scrollbar::-webkit-scrollbar-track {
-  background: rgba(243, 244, 246, 0.5);
-  border-radius: 4px;
-}
-
-.dark .admin-scrollbar::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.5);
-}
-
-.admin-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #6366f1);
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb, #4f46e5);
-}
-
-.dark .admin-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #60a5fa, #818cf8);
-}
-
-.dark .admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #3b82f6, #6366f1);
-}
-
-/* Firefox scrollbar styling */
-.admin-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #3b82f6 rgba(243, 244, 246, 0.5);
-}
-
-.dark .admin-scrollbar {
-  scrollbar-color: #60a5fa rgba(31, 41, 55, 0.5);
-}
-
-/* Professional fade-in animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-/* Shimmer loading animation for professional look */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    transparent 100%
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
-}
-
-.dark .shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
-}
-
-.skeleton {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 0%,
-    #e0e0e0 20%,
-    #f0f0f0 40%,
-    #f0f0f0 100%
-  );
-  background-size: 1000px 100%;
-}
-
-.dark .skeleton {
-  background: linear-gradient(
-    90deg,
-    #2d3748 0%,
-    #4a5568 20%,
-    #2d3748 40%,
-    #2d3748 100%
-  );
 }
 
 .animate-scale-in {

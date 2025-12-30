@@ -39,20 +39,56 @@ const LectureSlidesPage = lazy(importLectureSlidesPage);
 type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
 
 export default function App() {
-  // Initialize Status Bar for native mobile apps
+  // Initialize Status Bar for native mobile apps - optimized for proper safe area handling
   useEffect(() => {
     const initStatusBar = async () => {
       if (Capacitor.isNativePlatform()) {
         try {
-          await StatusBar.setStyle({ style: Style.Dark });
-          await StatusBar.setBackgroundColor({ color: '#1e293b' });
+          // Set status bar to not overlay WebView - this ensures proper safe area calculation
           await StatusBar.setOverlaysWebView({ overlay: false });
+          
+          // Set status bar style (light text for dark backgrounds)
+          await StatusBar.setStyle({ style: Style.Dark });
+          
+          // Set status bar background color to match header
+          await StatusBar.setBackgroundColor({ color: '#ffffff' });
+          
+          // Show the status bar (in case it was hidden)
+          await StatusBar.show();
+          
+          console.log('[StatusBar] Configured successfully');
         } catch (error) {
-          console.error('Failed to configure status bar:', error);
+          console.error('[StatusBar] Failed to configure:', error);
         }
       }
     };
     initStatusBar();
+    
+    // Also handle theme changes for status bar color
+    const handleThemeChange = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const isDark = document.documentElement.classList.contains('dark');
+          await StatusBar.setBackgroundColor({ color: isDark ? '#111827' : '#ffffff' });
+          await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+        } catch (error) {
+          console.error('[StatusBar] Failed to update theme:', error);
+        }
+      }
+    };
+    
+    // Watch for dark mode changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          handleThemeChange();
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
   }, []);
 
   // Always call all hooks first, regardless of any conditions
@@ -452,7 +488,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container safe-area-container">
       <Navigation 
         onLogout={logout}
         hasUnreadNotifications={hasUnreadNotifications}
@@ -470,6 +506,10 @@ export default function App() {
       
       <main 
         className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-12"
+        style={{
+          /* Add top padding to account for sticky header height */
+          paddingTop: 'max(1rem, calc(env(safe-area-inset-top) + 1rem))'
+        }}
       >
         {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
           <LoadingScreen minimumLoadTime={500} showProgress={false} />

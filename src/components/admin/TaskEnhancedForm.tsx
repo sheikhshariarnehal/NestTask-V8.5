@@ -53,19 +53,58 @@ const TaskEnhancedFormComponent = ({
     })) || []
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const savingStartTimeRef = useRef<number | null>(null);
 
   // Track component mount state and reset saving state on unmount
   useEffect(() => {
     isMountedRef.current = true;
+    
+    // Reset stuck saving state when component mounts (e.g., after app restore)
+    setSaving(false);
+    setUploading(false);
+    
     return () => {
       isMountedRef.current = false;
-      setSaving(false); // Reset saving state on unmount
       // Cancel any pending requests
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
   }, []);
+
+  // Handle visibility changes to recover from stuck states
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Check if we've been in saving state for too long (more than 20 seconds)
+        if (saving && savingStartTimeRef.current) {
+          const elapsed = Date.now() - savingStartTimeRef.current;
+          if (elapsed > 20000) {
+            console.warn('[TaskEnhancedForm] Resetting stuck saving state after visibility change');
+            setSaving(false);
+            setError('Operation may have timed out. Please try again.');
+            if (abortControllerRef.current) {
+              abortControllerRef.current.abort();
+            }
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [saving]);
+
+  // Track when saving starts
+  useEffect(() => {
+    if (saving) {
+      savingStartTimeRef.current = Date.now();
+    } else {
+      savingStartTimeRef.current = null;
+    }
+  }, [saving]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -143,12 +182,25 @@ const TaskEnhancedFormComponent = ({
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (saving) return;
+    if (saving) {
+      console.log('[TaskEnhancedForm] Already saving, ignoring submit');
+      return;
+    }
     
     setSaving(true);
     setError(null);
 
+    // Create abort controller for this request
     abortControllerRef.current = new AbortController();
+    
+    // Safety timeout - reset saving state after 30 seconds regardless
+    const safetyTimeout = setTimeout(() => {
+      if (isMountedRef.current && saving) {
+        console.warn('[TaskEnhancedForm] Safety timeout triggered - resetting saving state');
+        setSaving(false);
+        setError('Request timed out. Please try again.');
+      }
+    }, 30000);
 
     try {
       const googleDriveLinks = formData.googleDriveLinks
@@ -167,8 +219,10 @@ const TaskEnhancedFormComponent = ({
           googleDriveLinks,
         };
         const updatedTask = await updateTaskEnhanced(task.id, updates);
+        clearTimeout(safetyTimeout);
         if (isMountedRef.current) {
           onTaskUpdated?.(updatedTask);
+          onClose();
         }
       } else {
         const taskInput: CreateTaskInput = {
@@ -188,22 +242,23 @@ const TaskEnhancedFormComponent = ({
           abortControllerRef.current.signal
         );
         
+        clearTimeout(safetyTimeout);
+        
         if (isMountedRef.current) {
           setSaving(false);
+          onTaskCreated?.(newTask);
+          onClose();
         }
-        
-        if (isMountedRef.current && onTaskCreated) {
-          onTaskCreated(newTask);
-        }
-      }
-      
-      if (isMountedRef.current) {
-        onClose();
       }
     } catch (err: any) {
+      clearTimeout(safetyTimeout);
+      
       if (err?.message === 'Operation cancelled') {
+        console.log('[TaskEnhancedForm] Operation was cancelled');
         return;
       }
+      
+      console.error('[TaskEnhancedForm] Error saving task:', err);
       
       if (isMountedRef.current) {
         const errorMessage = err?.message || 'Failed to save task. Please try again.';

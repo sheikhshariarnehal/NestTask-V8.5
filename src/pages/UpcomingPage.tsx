@@ -316,41 +316,6 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
     setTasks(propTasks || allTasks || []);
   }, [propTasks, allTasks]);
 
-  // Read initial date from URL parameters
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const dateParam = params.get('selectedDate');
-      
-      if (dateParam) {
-        const parsedDate = parseISO(dateParam);
-        if (!isNaN(parsedDate.getTime())) {
-          setSelectedDate(parsedDate);
-          console.log('Initial date loaded from URL:', dateParam);
-        }
-      }
-    } catch (error) {
-      console.error('Error parsing initial date from URL:', error);
-    }
-  }, []); // Run only once on mount
-
-  // Listen for dateSelected events from Navigation calendar
-  useEffect(() => {
-    const handleDateSelected = (event: CustomEvent) => {
-      const { date } = event.detail;
-      if (date) {
-        setSelectedDate(new Date(date));
-        setSelectedTask(null);
-        console.log('Date selected from Navigation calendar:', date);
-      }
-    };
-    
-    window.addEventListener('dateSelected', handleDateSelected as EventListener);
-    return () => {
-      window.removeEventListener('dateSelected', handleDateSelected as EventListener);
-    };
-  }, []);
-
   // Clear loading state if stuck for too long
   useEffect(() => {
     if (loading) {
@@ -656,7 +621,7 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
     setSelectedTask(null);
   }, []);
 
-  // Sync URL with selected date bidirectionally
+  // Optimize render cycle by only updating date in URL when needed
   useEffect(() => {
     const updateUrl = () => {
       try {
@@ -664,7 +629,6 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
         const dateParam = params.get('selectedDate');
         const currentDateStr = formatDate(selectedDate);
         
-        // Update URL if it doesn't match
         if (dateParam !== currentDateStr) {
           params.set('selectedDate', currentDateStr);
           const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -675,31 +639,9 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
       }
     };
     
-    // Also listen for URL changes (back/forward navigation)
-    const handlePopState = () => {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const dateParam = params.get('selectedDate');
-        if (dateParam) {
-          const parsedDate = parseISO(dateParam);
-          if (!isNaN(parsedDate.getTime())) {
-            setSelectedDate(parsedDate);
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing date from URL:', error);
-      }
-    };
-    
-    window.addEventListener('popstate', handlePopState);
-    
     // Debounce URL updates to avoid excessive history entries
     const timeoutId = setTimeout(updateUrl, 300);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => clearTimeout(timeoutId);
   }, [selectedDate, formatDate]);
 
   // Render loading skeleton during initial load
@@ -778,7 +720,7 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
       {/* Calendar Strip */}
       <div className="max-w-full md:max-w-5xl mx-auto px-2 md:px-6 mb-6">
         {/* Date Navigation */}
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-between px-1.5 py-2 min-h-[40px]">
           <button 
             onClick={() => setSelectedDate(new Date())}
             className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-900/30 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 whitespace-nowrap"

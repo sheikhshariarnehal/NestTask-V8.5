@@ -16,6 +16,12 @@ import type { AdminTab } from '../types/admin';
 import { useAuth } from '../hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
 import { RefreshCcw, AlertTriangle, Loader2, Plus } from 'lucide-react';
+import {
+  IonContent,
+  IonRefresher,
+  IonRefresherContent,
+  RefresherCustomEvent,
+} from '@ionic/react';
 
 // Minimum time between refreshes (in ms)
 const MIN_REFRESH_INTERVAL = 30000; // 30 seconds
@@ -79,6 +85,34 @@ export function AdminDashboard({
     refreshTasks,
     loading: tasksLoading
   } = useTasks(user?.id);
+
+  const handleRefresh = useCallback(async (event: RefresherCustomEvent) => {
+    const startTime = Date.now();
+    const MIN_REFRESH_DURATION = 500;
+    
+    try {
+      // Haptic feedback on pull start
+      if ('vibrate' in navigator) navigator.vibrate(10);
+      
+      const success = await refreshTasks(true);
+      
+      // Ensure minimum display time for smooth UX
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_REFRESH_DURATION) {
+        await new Promise(resolve => setTimeout(resolve, MIN_REFRESH_DURATION - elapsed));
+      }
+      
+      // Success haptic feedback
+      if (success && 'vibrate' in navigator) {
+        navigator.vibrate([5, 50, 5]);
+      }
+    } catch (error) {
+      console.error('[AdminDashboard] Refresh error:', error);
+      if ('vibrate' in navigator) navigator.vibrate(100);
+    } finally {
+      event.detail.complete();
+    }
+  }, [refreshTasks]);
 
   // Reset task form state when navigating away from tasks tab
   useEffect(() => {
@@ -473,7 +507,7 @@ export function AdminDashboard({
 
   // Memoized main layout structure to prevent unnecessary re-renders
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
       <SideNavigation
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -484,54 +518,60 @@ export function AdminDashboard({
       />
 
       <main className={`
-        flex-1 overflow-y-auto w-full transition-all duration-300
+        flex-1 w-full transition-all duration-300 h-full flex flex-col relative
         ${isMobileView ? 'pt-16' : isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
       `}>
-        <div className="max-w-full mx-auto p-3 sm:p-5 lg:p-6">
-          <header className="mb-4 sm:mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  {activeTab === 'dashboard' && 'Dashboard'}
-                  {activeTab === 'users' && 'User Management'}
-                  {activeTab === 'tasks' && 'Task Management (Legacy)'}
-                  {activeTab === 'task-management-v2' && 'Task Management'}
-                  {activeTab === 'announcements' && 'Announcements'}
+        <IonContent className="flex-1" style={{ '--background': 'transparent' }}>
+          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+            <IonRefresherContent></IonRefresherContent>
+          </IonRefresher>
+
+          <div className="max-w-full mx-auto p-3 sm:p-5 lg:p-6 pb-24 lg:pb-6">
+            <header className="mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    {activeTab === 'dashboard' && 'Dashboard'}
+                    {activeTab === 'users' && 'User Management'}
+                    {activeTab === 'tasks' && 'Task Management (Legacy)'}
+                    {activeTab === 'task-management-v2' && 'Task Management'}
+                    {activeTab === 'announcements' && 'Announcements'}
 
 
-                  {activeTab === 'lecture-slides' && 'Lecture Slides'}
+                    {activeTab === 'lecture-slides' && 'Lecture Slides'}
 
-                </h1>
-                {isSectionAdmin && sectionName && (
-                  <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
-                    Section Admin: {sectionName}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {new Date().toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+                  </h1>
+                  {isSectionAdmin && sectionName && (
+                    <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
+                      Section Admin: {sectionName}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {new Date().toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          {error && (
-            <div className="mb-4 p-3 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm">
-              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+            {error && (
+              <div className="mb-4 p-3 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
-          <div className="space-y-4 sm:space-y-6">
-            {renderTabContent()}
+            <div className="space-y-4 sm:space-y-6">
+              {renderTabContent()}
+            </div>
           </div>
-        </div>
+        </IonContent>
       </main>
 
       {/* Mobile FAB - Create Task */}

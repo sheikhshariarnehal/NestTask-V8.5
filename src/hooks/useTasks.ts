@@ -48,7 +48,7 @@ export function useTasks(userId: string | undefined) {
     userIdRef.current = userId;
   }, [userId]);
 
-  // Track page visibility to prevent blank screens
+  // Track page visibility to prevent blank screens and recover from stuck states
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
@@ -58,6 +58,16 @@ export function useTasks(userId: string | undefined) {
         // Mark that we came back from hidden
         const hiddenDuration = Date.now() - lastVisibilityChangeRef.current;
         lastVisibilityChangeRef.current = Date.now();
+        
+        // CRITICAL: Reset stuck loading state when app becomes visible
+        // This prevents the app from being stuck on loading after minimize/restore
+        if (loadingRef.current) {
+          console.log('[useTasks] Resetting stuck loading state after visibility change');
+          loadingRef.current = false;
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
+        }
         
         // Only mark as recent tab switch if hidden for less than 30 seconds
         // This prevents showing loading state immediately after tab switch
@@ -91,9 +101,10 @@ export function useTasks(userId: string | undefined) {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
     
-    // If force is true, reset recovery mode and retry count
+    // If force is true, reset recovery mode, retry count, and any stuck states
     if (options.force) {
       tabSwitchRecoveryRef.current = true;
+      loadingRef.current = false; // Reset stuck loading state
       if (isMountedRef.current) {
         setRetryCount(0);
       }
@@ -101,7 +112,7 @@ export function useTasks(userId: string | undefined) {
     
     // Don't reload if a request is already in progress, unless forced
     if (loadingRef.current && !options.force) {
-      console.log('Task loading already in progress, skipping');
+      console.log('[useTasks] Loading already in progress, skipping');
       return;
     }
     
@@ -157,8 +168,8 @@ export function useTasks(userId: string | undefined) {
 
       // Batch process tasks in chunks for better performance
       const processTasks = async () => {
-        // Add signal to fetch request for timeout control
-        const data = await fetchTasks(userId, signal);
+        // Pass undefined for sectionId as we don't need to filter manually
+        const data = await fetchTasks(userId, undefined);
         return data;
       };
       
@@ -213,13 +224,11 @@ export function useTasks(userId: string | undefined) {
         }
       }
     } finally {
+      // Immediately reset loading state - no delay needed
+      loadingRef.current = false;
       if (isMountedRef.current) {
         setLoading(false);
       }
-      // Small delay before clearing loadingRef to prevent immediate re-requests
-      setTimeout(() => {
-        loadingRef.current = false;
-      }, 100);
     }
   }, [userId, retryCount]);
 
@@ -252,6 +261,12 @@ export function useTasks(userId: string | undefined) {
   const handleCreateTask = async (newTask: NewTask, sectionId?: string) => {
     if (!userId) {
       throw new Error('User ID is required');
+    }
+    
+    // Reset any stuck loading state before creating task
+    if (loadingRef.current) {
+      console.log('[useTasks] Resetting stuck loading state before task creation');
+      loadingRef.current = false;
     }
 
     try {
@@ -325,8 +340,19 @@ export function useTasks(userId: string | undefined) {
     }
   };
 
-  const refreshTasks = useCallback((force = false) => {
-    loadTasks({ force });
+  /**
+   * Refresh tasks with optimized loading
+   * @param force - Force refresh bypassing cache and throttle
+   * @returns Promise that resolves when refresh is complete
+   */
+  const refreshTasks = useCallback(async (force = false): Promise<boolean> => {
+    try {
+      await loadTasks({ force });
+      return true;
+    } catch (error) {
+      console.error('[useTasks] Refresh failed:', error);
+      return false;
+    }
   }, [loadTasks]);
 
   return {
@@ -336,6 +362,6 @@ export function useTasks(userId: string | undefined) {
     createTask: handleCreateTask,
     updateTask: handleUpdateTask,
     deleteTask: handleDeleteTask,
-    refreshTasks: () => loadTasks({ force: true })
+    refreshTasks
   };
 }
