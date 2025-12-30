@@ -9,10 +9,8 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { Navigation } from './components/Navigation';
 import { BottomNavigation } from './components/BottomNavigation';
 import { isSameDay } from './utils/dateUtils';
-import { InstantTransition } from './components/InstantTransition';
 import type { NavPage } from './types/navigation';
 import type { TaskCategory } from './types/task';
-import type { Task } from './types/task';
 import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
@@ -21,6 +19,13 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, ActionPerformed } from '@capacitor/push-notifications';
 import { checkAndNavigate } from './services/pushNavigationService';
+import { IonApp, IonContent, IonRefresher, IonRefresherContent, setupIonicReact } from '@ionic/react';
+import type { RefresherEventDetail } from '@ionic/react';
+
+// Initialize Ionic React
+setupIonicReact({
+  mode: 'md', // Use Material Design mode for consistent look
+});
 
 // Page import functions
 const importAdminDashboard = () => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard }));
@@ -102,7 +107,7 @@ export default function App() {
     }
   }, [user]);
   
-  const { users, loading: usersLoading, deleteUser } = useUsers();
+  const { users, loading: usersLoading, deleteUser, refreshUsers } = useUsers();
   
   // Initialize push notifications for native platforms
   const { isRegistered: isPushRegistered, register: registerPush } = usePushNotifications();
@@ -204,6 +209,27 @@ export default function App() {
   const handleUpdateTask = useCallback((taskId: string, updates: any) => {
     return updateTask(taskId, updates);
   }, [updateTask]);
+
+  // Pull-to-refresh handler
+  const handlePullToRefresh = useCallback(async (event: CustomEvent<RefresherEventDetail>) => {
+    try {
+      const refreshPromises: Promise<unknown>[] = [];
+      
+      if (user?.id) {
+        refreshPromises.push(refreshTasks(true));
+      }
+      
+      // Refresh users for admin roles
+      const isAdmin = user?.role === 'admin' || user?.role === 'super-admin' || user?.role === 'section_admin';
+      if (isAdmin) {
+        refreshPromises.push(refreshUsers());
+      }
+      
+      await Promise.allSettled(refreshPromises);
+    } finally {
+      event.detail.complete();
+    }
+  }, [user?.id, user?.role, refreshTasks, refreshUsers]);
 
   const { 
     notifications, 
@@ -488,42 +514,51 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container safe-area-container">
-      <Navigation 
-        onLogout={logout}
-        hasUnreadNotifications={hasUnreadNotifications}
-        onNotificationsClick={() => setShowNotifications(true)}
-        activePage={activePage}
-        onPageChange={setActivePage}
-        user={{
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar || '' // Provide a default value
-        }}
-        taskStats={taskStats}
-        tasks={tasks}
-      />
-      
-      <main 
-        className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-12"
-        style={{
-          /* Add top padding to account for sticky header height */
-          paddingTop: 'max(1rem, calc(env(safe-area-inset-top) + 1rem))'
-        }}
-      >
-        {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
-          <LoadingScreen minimumLoadTime={500} showProgress={false} />
-        ) : (
-          renderContent()
-        )}
-      </main>
+    <IonApp>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container safe-area-container flex flex-col">
+        {/* Navigation Header - Fixed at top */}
+        <Navigation 
+          onLogout={logout}
+          hasUnreadNotifications={hasUnreadNotifications}
+          onNotificationsClick={() => setShowNotifications(true)}
+          activePage={activePage}
+          onPageChange={setActivePage}
+          user={{
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar || ''
+          }}
+          taskStats={taskStats}
+          tasks={tasks}
+        />
+        
+        {/* Main Content Area with Pull-to-Refresh */}
+        <div className="flex-1 relative overflow-hidden">
+          <IonContent scrollY fullscreen className="h-full">
+            <IonRefresher slot="fixed" onIonRefresh={handlePullToRefresh}>
+              <IonRefresherContent />
+            </IonRefresher>
+            
+            <main 
+              className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-12"
+            >
+              {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
+                <LoadingScreen minimumLoadTime={500} showProgress={false} />
+              ) : (
+                renderContent()
+              )}
+            </main>
+          </IonContent>
+        </div>
 
-      <BottomNavigation 
-        activePage={activePage}
-        onPageChange={setActivePage}
-        hasUnreadNotifications={hasUnreadNotifications}
-        todayTaskCount={todayTaskCount}
-      />
-    </div>
+        {/* Bottom Navigation - Fixed at bottom */}
+        <BottomNavigation 
+          activePage={activePage}
+          onPageChange={setActivePage}
+          hasUnreadNotifications={hasUnreadNotifications}
+          todayTaskCount={todayTaskCount}
+        />
+      </div>
+    </IonApp>
   );
 }
