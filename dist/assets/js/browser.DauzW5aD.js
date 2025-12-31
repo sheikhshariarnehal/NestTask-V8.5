@@ -1,0 +1,1 @@
+import{g as e}from"./charts.Gb_JFp2r.js";const t=e((function(){throw new Error("ws does not work in the browser. Browser clients must use the native WebSocket object")})),o=Object.freeze(Object.defineProperty({__proto__:null,default:t},Symbol.toStringTag,{value:"Module"}));export{o as b};

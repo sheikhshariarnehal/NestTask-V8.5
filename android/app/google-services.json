@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "128980799129",
+    "project_id": "nesttask-73c13",
+    "storage_bucket": "nesttask-73c13.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:128980799129:android:ed6952ea60d30086f8f208",
+        "android_client_info": {
+          "package_name": "com.nesttask.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "128980799129-79pcl6l64h2sqbtg14ul6unlvs16arj2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_QvdLmTZ_d-wz-bEtQDTJsRSnEw4M_O4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "128980799129-79pcl6l64h2sqbtg14ul6unlvs16arj2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
