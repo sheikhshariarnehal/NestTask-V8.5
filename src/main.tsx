@@ -1,11 +1,6 @@
 import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-// Import Ionic CSS for pull-to-refresh and other components
-import '@ionic/react/css/core.css';
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
 // Import CSS (Vite handles this correctly)
 import './index.css';
 import { MicroLoader } from './components/MicroLoader';
