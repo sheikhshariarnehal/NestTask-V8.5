@@ -270,25 +270,30 @@ const TaskEnhancedFormComponent = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-2 border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-            {isEditing ? 'Edit Task' : 'Create New Task'}
-          </h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {isEditing ? 'Edit Task' : 'Create New Task'}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Fill in the details below to {isEditing ? 'update the' : 'create a new'} task.
+            </p>
+          </div>
           <button
             onClick={onClose}
             disabled={saving}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
             aria-label="Close form"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
+          <div className="mx-6 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3 shrink-0">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
@@ -305,106 +310,120 @@ const TaskEnhancedFormComponent = ({
         )}
 
         {/* Form */}
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)] admin-scrollbar">
+        <div className="overflow-y-auto flex-1 admin-scrollbar">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Task Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Task Name *
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Task Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none shadow-sm"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm placeholder:text-gray-400"
               placeholder="Enter a clear and concise task name"
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Description *
-            </label>
-            <textarea
-              required
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none shadow-sm resize-none"
-              placeholder="Provide detailed information about the task"
-            />
-          </div>
-
-          {/* Row 1: Category, Due Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Row 1: Category, Priority, Due Date */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Category *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Category <span className="text-red-500">*</span>
               </label>
-              <select
-                required
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as TaskCategory })}
-                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none shadow-sm"
-              >
-                <option value="assignment">📝 Assignment</option>
-                <option value="quiz">❓ Quiz</option>
-                <option value="presentation">🎯 Presentation</option>
-                <option value="project">🛠️ Project</option>
-                <option value="lab-report">🔬 Lab Report</option>
-                <option value="lab-final">🏆 Lab Final</option>
-                <option value="lab-performance">📈 Lab Performance</option>
-                <option value="task">✔️ Task</option>
-                <option value="documents">📄 Documents</option>
-                <option value="blc">📚 BLC</option>
-                <option value="groups">👥 Groups</option>
-                <option value="midterm">📊 Midterm</option>
-                <option value="final-exam">🎓 Final Exam</option>
-                <option value="others">🔹 Others</option>
-              </select>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value as TaskCategory })}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm appearance-none"
+                >
+                  <option value="assignment">📝 Assignment</option>
+                  <option value="quiz">❓ Quiz</option>
+                  <option value="presentation">🎯 Presentation</option>
+                  <option value="project">🛠️ Project</option>
+                  <option value="lab-report">🔬 Lab Report</option>
+                  <option value="lab-final">🏆 Lab Final</option>
+                  <option value="lab-performance">📈 Lab Performance</option>
+                  <option value="task">✔️ Task</option>
+                  <option value="documents">📄 Documents</option>
+                  <option value="blc">📚 BLC</option>
+                  <option value="groups">👥 Groups</option>
+                  <option value="midterm">📊 Midterm</option>
+                  <option value="final-exam">🎓 Final Exam</option>
+                  <option value="others">🔹 Others</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Due Date *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Priority <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm appearance-none"
+                >
+                  <option value="low">🟢 Low Priority</option>
+                  <option value="medium">🔵 Medium Priority</option>
+                  <option value="high">🟠 High Priority</option>
+                  <option value="urgent">🔴 Urgent Priority</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Due Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 required
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none shadow-sm"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm"
               />
             </div>
           </div>
 
-          {/* Priority */}
+          {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Priority *
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Description <span className="text-red-500">*</span>
             </label>
-            <select
+            <textarea
               required
-              value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none shadow-sm"
-            >
-              <option value="low">🟢 Low Priority</option>
-              <option value="medium">🔵 Medium Priority</option>
-              <option value="high">🟠 High Priority</option>
-              <option value="urgent">🔴 Urgent Priority</option>
-            </select>
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm resize-none placeholder:text-gray-400"
+              placeholder="Provide detailed information about the task..."
+            />
           </div>
 
           {/* File Upload */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              <Upload className="w-4 h-4 inline mr-2" />
-              Attachments <span className="text-xs text-gray-500">(Max 10 files, 50MB each)</span>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  Attachments
+                </span>
+                <span className="text-xs text-gray-500 font-normal">Max 10 files, 50MB each</span>
+              </div>
             </label>
-            <div className="relative">
+            <div className="relative group">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -412,13 +431,28 @@ const TaskEnhancedFormComponent = ({
                 onChange={handleFileUpload}
                 disabled={uploading || uploadedFiles.length >= 10}
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.svg,.zip,.rar,.7z,.mp4,.mp3,.wav"
-                className="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
               />
+              <div className="w-full px-6 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center group-hover:border-blue-500 dark:group-hover:border-blue-400 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-all duration-200">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-sm group-hover:scale-110 transition-transform duration-200">
+                    <Upload className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Support for documents, images, and archives
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Upload Progress */}
             {uploading && Object.keys(uploadProgress).length > 0 && (
-              <div className="mt-3 space-y-2">
+              <div className="mt-4 space-y-3">
                 {Object.entries(uploadProgress).map(([fileId, progress]) => (
                   <div key={fileId} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
@@ -429,7 +463,7 @@ const TaskEnhancedFormComponent = ({
                         {progress}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                       <div
                         className="bg-blue-600 dark:bg-blue-500 h-full transition-all duration-300 ease-out"
                         style={{ width: `${progress}%` }}
@@ -442,90 +476,91 @@ const TaskEnhancedFormComponent = ({
             
             {/* Uploaded Files List */}
             {uploadedFiles.length > 0 && (
-              <div className="mt-3 p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 rounded-xl border-2 border-gray-200 dark:border-gray-600">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    Uploaded Files ({uploadedFiles.length}/10)
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  {uploadedFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      className="group flex items-center gap-3 bg-white dark:bg-gray-700 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
-                    >
-                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {file.name}
-                        </p>
-                        {file.size > 0 && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {formatFileSize(file.size)}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile(index)}
-                        disabled={saving}
-                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Remove file"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {uploadedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="group flex items-center gap-3 bg-white dark:bg-gray-700/50 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
+                  >
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
-                  ))}
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {file.name}
+                      </p>
+                      {file.size > 0 && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatFileSize(file.size)}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile(index)}
+                      disabled={saving}
+                      className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Remove file"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
           {/* Google Drive Links */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              <LinkIcon className="w-4 h-4 inline mr-2" />
-              Google Drive Links (one per line)
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              <span className="flex items-center gap-2">
+                <LinkIcon className="w-4 h-4" />
+                Google Drive Links
+              </span>
             </label>
             <textarea
               value={formData.googleDriveLinks}
               onChange={(e) => setFormData({ ...formData, googleDriveLinks: e.target.value })}
               rows={3}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none shadow-sm resize-none"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm resize-none placeholder:text-gray-400 font-mono text-sm"
               placeholder="https://drive.google.com/file/d/..."
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+              Enter one link per line. Supported: Drive files, folders, Docs, Sheets, Slides.
+            </p>
           </div>
+        </form>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t-2 border-gray-200 dark:border-gray-700">
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+          <div className="flex gap-3 justify-end">
             <button
               type="button"
               onClick={() => {
                 setSaving(false);
                 onClose();
               }}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-all duration-200 disabled:opacity-50 active:scale-95"
+              className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-white dark:hover:bg-gray-700 font-medium transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow"
               disabled={saving}
             >
               Cancel
             </button>
             <button
-              type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+              onClick={(e) => handleSubmit(e as any)}
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 flex items-center gap-2"
               disabled={saving || uploading}
             >
               {saving ? (
-                <span className="flex items-center justify-center gap-2">
-                  <RefreshCw className="w-5 h-5 animate-spin" />
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
                   Saving...
-                </span>
+                </>
               ) : (
-                isEditing ? '✔️ Update Task' : '✨ Create Task'
+                isEditing ? 'Update Task' : 'Create Task'
               )}
             </button>
           </div>
-        </form>
         </div>
       </div>
     </div>

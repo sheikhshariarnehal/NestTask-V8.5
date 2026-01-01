@@ -479,6 +479,7 @@ export function AdminDashboard({
             isSectionAdmin={isSectionAdmin}
             isAdmin={!isSectionAdmin}
             openCreateForm={openTaskFormV2}
+            onCloseCreateForm={() => setOpenTaskFormV2(false)}
           />
         )}
 

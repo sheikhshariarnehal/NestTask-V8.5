@@ -1,28 +1,21 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import {
   Plus,
-  BarChart3,
-  LayoutGrid,
-  List,
   Filter,
   Search,
   Download,
   Trash2,
   CheckSquare,
-  FileText,
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
 import type { EnhancedTask, TaskFilters, TaskSortOptions } from '../../types/taskEnhanced';
 import type { TaskStatus } from '../../types/task';
 import { fetchTasksEnhanced, bulkDeleteTasks, bulkUpdateTaskStatus } from '../../services/taskEnhanced.service';
-import { TaskKanbanBoard } from './TaskKanbanBoard';
-import { TaskAnalytics } from './TaskAnalytics';
-import { TaskTemplateManager } from './TaskTemplateManager';
 import { TaskEnhancedForm } from './TaskEnhancedForm';
 import { TaskEnhancedTable } from './TaskEnhancedTable';
 import { TaskDetailsModal } from './TaskDetailsModal';
-import { TaskTableSkeleton, TaskKanbanSkeleton, TaskAnalyticsSkeleton } from './TaskSkeleton';
+import { TaskTableSkeleton } from './TaskSkeleton';
 
 interface TaskManagerEnhancedProps {
   userId: string;
@@ -30,9 +23,8 @@ interface TaskManagerEnhancedProps {
   isSectionAdmin?: boolean;
   isAdmin?: boolean;
   openCreateForm?: boolean;
+  onCloseCreateForm?: () => void;
 }
-
-type ViewMode = 'list' | 'kanban' | 'analytics' | 'templates';
 
 const TaskManagerEnhancedComponent = ({
   userId,
@@ -40,14 +32,30 @@ const TaskManagerEnhancedComponent = ({
   isSectionAdmin: _isSectionAdmin = false,
   isAdmin: _isAdmin = false,
   openCreateForm = false,
+  onCloseCreateForm,
 }: TaskManagerEnhancedProps) => {
   // View State
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(openCreateForm);
   const [selectedTask, setSelectedTask] = useState<EnhancedTask | null>(null);
   const [editingTask, setEditingTask] = useState<EnhancedTask | null>(null);
   const [formKey, setFormKey] = useState(0); // Key to force form remount
+
+  // Sync openCreateForm prop with state
+  useEffect(() => {
+    if (openCreateForm) {
+      setShowCreateForm(true);
+    }
+  }, [openCreateForm]);
+
+  // Handle closing form
+  const handleCloseForm = useCallback(() => {
+    setShowCreateForm(false);
+    setEditingTask(null);
+    if (onCloseCreateForm) {
+      onCloseCreateForm();
+    }
+  }, [onCloseCreateForm]);
 
   // Data State
   const [tasks, setTasks] = useState<EnhancedTask[]>([]);
@@ -334,36 +342,10 @@ const TaskManagerEnhancedComponent = ({
             </button>
           </div>
         </div>
-
-        {/* View Mode Tabs */}
-        <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {[
-            { mode: 'list' as ViewMode, icon: List, label: 'List' },
-            { mode: 'kanban' as ViewMode, icon: LayoutGrid, label: 'Kanban' },
-            { mode: 'analytics' as ViewMode, icon: BarChart3, label: 'Analytics' },
-            { mode: 'templates' as ViewMode, icon: FileText, label: 'Templates' }
-          ].map(({ mode, icon: Icon, label }) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 whitespace-nowrap touch-manipulation ${
-                viewMode === mode
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
-                  : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600/50 hover:shadow-md hover:scale-105'
-              }`}
-              aria-label={`Switch to ${label} view`}
-              aria-pressed={viewMode === mode}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm">{label}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Toolbar */}
-      {(viewMode === 'list' || viewMode === 'kanban') && (
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4">
             {/* Search */}
             <div className="flex-1 lg:max-w-lg">
@@ -505,7 +487,6 @@ const TaskManagerEnhancedComponent = ({
             </div>
           )}
         </div>
-      )}
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto admin-scrollbar">
@@ -528,50 +509,18 @@ const TaskManagerEnhancedComponent = ({
             </button>
           </div>
         ) : loading ? (
-          <>
-            {viewMode === 'list' && <TaskTableSkeleton />}
-            {viewMode === 'kanban' && <TaskKanbanSkeleton />}
-            {viewMode === 'analytics' && <TaskAnalyticsSkeleton />}
-            {viewMode === 'templates' && (
-              <div className="flex flex-col items-center justify-center h-full gap-4">
-                <div className="w-16 h-16 border-4 border-blue-600/20 dark:border-blue-400/20 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Loading templates...</p>
-              </div>
-            )}
-          </>
+          <TaskTableSkeleton />
         ) : (
-          <>
-            {viewMode === 'list' && (
-              <TaskEnhancedTable
-                tasks={filteredTasks}
-                selectedTaskIds={selectedTaskIds}
-                onSelectTasks={setSelectedTaskIds}
-                onTaskClick={setSelectedTask}
-                onTaskEdit={handleTaskEdit}
-                onTaskDelete={handleTaskDeleted}
-                sort={sort}
-                onSortChange={setSort}
-              />
-            )}
-
-            {viewMode === 'kanban' && (
-              <TaskKanbanBoard
-                tasks={filteredTasks}
-                onTaskUpdate={handleTaskUpdated}
-                onTaskClick={setSelectedTask}
-              />
-            )}
-
-            {viewMode === 'analytics' && <TaskAnalytics sectionId={sectionId} />}
-
-            {viewMode === 'templates' && (
-              <TaskTemplateManager
-                userId={userId}
-                sectionId={sectionId}
-                onCreateFromTemplate={() => setShowCreateForm(true)}
-              />
-            )}
-          </>
+          <TaskEnhancedTable
+            tasks={filteredTasks}
+            selectedTaskIds={selectedTaskIds}
+            onSelectTasks={setSelectedTaskIds}
+            onTaskClick={setSelectedTask}
+            onTaskEdit={handleTaskEdit}
+            onTaskDelete={handleTaskDeleted}
+            sort={sort}
+            onSortChange={setSort}
+          />
         )}
       </div>
 
@@ -581,7 +530,7 @@ const TaskManagerEnhancedComponent = ({
           key={formKey}
           userId={userId}
           sectionId={sectionId}
-          onClose={() => setShowCreateForm(false)}
+          onClose={handleCloseForm}
           onTaskCreated={handleTaskCreated}
         />
       )}
@@ -592,7 +541,7 @@ const TaskManagerEnhancedComponent = ({
           userId={userId}
           sectionId={sectionId}
           task={editingTask}
-          onClose={() => setEditingTask(null)}
+          onClose={handleCloseForm}
           onTaskUpdated={(updatedTask) => {
             handleTaskUpdated(updatedTask);
             setEditingTask(null);
