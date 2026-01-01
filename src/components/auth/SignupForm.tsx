@@ -327,41 +327,35 @@ export function SignupForm({ onSubmit, onSwitchToLogin, error }: SignupFormProps
             error={fieldErrors.departmentId}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SelectInput
-              label="Batch"
-              value={credentials.batchId ?? ''}
-              onChange={(value) => handleInputChange('batchId', value)}
-              options={batches}
-              placeholder={
-                !credentials.departmentId 
-                  ? "Select department first" 
-                  : isLoadingBatches 
-                    ? "Loading batches..." 
-                    : "Select your batch"
-              }
-              icon={Layers}
-              disabled={!credentials.departmentId || isLoadingBatches}
-              error={fieldErrors.batchId}
-            />
+          {credentials.departmentId && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <SelectInput
+                label="Batch"
+                value={credentials.batchId ?? ''}
+                onChange={(value) => handleInputChange('batchId', value)}
+                options={batches}
+                placeholder={isLoadingBatches ? "Loading batches..." : "Select your batch"}
+                icon={Layers}
+                disabled={isLoadingBatches}
+                error={fieldErrors.batchId}
+              />
+            </div>
+          )}
             
-            <SelectInput
-              label="Section"
-              value={credentials.sectionId ?? ''}
-              onChange={(value) => handleInputChange('sectionId', value)}
-              options={sections}
-              placeholder={
-                !credentials.batchId 
-                  ? "Select batch first" 
-                  : isLoadingSections 
-                    ? "Loading sections..." 
-                    : "Select your section"
-              }
-              icon={Users}
-              disabled={!credentials.batchId || isLoadingSections}
-              error={fieldErrors.sectionId}
-            />
-          </div>
+          {credentials.batchId && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <SelectInput
+                label="Section"
+                value={credentials.sectionId ?? ''}
+                onChange={(value) => handleInputChange('sectionId', value)}
+                options={sections}
+                placeholder={isLoadingSections ? "Loading sections..." : "Select your section"}
+                icon={Users}
+                disabled={isLoadingSections}
+                error={fieldErrors.sectionId}
+              />
+            </div>
+          )}
 
           <AuthInput
             type="password"
