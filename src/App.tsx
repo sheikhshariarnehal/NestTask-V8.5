@@ -372,9 +372,20 @@ export default function App() {
       case 'upcoming':
         return (
           <Suspense fallback={
-            <div className="p-6 space-y-4">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse" />
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 animate-pulse">
+              <div className="h-7 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-28 sm:w-32" />
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                    </div>
+                    <div className="w-16 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                  </div>
+                </div>
+              ))}
             </div>
           }>
             <UpcomingPage
@@ -387,9 +398,14 @@ export default function App() {
       case 'search':
         return (
           <Suspense fallback={
-            <div className="p-6 space-y-4">
-              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 animate-pulse">
+              <div className="h-10 sm:h-12 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5">
+                  <div className="h-4 sm:h-5 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-2" />
+                  <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                </div>
+              ))}
             </div>
           }>
             <SearchPage tasks={tasks || []} />
@@ -398,10 +414,18 @@ export default function App() {
       case 'lecture-slides':
         return (
           <Suspense fallback={
-            <div className="p-6 space-y-4">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 animate-pulse">
+              <div className="h-7 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-32 sm:w-40" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div className="h-32 sm:h-40 bg-gray-200 dark:bg-gray-700" />
+                    <div className="p-3 sm:p-4 space-y-2">
+                      <div className="h-4 sm:h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           }>
@@ -429,32 +453,69 @@ export default function App() {
   // Show minimal skeleton only during true initial auth loading
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center animate-fadeIn">
-        <div className="w-full max-w-7xl mx-auto px-4 space-y-5">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center animate-fadeIn p-4">
+        <div className="w-full max-w-7xl mx-auto space-y-5">
           {/* Logo and Brand */}
-          <div className="text-center mb-8 animate-slideUp">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center mb-6 sm:mb-8 animate-slideUp">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NestTask</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Loading your workspace...</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">NestTask</h1>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Loading your workspace...</p>
           </div>
-          {/* Skeleton Content */}
-          <div className="bg-gray-200 dark:bg-gray-700 rounded-2xl p-6 animate-pulse">
-            <div className="h-7 bg-gray-300 dark:bg-gray-600 rounded w-48 mb-2" />
-            <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-64" />
+          
+          {/* Welcome Header Skeleton */}
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 sm:p-6 shadow-lg animate-pulse">
+            <div className="h-6 sm:h-7 bg-blue-500/50 rounded-lg w-36 sm:w-48 mb-2" />
+            <div className="h-4 sm:h-5 bg-blue-500/30 rounded-lg w-48 sm:w-64" />
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          
+          {/* Stat Cards Skeleton */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-xl p-5 animate-pulse">
+              <div key={i} className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 min-h-stat-card animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-lg" />
-                  <div className="flex-1">
-                    <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-12 mb-1" />
-                    <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="h-7 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded w-12 sm:w-14 mb-1.5" />
+                    <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 sm:w-20" />
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Categories Skeleton */}
+          <div className="space-y-3 animate-pulse">
+            <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-20 sm:w-24" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 sm:p-4 min-h-category-card">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                    <div className="flex-1 space-y-1.5 sm:space-y-2">
+                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 sm:w-20" />
+                      <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded w-10 sm:w-12" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Task List Skeleton */}
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 animate-pulse">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
+                    <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
+                    <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                  </div>
+                  <div className="w-16 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
                 </div>
               </div>
             ))}
