@@ -31,7 +31,7 @@ interface NotificationPayload {
   title: string
   body: string
   sectionId?: string
-  data?: Record<string, string>
+  data?: Record<string, unknown>
 }
 
 interface FCMResponse {
@@ -277,11 +277,20 @@ serve(async (req) => {
     const accessToken = await getFirebaseAccessToken()
 
     // Send notifications to all tokens
-    const notificationData = {
-      taskId,
+    const extraData: Record<string, string> = {}
+    if (data && typeof data === 'object') {
+      for (const [key, value] of Object.entries(data)) {
+        if (value === null || value === undefined) continue
+        extraData[key] = String(value)
+      }
+    }
+
+    // IMPORTANT: keep required keys last so callers can't override them.
+    const notificationData: Record<string, string> = {
+      ...extraData,
+      taskId: String(taskId),
       type: 'TASK',
       route: `/task/view/${taskId}`,
-      ...data,
     }
 
     const results = await Promise.all(

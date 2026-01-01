@@ -18,8 +18,7 @@ import { HomePage } from './pages/HomePage';
 import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications, ActionPerformed } from '@capacitor/push-notifications';
-import { checkAndNavigate } from './services/pushNavigationService';
+import { getPendingOpenTaskId } from './services/pushNavigationService';
 import { IonApp, IonContent, IonRefresher, IonRefresherContent, setupIonicReact } from '@ionic/react';
 import type { RefresherEventDetail } from '@ionic/react';
 
@@ -123,69 +122,53 @@ export default function App() {
     }
   }, [user, isPushRegistered, registerPush]);
   
-  // Handle push notification clicks (when user taps notification)
-  // This listener handles deep linking from push notifications
+  // Push notification click handling:
+  // - Listeners are registered early in main.tsx (pushNavigationService)
+  // - This effect consumes any pending taskId (killed-state launch)
+  //   and listens for in-app events while running.
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    console.log('[App] Setting up notification handlers');
+    
+    // Check immediately for pending taskId
+    const checkPending = () => {
+      const pendingTaskId = getPendingOpenTaskId();
+      if (pendingTaskId) {
+        console.log('[App] Found pending taskId:', pendingTaskId);
+        setActivePage('upcoming');
+        setNotificationOpenTaskId(pendingTaskId);
+        return true;
+      }
+      return false;
+    };
 
-    // Check for any pending navigation from killed state launch
-    // (notification that launched the app before React was ready)
-    checkAndNavigate();
+    // Check now
+    const found = checkPending();
+    
+    // If not found, poll a few more times (for race conditions)
+    if (!found) {
+      const pollInterval = setInterval(() => {
+        if (checkPending()) {
+          clearInterval(pollInterval);
+        }
+      }, 100);
+      
+      // Stop polling after 2 seconds
+      setTimeout(() => clearInterval(pollInterval), 2000);
+    }
 
-    let listenerHandle: { remove: () => void } | null = null;
-
-    const setupPushListener = async () => {
-      try {
-        // Listen for push notification action performed (user tapped notification)
-        // This handles notifications tapped while app is in background
-        listenerHandle = await PushNotifications.addListener(
-          'pushNotificationActionPerformed',
-          (action: ActionPerformed) => {
-            console.log('[Push] Notification tapped:', action);
-            console.log('[Push] Action ID:', action.actionId);
-            console.log('[Push] Notification data:', action.notification?.data);
-
-            // Extract route from notification data
-            const data = action.notification?.data;
-            const route = data?.route;
-            const taskId = data?.taskId;
-            const type = data?.type;
-
-            console.log('[Push] Route:', route, 'TaskId:', taskId, 'Type:', type);
-
-            // Navigate based on the route or type
-            if (route && typeof route === 'string') {
-              // Use window.location for reliable navigation that works from any state
-              // Small delay to ensure app is fully active
-              setTimeout(() => {
-                console.log('[Push] Navigating to:', route);
-                window.location.href = route;
-              }, 100);
-            } else if (taskId && typeof taskId === 'string') {
-              // Fallback: construct route from taskId
-              setTimeout(() => {
-                console.log('[Push] Navigating to task:', taskId);
-                window.location.href = `/task/view/${taskId}`;
-              }, 100);
-            } else {
-              // Default: go to home
-              console.log('[Push] No route found, going to home');
-              setActivePage('home');
-            }
-          }
-        );
-      } catch (error) {
-        console.error('[Push] Error setting up push listener:', error);
+    const onOpenTask = (event: Event) => {
+      const customEvent = event as CustomEvent<{ taskId?: unknown }>;
+      const taskId = customEvent?.detail?.taskId;
+      console.log('[App] Received open-task-from-notification event, taskId:', taskId);
+      if (typeof taskId === 'string' && taskId.length > 0) {
+        console.log('[App] Opening task:', taskId);
+        setActivePage('upcoming');
+        setNotificationOpenTaskId(taskId);
       }
     };
 
-    setupPushListener();
-
-    return () => {
-      if (listenerHandle) {
-        listenerHandle.remove();
-      }
-    };
+    window.addEventListener('open-task-from-notification', onOpenTask as EventListener);
+    return () => window.removeEventListener('open-task-from-notification', onOpenTask as EventListener);
   }, []);
   
   const { 
@@ -245,6 +228,7 @@ export default function App() {
   
   const [activePage, setActivePage] = useState<NavPage>('home');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationOpenTaskId, setNotificationOpenTaskId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
   const [statFilter, setStatFilter] = useState<StatFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -400,7 +384,11 @@ export default function App() {
       case 'upcoming':
         return (
           <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
-            <UpcomingPage tasks={tasks || []} />
+            <UpcomingPage
+              tasks={tasks || []}
+              openTaskId={notificationOpenTaskId}
+              onOpenTaskIdConsumed={() => setNotificationOpenTaskId(null)}
+            />
           </Suspense>
         );
       case 'search':

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { PushNotifications, Token, PushNotificationSchema } from '@capacitor/push-notifications';
 import { useAuth } from './useAuth';
 import { supabase } from '../lib/supabase';
 
@@ -228,28 +228,8 @@ export function usePushNotifications() {
       }
     );
 
-    // Handle push notification action (user tapped notification)
-    const pushActionListener = PushNotifications.addListener(
-      'pushNotificationActionPerformed',
-      (action: ActionPerformed) => {
-        console.log('Push notification action performed');
-        console.log('Action:', action.actionId);
-        console.log('Notification data:', action.notification);
-        
-        // Dispatch event to notify the app
-        window.dispatchEvent(new CustomEvent('push-notification-clicked', { 
-          detail: { 
-            opened: true,
-            actionId: action.actionId,
-            data: action.notification.data,
-            notification: action.notification
-          } 
-        }));
-        
-        // If the app was in background, this will bring it to foreground
-        // The event listener in App.tsx can handle any navigation if needed
-      }
-    );
+    // Note: pushNotificationActionPerformed is handled centrally by pushNavigationService
+    // (initialized early in main.tsx) to avoid duplicate listeners and ensure cold-start reliability.
 
     // Check initial status
     const checkInitialStatus = async () => {
@@ -279,7 +259,6 @@ export function usePushNotifications() {
       registrationListener.then(l => l.remove());
       registrationErrorListener.then(l => l.remove());
       pushReceivedListener.then(l => l.remove());
-      pushActionListener.then(l => l.remove());
     };
   }, [isNativePlatform, saveFCMToken]);
 

@@ -287,9 +287,11 @@ const TaskCard = memo(({
 
 interface UpcomingPageProps {
   tasks?: Task[];
+  openTaskId?: string | null;
+  onOpenTaskIdConsumed?: () => void;
 }
 
-export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
+export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsumed }: UpcomingPageProps) {
   const { user } = useAuth();
   const { tasks: allTasks, loading, error: taskError, updateTask, refreshTasks } = useTasks(propTasks ? undefined : user?.id);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -315,6 +317,37 @@ export function UpcomingPage({ tasks: propTasks }: UpcomingPageProps) {
   useEffect(() => {
     setTasks(propTasks || allTasks || []);
   }, [propTasks, allTasks]);
+
+  // Open task details popup when requested (e.g., from push notification click)
+  useEffect(() => {
+    console.log('[UpcomingPage] openTaskId changed:', openTaskId);
+    if (!openTaskId) return;
+
+    const allTasksList = propTasks || allTasks || [];
+    console.log('[UpcomingPage] Searching for task:', openTaskId, 'in', allTasksList.length, 'tasks');
+    const taskToOpen = allTasksList.find(t => t.id === openTaskId);
+    
+    if (taskToOpen) {
+      console.log('[UpcomingPage] Found task, opening popup:', taskToOpen.name);
+      setSelectedTask(taskToOpen);
+
+      // Optional: move calendar selection to the task date if possible
+      if (taskToOpen.dueDate) {
+        try {
+          const d = typeof taskToOpen.dueDate === 'string' ? parseISO(taskToOpen.dueDate) : new Date(taskToOpen.dueDate);
+          if (!Number.isNaN(d.getTime())) {
+            setSelectedDate(d);
+          }
+        } catch {
+          // Ignore date parsing failures; popup still opens.
+        }
+      }
+    } else {
+      console.log('[UpcomingPage] Task not found:', openTaskId);
+    }
+
+    onOpenTaskIdConsumed?.();
+  }, [openTaskId, propTasks, allTasks, onOpenTaskIdConsumed]);
 
   // Clear loading state if stuck for too long
   useEffect(() => {

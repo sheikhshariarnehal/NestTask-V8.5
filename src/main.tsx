@@ -12,6 +12,7 @@ import { MicroLoader } from './components/MicroLoader';
 import { initPWA } from './utils/pwa';
 import { supabase } from './lib/supabase';
 import type { LoginCredentials, SignupCredentials } from './types/auth';
+import { initPushNotificationListeners } from './services/pushNavigationService';
 
 // Lazy-load core pages
 const App = lazy(() => import('./App'));
@@ -93,6 +94,9 @@ const router = createBrowserRouter([
     element: <Suspense fallback={<MicroLoader />}><ResetPasswordPage /></Suspense>
   }
 ]);
+
+// Initialize native push listeners as early as possible (before React renders)
+initPushNotificationListeners();
 
 // Initialize app with minimal operations
 function initApp() {
