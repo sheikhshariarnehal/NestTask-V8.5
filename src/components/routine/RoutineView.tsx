@@ -334,7 +334,13 @@ export function RoutineView() {
                       
                       <div className="text-gray-500 dark:text-gray-400">Section</div>
                       <div className="font-semibold text-gray-900 dark:text-white text-right">
-                        {slot.section || 'N/A'}
+                        {(() => {
+                          const room = (slot.roomNumber || '').toString();
+                          const isLabRoom = /lab/i.test(room);
+                          const raw = slot.sectionRaw;
+                          if (isLabRoom && raw) return raw;
+                          return slot.section || 'N/A';
+                        })()}
                       </div>
                       
                       <div className="text-gray-500 dark:text-gray-400">Teacher</div>

@@ -20,6 +20,7 @@ export interface RoutineSlot {
   teacherName?: string;
   roomNumber?: string;
   section?: string;
+  sectionRaw?: string;
   createdAt?: string;
   updatedAt?: string;
 }

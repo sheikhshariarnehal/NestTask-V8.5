@@ -14,6 +14,7 @@ export interface TransformedSlot {
   courseId: string;
   courseName: string;
   section: string;
+  sectionRaw?: string;
   teacherName: string;
   roomNumber: string;
 }
@@ -44,26 +45,33 @@ function parseTimeRange(timeRange: string): { startTime: string; endTime: string
   return { startTime: startTime || '', endTime: endTime || '' };
 }
 
+function normalizeSectionGroup(section: string): string {
+  if (!section) return '';
+  // Group lab batches: "63_G1"/"63_G2" → "63_G" (keeps "63_G" as-is)
+  return section.replace(/(_[A-Za-z])\d+$/, '$1');
+}
+
 /**
  * Parses course string into courseId and section
- * Parses "CSE227(65_C)" → { courseId: "CSE227", section: "65_C" }
- * Parses "CSE227" → { courseId: "CSE227", section: "" }
+ * Parses "CSE227(65_C)" → { courseId: "CSE227", sectionRaw: "65_C", sectionGroup: "65_C" }
+ * Parses "CSE331(63_G1)" → { courseId: "CSE331", sectionRaw: "63_G1", sectionGroup: "63_G" }
+ * Parses "CSE227" → { courseId: "CSE227", sectionRaw: "", sectionGroup: "" }
  */
-function parseCourseString(courseStr: string): { courseId: string; section: string } {
-  if (!courseStr) return { courseId: '', section: '' };
-  
+function parseCourseString(courseStr: string): { courseId: string; sectionRaw: string; sectionGroup: string } {
+  if (!courseStr) return { courseId: '', sectionRaw: '', sectionGroup: '' };
+
   // Match pattern: COURSECODE(SECTION) or just COURSECODE
   const match = courseStr.match(/^([A-Za-z0-9]+)(?:\(([^)]+)\))?$/);
-  
+
   if (match) {
-    return {
-      courseId: match[1] || '',
-      section: match[2] || ''
-    };
+    const courseId = match[1] || '';
+    const sectionRaw = match[2] || '';
+    const sectionGroup = normalizeSectionGroup(sectionRaw);
+    return { courseId, sectionRaw, sectionGroup };
   }
-  
+
   // Fallback: return the whole string as courseId
-  return { courseId: courseStr, section: '' };
+  return { courseId: courseStr, sectionRaw: '', sectionGroup: '' };
 }
 
 /**
@@ -103,7 +111,7 @@ function transformDay(
       }
       
       const { startTime, endTime } = parseTimeRange(timeSlot);
-      const { courseId, section } = parseCourseString(courseData.course);
+      const { courseId, sectionRaw, sectionGroup } = parseCourseString(courseData.course);
       
       const slot: TransformedSlot = {
         id: generateSlotId(dayOfWeek, timeIndex, roomNumber),
@@ -113,7 +121,8 @@ function transformDay(
         endTime,
         courseId,
         courseName: courseData.title || courseId, // Use title if available, otherwise courseId
-        section,
+        section: sectionGroup,
+        sectionRaw,
         teacherName: courseData.teacher || '',
         roomNumber
       };
