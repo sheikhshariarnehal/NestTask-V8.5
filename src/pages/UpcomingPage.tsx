@@ -761,81 +761,67 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       {/* Calendar Strip */}
       <div className="max-w-full md:max-w-5xl mx-auto px-2 md:px-6 mb-6">
         {/* Date Navigation */}
-        <div className="flex items-center justify-between px-1.5 py-2 min-h-[40px]">
-          <button 
-            onClick={() => setSelectedDate(new Date())}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-900/30 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-200 whitespace-nowrap"
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setSelectedDate(addDays(selectedDate, -7))}
+            className="p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50/80 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors duration-150 active:scale-95"
+            aria-label="Previous week"
           >
-            <div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"></div>
-            Today
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
 
-          <span 
-            className="text-xs font-medium text-gray-600 dark:text-gray-300 cursor-pointer hover:text-blue-500 dark:hover:text-blue-400 transition-colors px-2 whitespace-nowrap"
+          <button 
+            className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 active:scale-98"
             onClick={() => setIsMonthlyCalendarOpen(true)}
+            aria-label="Open calendar"
           >
-            {cachedFormat(selectedDate, 'MMM yyyy')}
-          </span>
+            <Calendar className="w-4 h-4" />
+            <span className="whitespace-nowrap">{cachedFormat(selectedDate, 'MMMM yyyy')}</span>
+          </button>
 
-          <div className="flex items-center bg-gray-100/80 dark:bg-gray-800/80 rounded-md h-6 overflow-hidden">
-            <button
-              onClick={() => {
-                const newDate = addDays(selectedDate, -7);
-                setSelectedDate(newDate);
-              }}
-              className="h-full px-1 text-gray-600 hover:text-blue-600 hover:bg-white/90 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-700/90 transition-all duration-200 border-r border-gray-200 dark:border-gray-700"
-              aria-label="Previous week"
-            >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => {
-                const newDate = addDays(selectedDate, 7);
-                setSelectedDate(newDate);
-              }}
-              className="h-full px-1 text-gray-600 hover:text-blue-600 hover:bg-white/90 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-700/90 transition-all duration-200"
-              aria-label="Next week"
-            >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={() => setSelectedDate(addDays(selectedDate, 7))}
+            className="p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50/80 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors duration-150 active:scale-95"
+            aria-label="Next week"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         {/* Date Boxes - Weekly Calendar */}
-        <div className="pb-4 mb-2 mt-4">
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 px-1 sm:px-2 md:px-6">
+        <div className="pb-4">
+          <div className="grid grid-cols-7 gap-2 md:gap-3 px-2 md:px-4">
           {weekDays.map((day) => (
             <button
-                key={day.day + day.weekDay}
+              key={day.day + day.weekDay}
               onClick={() => setSelectedDate(day.date)}
               className={`
-                  relative flex flex-col items-center justify-center
-                  h-16 sm:h-20 md:h-24 lg:h-28 w-full
-                  p-1 sm:p-2 md:p-3 rounded-xl
-                  border transition-all duration-150
+                flex flex-col items-center justify-center
+                h-16 sm:h-20 md:h-24 w-full
+                p-2 md:p-3 rounded-lg
+                border transition-all duration-200
                 ${day.isSelected
-                    ? 'bg-blue-500 border-blue-400 shadow-md text-white'
+                  ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/20 text-white scale-105'
                   : day.isToday
-                    ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800/50'
-                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                  }
-                  hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700
-                  active:scale-95
+                  ? 'bg-blue-50/50 border-blue-200/60 dark:bg-blue-900/20 dark:border-blue-700/50'
+                  : 'bg-white dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/50'
+                }
+                hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md
+                active:scale-95
               `}
             >
               {/* Weekday */}
               <span className={`
-                  text-[10px] sm:text-xs font-medium tracking-wide
+                text-[10px] sm:text-xs font-semibold tracking-wider uppercase
                 ${day.isSelected
                   ? 'text-blue-100'
                   : day.isToday
-                    ? 'text-blue-500 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400'
                 }
               `}>
                 {day.weekDay}
@@ -843,12 +829,12 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
 
               {/* Day Number */}
               <span className={`
-                  text-xl sm:text-2xl md:text-3xl font-bold mt-1
+                text-xl sm:text-2xl md:text-3xl font-bold mt-1
                 ${day.isSelected
                   ? 'text-white'
                   : day.isToday
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-800 dark:text-gray-200'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-800 dark:text-gray-200'
                 }
               `}>
                 {day.day}
