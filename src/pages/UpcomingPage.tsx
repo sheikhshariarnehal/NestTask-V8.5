@@ -146,32 +146,46 @@ const TaskCard = memo(({
   const currentDate = new Date();
   const isOverdue = isBefore(endOfDay(dueDate), startOfDay(currentDate));
 
+  // Determine left border color based on category
+  const getLeftBorderColor = () => {
+    if (task.status === 'completed') return 'border-l-green-500/80';
+    if (isOverdue) return 'border-l-red-500/80';
+    
+    const colors: Record<string, string> = {
+      presentation: 'border-l-purple-500/80',
+      project: 'border-l-blue-500/80',
+      assignment: 'border-l-indigo-500/80',
+      quiz: 'border-l-emerald-500/80',
+      'lab-report': 'border-l-red-500/80',
+      'lab-final': 'border-l-yellow-500/80',
+      'lab-perf': 'border-l-amber-500/80',
+      documents: 'border-l-sky-500/80'
+    };
+    
+    return colors[task.category.toLowerCase()] || 'border-l-gray-300 dark:border-l-gray-600';
+  };
+
   return (
     <div
       onClick={onClick}
       className={`
         group h-full bg-white dark:bg-gray-800/90 rounded-lg
-        shadow-sm hover:shadow-lg
+        shadow-sm hover:shadow-md
         border border-gray-100 dark:border-gray-700/50
-        hover:border-blue-200 dark:hover:border-blue-600/50
         relative overflow-hidden ${preventTaskSelection ? '' : 'cursor-pointer'}
         transition-all duration-200
-        transform ${preventTaskSelection ? '' : 'hover:-translate-y-1'}
+        transform ${preventTaskSelection ? '' : 'hover:-translate-y-0.5'}
         flex flex-col
-        ${task.status === 'completed' 
-          ? 'opacity-80 hover:opacity-95' 
-          : isOverdue
-            ? 'border-l-[3px] border-l-red-500' 
-            : ''
-        }
+        border-l-[3px] ${getLeftBorderColor()}
+        ${task.status === 'completed' ? 'opacity-80' : ''}
       `}
     >
       <div className="p-4 flex-grow flex flex-col">
         {/* Header Section */}
         <div className="flex items-start mb-3">
-          <div className="flex items-start gap-2 min-w-0">
+          <div className="flex items-start gap-2 min-w-0 flex-1">
             <h3 className={`
-              text-base font-semibold leading-tight truncate
+              text-base font-semibold leading-tight flex-1
               ${task.status === 'completed'
                 ? 'text-gray-500 dark:text-gray-400 line-through'
                 : isOverdue
@@ -181,11 +195,6 @@ const TaskCard = memo(({
             `}>
               {task.name}
             </h3>
-            {task.isAdminTask && (
-              <div className="flex-shrink-0 p-0.5 mt-0.5">
-                <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-              </div>
-            )}
             {hasAttachments && (
               <div className="flex-shrink-0 p-0.5 mt-0.5">
                 <Paperclip className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
@@ -308,10 +317,6 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
   const lastFocusTimeRef = useRef(Date.now());
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
-  
-  // Add caches for performance improvement
-  const descriptionCache = useRef<Map<string, string>>(new Map());
-  const filteredTasksCache = useRef<Map<string, Task[]>>(new Map());
 
   // Update tasks when prop or fetched tasks change
   useEffect(() => {
@@ -504,32 +509,35 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
     });
   }, [selectedDate, isSameDayOptimized, cachedFormat]);
 
-  // Optimize task filtering for selected date with better memoization
-  const filteredTasks = useMemo(() => {
-    // Early return if no tasks
-    if (!tasks || tasks.length === 0) return [];
+  // Build date-indexed cache for O(1) task lookup - major performance improvement
+  const tasksByDate = useMemo(() => {
+    if (!tasks || tasks.length === 0) return new Map<string, Task[]>();
     
-    // Extract date components once for more efficient comparison
-    const selectedYear = selectedDate.getFullYear();
-    const selectedMonth = selectedDate.getMonth();
-    const selectedDay = selectedDate.getDate();
-    
-    // Use efficient filtering with date component comparison instead of isSameDay
-    return tasks.filter(task => {
-        if (!task.dueDate) return false;
-        
+    const index = new Map<string, Task[]>();
+    tasks.forEach(task => {
+      if (!task.dueDate) return;
+      
       try {
         const taskDate = parseISO(task.dueDate);
-        return (
-          taskDate.getFullYear() === selectedYear &&
-          taskDate.getMonth() === selectedMonth &&
-          taskDate.getDate() === selectedDay
-        );
+        const dateKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`;
+        
+        if (!index.has(dateKey)) {
+          index.set(dateKey, []);
+        }
+        index.get(dateKey)!.push(task);
       } catch {
-        return false;
+        // Skip invalid dates
       }
     });
-  }, [tasks, selectedDate]);
+    
+    return index;
+  }, [tasks]);
+
+  // O(1) lookup instead of O(n) filter - instant date switching
+  const filteredTasks = useMemo(() => {
+    const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    return tasksByDate.get(dateKey) || [];
+  }, [tasksByDate, selectedDate]);
 
   // Get task status - memoized utility function
   const getTaskStatus = useCallback((task: Task) => {

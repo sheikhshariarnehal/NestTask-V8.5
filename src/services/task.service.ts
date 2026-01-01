@@ -2,6 +2,43 @@ import { supabase } from '../lib/supabase';
 import { sendTaskNotification } from './telegram.service';
 import type { Task, NewTask } from '../types/task';
 import { mapTaskFromDB } from '../utils/taskMapper';
+import { format, addDays } from 'date-fns';
+
+/**
+ * Fetches tasks for a specific date range with optimized field selection
+ * @param userId - The user ID to fetch tasks for
+ * @param startDate - Start date (ISO format or Date)
+ * @param endDate - End date (ISO format or Date)
+ * @returns Promise with filtered tasks
+ */
+export const fetchTasksForDateRange = async (
+  userId: string,
+  startDate: string | Date,
+  endDate: string | Date
+): Promise<Task[]> => {
+  try {
+    const startDateStr = typeof startDate === 'string' ? startDate : format(startDate, 'yyyy-MM-dd');
+    const endDateStr = typeof endDate === 'string' ? endDate : format(endDate, 'yyyy-MM-dd');
+
+    // Optimized query: select only needed fields and filter by date range
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at')
+      .gte('due_date', startDateStr)
+      .lte('due_date', endDateStr)
+      .order('due_date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching tasks for date range:', error);
+      throw error;
+    }
+
+    return data?.map(mapTaskFromDB) || [];
+  } catch (error: any) {
+    console.error('Error in fetchTasksForDateRange:', error);
+    throw new Error(`Failed to fetch tasks: ${error.message}`);
+  }
+};
 
 /**
  * Fetches tasks for a user, considering role and section
@@ -12,7 +49,9 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
   try {
     // For development environment, return faster with reduced logging
     if (process.env.NODE_ENV === 'development') {
-      let query = supabase.from('tasks').select('*');
+      let query = supabase
+        .from('tasks')
+        .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at');
       query = query.order('created_at', { ascending: false });
       const { data, error } = await query;
       
@@ -33,8 +72,10 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     const userRole = user?.user_metadata?.role;
     const userSectionId = sectionId || user?.user_metadata?.section_id;
 
-    // Start query builder - no filters needed as RLS handles permissions
-    let query = supabase.from('tasks').select('*');
+    // Start query builder with optimized field selection - no filters needed as RLS handles permissions
+    let query = supabase
+      .from('tasks')
+      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at');
 
     // We only need to order the results, the Row Level Security policy 
     // will handle filtering based on user_id, is_admin_task, and section_id

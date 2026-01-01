@@ -42,6 +42,9 @@
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="dns-prefetch" href="https://api.supabase.co" />
     
+    <!-- Preload the main entry point for faster LCP -->
+    <link rel="modulepreload" href="/assets/main.Cf7xbLxe.tsx" />
+    
     <!-- PWA assets -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.png" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
@@ -138,8 +141,9 @@
       }
     </style>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Fonts - Non-render blocking with preload -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     
     <!-- Theme controller script -->
     <script>
@@ -181,11 +185,11 @@
       // Backwards compatibility
       window.toggleTheme = window.themeController.toggle.bind(window.themeController);
     </script>
-    <script type="module" crossorigin src="/assets/js/index.CxTf1Bti.js"></script>
+    <script type="module" crossorigin src="/assets/js/index.DnhJRsFx.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/js/react-vendor.SP0LgxZM.js">
     <link rel="modulepreload" crossorigin href="/assets/js/charts.BhfGaadd.js">
     <link rel="modulepreload" crossorigin href="/assets/js/supabase.B4ywLuvY.js">
-    <link rel="stylesheet" crossorigin href="/assets/css/index.PdEsOd4T.css">
+    <link rel="stylesheet" crossorigin href="/assets/css/index.Z1Fr3Z94.css">
   </head>
   <body>
     <div id="root"></div>
