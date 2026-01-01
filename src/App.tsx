@@ -33,6 +33,7 @@ const importSuperAdminDashboard = () => import('./components/admin/super/SuperAd
 const importUpcomingPage = () => import('./pages/UpcomingPage').then(module => ({ default: module.UpcomingPage }));
 const importSearchPage = () => import('./pages/SearchPage').then(module => ({ default: module.SearchPage }));
 const importLectureSlidesPage = () => import('./pages/LectureSlidesPage').then(module => ({ default: module.LectureSlidesPage }));
+const importRoutinePage = () => import('./pages/RoutinePage').then(module => ({ default: module.RoutinePage }));
 
 // Lazy-loaded components
 const AdminDashboard = lazy(importAdminDashboard);
@@ -40,6 +41,7 @@ const SuperAdminDashboard = lazy(importSuperAdminDashboard);
 const UpcomingPage = lazy(importUpcomingPage);
 const SearchPage = lazy(importSearchPage);
 const LectureSlidesPage = lazy(importLectureSlidesPage);
+const RoutinePage = lazy(importRoutinePage);
 
 type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
 
@@ -125,7 +127,7 @@ export default function App() {
     const checkPending = () => {
       const pendingTaskId = getPendingOpenTaskId();
       if (pendingTaskId) {
-        setActivePage('upcoming');
+        handlePageChange('upcoming');
         setNotificationOpenTaskId(pendingTaskId);
         return true;
       }
@@ -151,7 +153,7 @@ export default function App() {
       const customEvent = event as CustomEvent<{ taskId?: unknown }>;
       const taskId = customEvent?.detail?.taskId;
       if (typeof taskId === 'string' && taskId.length > 0) {
-        setActivePage('upcoming');
+        handlePageChange('upcoming');
         setNotificationOpenTaskId(taskId);
       }
     };
@@ -215,13 +217,41 @@ export default function App() {
     clearNotification 
   } = useNotifications(user?.id);
   
-  const [activePage, setActivePage] = useState<NavPage>('home');
+  // Initialize activePage from URL pathname
+  const getInitialPage = (): NavPage => {
+    const path = window.location.pathname.slice(1); // Remove leading slash
+    const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides'];
+    return validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
+  };
+
+  const [activePage, setActivePage] = useState<NavPage>(getInitialPage());
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationOpenTaskId, setNotificationOpenTaskId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
   const [statFilter, setStatFilter] = useState<StatFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isResetPasswordFlow, setIsResetPasswordFlow] = useState(false);
+
+  // Sync URL with activePage state
+  const handlePageChange = useCallback((page: NavPage) => {
+    setActivePage(page);
+    // Update URL without reload
+    const newPath = page === 'home' ? '/' : `/${page}`;
+    window.history.pushState({ page }, '', newPath);
+  }, []);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const path = window.location.pathname.slice(1);
+      const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides'];
+      const newPage = validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
+      setActivePage(newPage);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   
   // Track if we just returned from a hidden state to prevent blank screens
   const [wasRecentlyHidden, setWasRecentlyHidden] = useState(false);
@@ -433,6 +463,23 @@ export default function App() {
             <LectureSlidesPage />
           </Suspense>
         );
+      case 'routine':
+        return (
+          <Suspense fallback={
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 animate-pulse">
+              <div className="h-7 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-24 sm:w-28" />
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 sm:p-8">
+                <div className="max-w-md mx-auto space-y-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto" />
+                  <div className="h-6 sm:h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mx-auto" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 mx-auto" />
+                </div>
+              </div>
+            </div>
+          }>
+            <RoutinePage />
+          </Suspense>
+        );
       default:
         return (
           <HomePage
@@ -619,7 +666,7 @@ export default function App() {
           hasUnreadNotifications={hasUnreadNotifications}
           onNotificationsClick={() => setShowNotifications(true)}
           activePage={activePage}
-          onPageChange={setActivePage}
+          onPageChange={handlePageChange}
           user={{
             name: user.name,
             email: user.email,
@@ -647,7 +694,7 @@ export default function App() {
         {/* Bottom Navigation - Fixed at bottom */}
         <BottomNavigation 
           activePage={activePage}
-          onPageChange={setActivePage}
+          onPageChange={handlePageChange}
           hasUnreadNotifications={hasUnreadNotifications}
           todayTaskCount={todayTaskCount}
         />

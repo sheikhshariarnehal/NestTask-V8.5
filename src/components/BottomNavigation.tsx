@@ -1,4 +1,4 @@
-import { Home, Calendar, Search, BookOpen, FileText } from 'lucide-react';
+import { Home, Calendar, Search, BookOpen, FileText, Clock } from 'lucide-react';
 import { NavPage } from '../types/navigation';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
@@ -77,7 +77,7 @@ export function BottomNavigation({ activePage, onPageChange, hasUnreadNotificati
   const navItems = useMemo(() => [
     { id: 'home' as NavPage, icon: Home, label: 'Home', ariaLabel: 'Go to home page', badge: undefined },
     { id: 'upcoming' as NavPage, icon: Calendar, label: 'Upcoming', ariaLabel: 'View upcoming tasks', badge: todayTaskCount > 0 ? todayTaskCount : undefined },
-    { id: 'lecture-slides' as NavPage, icon: FileText, label: 'Slides', ariaLabel: 'View lecture slides', badge: undefined },
+    { id: 'routine' as NavPage, icon: Clock, label: 'Routine', ariaLabel: 'View routine', badge: undefined },
     { id: 'search' as NavPage, icon: Search, label: 'Search', ariaLabel: 'Search content', badge: undefined }
   ], [todayTaskCount]);
 

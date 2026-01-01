@@ -8,8 +8,6 @@ import {
 import { useTheme } from '../../hooks/useTheme';
 import type { NavPage } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StudyMaterialsModal } from '../study-materials/StudyMaterialsModal';
-import { useCourses } from '../../hooks/useCourses';
 
 interface SlidingNavigationProps {
   isOpen: boolean;
@@ -46,7 +44,6 @@ export function SlidingNavigation({
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [showMaterialsModal, setShowMaterialsModal] = useState(false);
-  const { materials } = useCourses();
 
   const navItems = [
     { id: 'home' as const, label: 'Home', icon: Home },
@@ -311,16 +308,6 @@ export function SlidingNavigation({
           </>
         )}
       </AnimatePresence>
-
-      {/* Study Materials Modal */}
-      <StudyMaterialsModal
-        isOpen={showMaterialsModal}
-        onClose={() => setShowMaterialsModal(false)}
-        category={selectedCategory}
-        materials={materials?.filter(m => 
-          m.category.toLowerCase() === selectedCategory.toLowerCase()
-        )}
-      />
     </>
   );
 }

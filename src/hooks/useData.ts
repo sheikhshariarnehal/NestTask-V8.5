@@ -96,14 +96,6 @@ export function useTasks<T>(fetcher: () => Promise<T>) {
 }
 
 /**
- * Hook for accessing routines
- * @param fetcher Function to fetch routines
- */
-export function useRoutines<T>(fetcher: () => Promise<T>) {
-  return useData('routines', fetcher);
-}
-
-/**
  * Hook for accessing user data
  * @param fetcher Function to fetch user data
  */
