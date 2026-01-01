@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { dataCache, cacheKeys } from '../lib/dataCache';
 import type { Department, Batch, Section } from '../types/auth';
 import type { Database } from '../types/supabase';
 
@@ -11,18 +12,24 @@ type DbSection = Database['public']['Tables']['sections']['Row'];
  */
 export async function getDepartments(): Promise<Department[]> {
   try {
-    const { data, error } = await supabase
-      .from('departments')
-      .select('*')
-      .order('name');
+    return await dataCache.getOrFetch(
+      'departments:all',
+      async () => {
+        const { data, error } = await supabase
+          .from('departments')
+          .select('*')
+          .order('name');
 
-    if (error) throw error;
+        if (error) throw error;
 
-    return (data || []).map(dept => ({
-      id: dept.id,
-      name: dept.name,
-      createdAt: dept.created_at
-    }));
+        return (data || []).map(dept => ({
+          id: dept.id,
+          name: dept.name,
+          createdAt: dept.created_at
+        }));
+      },
+      10 * 60 * 1000 // 10 minutes cache
+    );
   } catch (error) {
     console.error('Error fetching departments:', error);
     throw new Error('Failed to fetch departments');
@@ -34,20 +41,26 @@ export async function getDepartments(): Promise<Department[]> {
  */
 export async function getBatchesByDepartment(departmentId: string): Promise<Batch[]> {
   try {
-    const { data, error } = await supabase
-      .from('batches')
-      .select('*')
-      .eq('department_id', departmentId)
-      .order('name');
+    return await dataCache.getOrFetch(
+      `batches:department:${departmentId}`,
+      async () => {
+        const { data, error } = await supabase
+          .from('batches')
+          .select('*')
+          .eq('department_id', departmentId)
+          .order('name');
 
-    if (error) throw error;
+        if (error) throw error;
 
-    return (data || []).map(batch => ({
-      id: batch.id,
-      name: batch.name,
-      departmentId: batch.department_id,
-      createdAt: batch.created_at
-    }));
+        return (data || []).map(batch => ({
+          id: batch.id,
+          name: batch.name,
+          departmentId: batch.department_id,
+          createdAt: batch.created_at
+        }));
+      },
+      10 * 60 * 1000 // 10 minutes cache
+    );
   } catch (error) {
     console.error('Error fetching batches:', error);
     throw new Error('Failed to fetch batches');

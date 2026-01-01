@@ -69,6 +69,23 @@ export default defineConfig({
             return 'react-vendor';
           }
           
+          // React Router
+          if (id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/react-router/')) {
+            return 'react-vendor';
+          }
+          
+          // Ionic React - separate chunk
+          if (id.includes('node_modules/@ionic/react/') ||
+              id.includes('node_modules/@ionic/core/')) {
+            return 'ionic-vendor';
+          }
+          
+          // Supabase
+          if (id.includes('node_modules/@supabase/')) {
+            return 'supabase-vendor';
+          }
+          
           // Date handling
           if (id.includes('node_modules/date-fns/')) {
             return 'date-utils';
@@ -77,12 +94,7 @@ export default defineConfig({
           // UI component libraries
           if (id.includes('node_modules/@radix-ui/') || 
               id.includes('node_modules/framer-motion/')) {
-            return 'ui-components';
-          }
-          
-          // Supabase
-          if (id.includes('node_modules/@supabase/')) {
-            return 'supabase';
+            return 'ui-vendor';
           }
           
           // Icons
@@ -94,6 +106,11 @@ export default defineConfig({
           if (id.includes('node_modules/recharts/') || 
               id.includes('node_modules/d3/')) {
             return 'charts';
+          }
+          
+          // Capacitor plugins
+          if (id.includes('node_modules/@capacitor/')) {
+            return 'capacitor-vendor';
           }
         },
         // Ensure proper file types and names

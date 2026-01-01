@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, testConnection } from '../lib/supabase';
+import { dataCache, cacheKeys } from '../lib/dataCache';
 import { loginUser, signupUser, logoutUser, resetPassword } from '../services/auth.service';
 import { forceCleanReload, updateAuthStatus } from '../utils/auth';
 import type { User, LoginCredentials, SignupCredentials } from '../types/auth';
@@ -262,16 +263,31 @@ export function useAuth() {
 
   const updateUserState = async (authUser: any) => {
     try {
-      // Fetch full user data with department/batch/section names using the view
-      const { data: fullUserData, error: userError } = await supabase
-        .from('users_with_full_info')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
+      // Check cache first
+      const cacheKey = cacheKeys.userWithFullInfo(authUser.id);
+      const cachedUser = dataCache.get<any>(cacheKey);
+      
+      let fullUserData;
+      
+      if (cachedUser) {
+        fullUserData = cachedUser;
+      } else {
+        // Fetch full user data with department/batch/section names using the view
+        const { data, error: userError } = await supabase
+          .from('users_with_full_info')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+          
+        if (userError) {
+          console.error('Error fetching user data:', userError);
+          throw userError;
+        }
         
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        throw userError;
+        fullUserData = data;
+        
+        // Cache the result
+        dataCache.set(cacheKey, fullUserData);
       }
       
       let role = fullUserData?.role || authUser.user_metadata?.role || 'user';
@@ -370,19 +386,29 @@ export function useAuth() {
         // Ensure the role is set correctly
         user.role = 'super-admin';
         
-        try {
-          const { data: userData, error: userError } = await supabase
-            .from('users_with_full_info')
-            .select('*')
-            .eq('email', user.email)
-            .single();
-            
-          if (!userError && userData) {
-            console.log('Super admin data from database:', userData);
-            if (userData.name) user.name = userData.name;
+        // Try to get from cache first
+        const cacheKey = cacheKeys.userWithFullInfo(user.id || user.email);
+        const cachedData = dataCache.get<any>(cacheKey);
+        
+        if (cachedData && cachedData.name) {
+          user.name = cachedData.name;
+        } else {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('users_with_full_info')
+              .select('*')
+              .eq('email', user.email)
+              .single();
+              
+            if (!userError && userData) {
+              console.log('Super admin data from database:', userData);
+              if (userData.name) user.name = userData.name;
+              // Cache it
+              dataCache.set(cacheKey, userData);
+            }
+          } catch (err) {
+            console.warn('Error fetching super admin data, using default values', err);
           }
-        } catch (err) {
-          console.warn('Error fetching super admin data, using default values', err);
         }
         
         localStorage.setItem('is_super_admin', 'true');
@@ -509,6 +535,9 @@ export function useAuth() {
     try {
       console.log('Starting logout process in useAuth hook...');
       setError(null);
+      
+      // Clear data cache
+      dataCache.clear();
       
       setUser(null);
       

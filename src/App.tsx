@@ -24,6 +24,7 @@ import type { RefresherEventDetail } from '@ionic/react';
 // Initialize Ionic React
 setupIonicReact({
   mode: 'md', // Use Material Design mode for consistent look
+  animated: false, // Disable animations to reduce forced reflows
 });
 
 // Page import functions
