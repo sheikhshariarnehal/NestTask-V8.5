@@ -55,7 +55,7 @@ export function ForgotPasswordForm({ onSubmit, onBackToLogin, error }: ForgotPas
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       {!successMessage ? (
         <>
-          <div className="mb-8">
+          <div className="mb-10 text-center">
             <button
               type="button"
               onClick={onBackToLogin}
@@ -64,7 +64,7 @@ export function ForgotPasswordForm({ onSubmit, onBackToLogin, error }: ForgotPas
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back
             </button>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
               Forgot Password?
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -90,7 +90,6 @@ export function ForgotPasswordForm({ onSubmit, onBackToLogin, error }: ForgotPas
               label={isLoading ? 'Sending...' : 'Send Reset Link'} 
               isLoading={isLoading}
               icon={isLoading ? Loader2 : undefined}
-              disabled={!email || (touched.email && !validateEmail(email))}
             />
           </form>
         </>

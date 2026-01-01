@@ -188,12 +188,6 @@ export function ResetPasswordPage() {
     <div className="h-screen w-full bg-gray-50 dark:bg-gray-900 overflow-hidden relative">
       <div className="absolute inset-0 overflow-y-auto safe-area-inset-bottom">
         <div className="min-h-full flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
-          <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
-            <div className="flex justify-center items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">NestTask</h1>
-            </div>
-          </div>
-
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-xl shadow-gray-200/50 dark:shadow-none rounded-2xl sm:px-10 border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-8">

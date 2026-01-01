@@ -28,11 +28,13 @@ export function AuthPage({ onLogin, onSignup, onForgotPassword, error }: AuthPag
 
         <div className="relative z-10 flex flex-col justify-between h-full p-16 text-white">
           <div>
-            <div className="flex items-center gap-3 mb-12">
-              <div className="p-2.5 bg-white/10 rounded-xl backdrop-blur-md border border-white/10 shadow-lg">
-                <Layout className="w-8 h-8" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight">NestTask</span>
+            <div className="flex items-center gap-2 mb-12">
+              <img 
+                src="/icons/icon-512x512.png" 
+                alt="NestTask Logo" 
+                className="w-[30px] h-[30px] rounded-lg shadow-lg shrink-0 object-contain" 
+              />
+              <span className="text-3xl font-bold tracking-tight text-white leading-none">NestTask</span>
             </div>
             
             <h1 className="text-5xl font-bold leading-tight mb-6 tracking-tight">
@@ -76,16 +78,19 @@ export function AuthPage({ onLogin, onSignup, onForgotPassword, error }: AuthPag
         <div className="absolute inset-0 overflow-y-auto safe-area-inset-bottom">
           <div className="min-h-full flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
             <div className="mx-auto w-full max-w-md">
-                {/* Mobile Header */}
-                <div className="lg:hidden text-center mb-8 sm:mb-10">
-                    <div className="flex justify-center mb-4">
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                        <Layout className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                {/* Mobile Header - Only show on Login */}
+                {authState === 'login' && (
+                  <div className="lg:hidden flex flex-col items-center mb-8 sm:mb-10">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <img 
+                          src="/icons/icon-512x512.png" 
+                          alt="NestTask Logo" 
+                          className="w-[30px] h-[30px] rounded-lg shrink-0 object-contain" 
+                        />
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">NestTask</h1>
                       </div>
-                    </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">NestTask</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">Your Ultimate Task Management Solution</p>
-                </div>
+                  </div>
+                )}
 
                 {authState === 'login' && (
                   <LoginForm

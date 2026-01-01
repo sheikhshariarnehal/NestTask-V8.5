@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Mail, Lock, User, Phone, Car as IdCard, Loader2, BookOpen, Users, Layers } from 'lucide-react';
+import { Mail, Lock, User, Loader2, BookOpen, Users, Layers } from 'lucide-react';
 import { AuthError } from './AuthError';
 import { AuthInput } from './AuthInput';
 import { AuthSubmitButton } from './AuthSubmitButton';
-import { validateEmail, validatePassword, validatePhone, validateStudentId } from '../../utils/authErrors';
+import { validateEmail, validatePassword } from '../../utils/authErrors';
 import { getDepartments, getBatchesByDepartment, getSectionsByBatch } from '../../services/department.service';
 import type { SignupCredentials, Department, Batch, Section } from '../../types/auth';
 
@@ -234,14 +234,6 @@ export function SignupForm({ onSubmit, onSwitchToLogin, error }: SignupFormProps
       setLocalError('Password must be at least 6 characters long');
       return false;
     }
-    if (!validatePhone(credentials.phone)) {
-      setLocalError('Please enter a valid phone number');
-      return false;
-    }
-    if (!validateStudentId(credentials.studentId)) {
-      setLocalError('Please enter a valid student ID');
-      return false;
-    }
     if (!credentials.departmentId) {
       setLocalError('Please select your department');
       return false;
@@ -283,8 +275,6 @@ export function SignupForm({ onSubmit, onSwitchToLogin, error }: SignupFormProps
   const fieldErrors = useMemo(() => ({
     name: touched.name && !credentials.name.trim() ? 'Name is required' : '',
     email: touched.email && !validateEmail(credentials.email) ? 'Please enter a valid email' : '',
-    phone: touched.phone && !validatePhone(credentials.phone) ? 'Please enter a valid phone number' : '',
-    studentId: touched.studentId && !validateStudentId(credentials.studentId) ? 'Please enter a valid student ID' : '',
     password: touched.password && !validatePassword(credentials.password) ? 'Password must be at least 6 characters' : '',
     departmentId: touched.departmentId && !credentials.departmentId ? 'Please select your department' : '',
     batchId: touched.batchId && !credentials.batchId && credentials.departmentId ? 'Please select your batch' : '',
@@ -293,8 +283,8 @@ export function SignupForm({ onSubmit, onSwitchToLogin, error }: SignupFormProps
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+      <div className="mb-10 text-center">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
           Create Account
         </h2>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -315,38 +305,15 @@ export function SignupForm({ onSubmit, onSwitchToLogin, error }: SignupFormProps
             error={fieldErrors.name}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AuthInput
-              type="email"
-              value={credentials.email}
-              onChange={(value) => handleInputChange('email', value)}
-              label="Email"
-              placeholder="Enter your email"
-              icon={Mail}
-              error={fieldErrors.email}
-              inputMode="email"
-            />
-
-            <AuthInput
-              type="text"
-              value={credentials.phone}
-              onChange={(value) => handleInputChange('phone', value)}
-              label="Phone Number"
-              placeholder="Enter your phone"
-              icon={Phone}
-              error={fieldErrors.phone}
-              inputMode="tel"
-            />
-          </div>
-
           <AuthInput
-            type="text"
-            value={credentials.studentId}
-            onChange={(value) => handleInputChange('studentId', value)}
-            label="Student ID"
-            placeholder="Enter your student ID"
-            icon={IdCard}
-            error={fieldErrors.studentId}
+            type="email"
+            value={credentials.email}
+            onChange={(value) => handleInputChange('email', value)}
+            label="Email"
+            placeholder="Enter your email"
+            icon={Mail}
+            error={fieldErrors.email}
+            inputMode="email"
           />
 
           <SelectInput

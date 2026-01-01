@@ -63,8 +63,8 @@ export function LoginForm({ onSubmit, onSwitchToSignup, onForgotPassword, error 
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+      <div className="mb-10 text-center">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
           Welcome back
         </h2>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -143,7 +143,6 @@ export function LoginForm({ onSubmit, onSwitchToSignup, onForgotPassword, error 
           label={isLoading ? 'Signing in...' : 'Sign in'} 
           isLoading={isLoading}
           icon={isLoading ? Loader2 : undefined}
-          disabled={!credentials.email || !credentials.password}
         />
       </form>
 

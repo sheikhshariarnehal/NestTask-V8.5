@@ -29,8 +29,8 @@ export interface LoginCredentials {
 
 export interface SignupCredentials extends LoginCredentials {
   name: string;
-  phone: string;
-  studentId: string;
+  phone?: string;
+  studentId?: string;
   departmentId?: string;
   batchId?: string;
   sectionId?: string;

@@ -354,7 +354,7 @@ export async function signupUser({
 }: SignupCredentials): Promise<User> {
   try {
     // Validate required fields
-    if (!email || !password || !name || !phone || !studentId) {
+    if (!email || !password || !name) {
       throw new Error('All fields are required');
     }
 
@@ -375,8 +375,8 @@ export async function signupUser({
         data: {
           // Use consistent field names matching what the trigger expects
           name,
-          phone,
-          studentId,
+          phone: phone || '',
+          studentId: studentId || '',
           role: 'user', // Default role
           departmentId,
           batchId,

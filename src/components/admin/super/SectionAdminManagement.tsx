@@ -138,7 +138,6 @@ export function SectionAdminManagement({
       return (
         (user.username || '').toLowerCase().includes(term) ||
         (user.email || '').toLowerCase().includes(term) ||
-        (user.studentId || '').toLowerCase().includes(term) ||
         (user.role || '').toLowerCase().includes(term)
       );
     });
@@ -612,7 +611,7 @@ export function SectionAdminManagement({
             </div>
             <input
               type="text"
-              placeholder="Search users by name, email, or student ID"
+              placeholder="Search users by name or email"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 px-3 py-2 bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder-gray-400 min-w-[200px] md:min-w-[300px]"
@@ -713,7 +712,7 @@ export function SectionAdminManagement({
                       onClick={() => handleSort('email')}
                     >
                       <div className="flex items-center">
-                        Email / Student ID {renderSortIndicator('email')}
+                        Email {renderSortIndicator('email')}
                       </div>
                     </th>
                     <th 
@@ -753,7 +752,6 @@ export function SectionAdminManagement({
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                           <div>{user.email}</div>
-                          <div className="text-xs text-gray-400 dark:text-gray-500">{user.studentId}</div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
