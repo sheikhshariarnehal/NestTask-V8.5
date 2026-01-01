@@ -14,10 +14,23 @@ import { supabase } from './lib/supabase';
 import type { LoginCredentials, SignupCredentials } from './types/auth';
 import { initPushNotificationListeners } from './services/pushNavigationService';
 
-// Lazy-load core pages
-const App = lazy(() => import('./App'));
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
-const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
+// Prefetch critical modules during idle time
+const prefetchModules = () => {
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      import('./App');
+      import('./pages/AuthPage');
+    });
+  }
+};
+
+// Start prefetching immediately
+prefetchModules();
+
+// Lazy-load core pages with chunk names for better caching
+const App = lazy(() => import(/* webpackChunkName: "app" */ './App'));
+const ResetPasswordPage = lazy(() => import(/* webpackChunkName: "reset-password" */ './pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
+const AuthPage = lazy(() => import(/* webpackChunkName: "auth" */ './pages/AuthPage').then(module => ({ default: module.AuthPage })));
 
 // Ensure environment variables are properly loaded in production
 if (import.meta.env.PROD) {
@@ -133,15 +146,14 @@ function initApp() {
     </StrictMode>
   );
   
-  // Initialize PWA features
+  // Initialize PWA features (service worker registered in index.html)
+  // Only initialize PWA utilities here, don't double-register SW
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(() => {
-          // Initialize PWA features after service worker is registered
-          setTimeout(() => initPWA(), 1000);
-        })
-        .catch(error => console.error('SW registration failed:', error));
+    // Wait for existing registration before initializing PWA utilities
+    navigator.serviceWorker.ready.then(() => {
+      setTimeout(() => initPWA(), 500);
+    }).catch(() => {
+      // SW not registered yet, that's fine - index.html handles it
     });
   }
 }

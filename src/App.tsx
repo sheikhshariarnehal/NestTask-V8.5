@@ -5,7 +5,6 @@ import { useUsers } from './hooks/useUsers';
 import { useNotifications } from './hooks/useNotifications';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { AuthPage } from './pages/AuthPage';
-import { LoadingScreen } from './components/LoadingScreen';
 import { Navigation } from './components/Navigation';
 import { BottomNavigation } from './components/BottomNavigation';
 import { isSameDay } from './utils/dateUtils';
@@ -102,14 +101,6 @@ export default function App() {
   // Critical: keep Supabase session healthy across tab/app backgrounding.
   useSupabaseLifecycle({ enabled: true });
   
-  // Debug user role
-  useEffect(() => {
-    if (user) {
-      console.log('Current user role:', user.role);
-      console.log('Complete user object:', user);
-    }
-  }, [user]);
-  
   const { users, loading: usersLoading, deleteUser, refreshUsers } = useUsers();
   
   // Initialize push notifications for native platforms
@@ -127,13 +118,12 @@ export default function App() {
   // - This effect consumes any pending taskId (killed-state launch)
   //   and listens for in-app events while running.
   useEffect(() => {
-    console.log('[App] Setting up notification handlers');
+    if (!user) return; // Only run when user is logged in
     
     // Check immediately for pending taskId
     const checkPending = () => {
       const pendingTaskId = getPendingOpenTaskId();
       if (pendingTaskId) {
-        console.log('[App] Found pending taskId:', pendingTaskId);
         setActivePage('upcoming');
         setNotificationOpenTaskId(pendingTaskId);
         return true;
@@ -159,9 +149,7 @@ export default function App() {
     const onOpenTask = (event: Event) => {
       const customEvent = event as CustomEvent<{ taskId?: unknown }>;
       const taskId = customEvent?.detail?.taskId;
-      console.log('[App] Received open-task-from-notification event, taskId:', taskId);
       if (typeof taskId === 'string' && taskId.length > 0) {
-        console.log('[App] Opening task:', taskId);
         setActivePage('upcoming');
         setNotificationOpenTaskId(taskId);
       }
@@ -169,7 +157,7 @@ export default function App() {
 
     window.addEventListener('open-task-from-notification', onOpenTask as EventListener);
     return () => window.removeEventListener('open-task-from-notification', onOpenTask as EventListener);
-  }, []);
+  }, [user]);
   
   const { 
     tasks, 
@@ -310,10 +298,10 @@ export default function App() {
   
   // Check hash on initial load and when it changes
   useEffect(() => {
-    // Reduce artificial loading delay to improve perceived performance
+    // Minimal loading delay for smooth transition
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 800); // Reduced from 2000ms to 800ms
+    }, 300); // Reduced from 800ms to 300ms for faster perceived load
 
     // Check hash on initial load
     checkHashForRecovery();
@@ -383,7 +371,12 @@ export default function App() {
     switch (activePage) {
       case 'upcoming':
         return (
-          <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
+          <Suspense fallback={
+            <div className="p-6 space-y-4">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse" />
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+            </div>
+          }>
             <UpcomingPage
               tasks={tasks || []}
               openTaskId={notificationOpenTaskId}
@@ -393,13 +386,25 @@ export default function App() {
         );
       case 'search':
         return (
-          <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
+          <Suspense fallback={
+            <div className="p-6 space-y-4">
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+            </div>
+          }>
             <SearchPage tasks={tasks || []} />
           </Suspense>
         );
       case 'lecture-slides':
         return (
-          <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
+          <Suspense fallback={
+            <div className="p-6 space-y-4">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+              </div>
+            </div>
+          }>
             <LectureSlidesPage />
           </Suspense>
         );
@@ -418,13 +423,45 @@ export default function App() {
   };
 
   // Early returns based on loading state and authentication
-  // Don't show loading screen if we just returned from hidden state (prevents blank screen)
-  const shouldShowInitialLoading = !wasRecentlyHidden && (
-    isLoading || authLoading || ((user?.role === 'admin' || user?.role === 'super-admin') && usersLoading)
-  );
-  
-  if (shouldShowInitialLoading) {
-    return <LoadingScreen minimumLoadTime={1000} showProgress={true} />;
+  // Only show skeleton for initial auth load, not for task loading
+  const isInitialLoading = authLoading && !user;
+
+  // Show minimal skeleton only during true initial auth loading
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center animate-fadeIn">
+        <div className="w-full max-w-7xl mx-auto px-4 space-y-5">
+          {/* Logo and Brand */}
+          <div className="text-center mb-8 animate-slideUp">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NestTask</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Loading your workspace...</p>
+          </div>
+          {/* Skeleton Content */}
+          <div className="bg-gray-200 dark:bg-gray-700 rounded-2xl p-6 animate-pulse">
+            <div className="h-7 bg-gray-300 dark:bg-gray-600 rounded w-48 mb-2" />
+            <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-64" />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-xl p-5 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-lg" />
+                  <div className="flex-1">
+                    <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-12 mb-1" />
+                    <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Handle password reset flow
@@ -432,34 +469,33 @@ export default function App() {
     return <ResetPasswordPage />;
   }
 
-  // Debug log to show the current user's section ID
-  if (user) {
-    console.log('[Debug] Current user in App.tsx:', {
-      id: user.id,
-      role: user.role,
-      sectionId: user.sectionId,
-      sectionName: user.sectionName
-    });
-  }
-
   if (!user) {
     return (
-      <AuthPage
-        onLogin={(credentials, rememberMe = false) => login(credentials, rememberMe)}
-        onSignup={async (credentials) => {
-          const user = await signup(credentials);
-          return undefined; // Explicitly return undefined to match void type
-        }}
-        onForgotPassword={forgotPassword}
-        error={authError || undefined}
-      />
+      <div className="animate-fadeIn">
+        <AuthPage
+          onLogin={(credentials, rememberMe = false) => login(credentials, rememberMe)}
+          onSignup={async (credentials) => {
+            const user = await signup(credentials);
+            return undefined; // Explicitly return undefined to match void type
+          }}
+          onForgotPassword={forgotPassword}
+          error={authError || undefined}
+        />
+      </div>
     );
   }
 
   // Check for super-admin role first
   if (user.role === 'super-admin') {
     return (
-      <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
+      <Suspense fallback={
+        <div className="p-6 space-y-4">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+          </div>
+        </div>
+      }>
         <SuperAdminDashboard />
       </Suspense>
     );
@@ -468,7 +504,14 @@ export default function App() {
   // Then check for regular admin role
   if (user.role === 'admin') {
     return (
-      <Suspense fallback={<LoadingScreen minimumLoadTime={300} />}>
+      <Suspense fallback={
+        <div className="p-6 space-y-4">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map(i => <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />)}
+          </div>
+        </div>
+      }>
         <AdminDashboard
           users={users}
           tasks={tasks}
@@ -534,11 +577,7 @@ export default function App() {
             <main 
               className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 lg:pb-12"
             >
-              {tasksLoading && !wasRecentlyHidden && tasks.length === 0 ? (
-                <LoadingScreen minimumLoadTime={500} showProgress={false} />
-              ) : (
-                renderContent()
-              )}
+              {renderContent()}
             </main>
           </IonContent>
         </div>

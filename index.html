@@ -42,6 +42,9 @@
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="dns-prefetch" href="https://api.supabase.co" />
     
+    <!-- Preload the main entry point for faster LCP -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
     <!-- PWA assets -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.png" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
@@ -138,8 +141,9 @@
       }
     </style>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Fonts - Non-render blocking with preload -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     
     <!-- Theme controller script -->
     <script>

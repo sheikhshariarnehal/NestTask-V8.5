@@ -35,7 +35,7 @@ export async function fetchUsers(): Promise<User[]> {
     
     // If user is not an admin or super-admin, filter by their section
     if (currentUserData?.role !== 'admin' && currentUserData?.role !== 'super-admin' && currentUserData?.section_id) {
-      console.log('Filtering users by section:', currentUserData.section_id);
+      // Filter by section for section admins
       query = query.eq('section_id', currentUserData.section_id);
     }
 

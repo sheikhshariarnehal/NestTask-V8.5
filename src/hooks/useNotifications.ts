@@ -35,7 +35,6 @@ export function useNotifications(userId: string | undefined) {
   const loadExistingItems = useCallback(async () => {
     if (!userId) return;
 
-    console.log('[Notifications] Loading existing items...');
     const [{ data: tasks }, { data: announcements }] = await Promise.all([
       supabase
         .from('tasks')
@@ -83,7 +82,6 @@ export function useNotifications(userId: string | undefined) {
     const sortedNotifications = sortNotifications(newNotifications);
     setNotifications(sortedNotifications);
     setUnreadCount(newNotifications.filter(n => !n.read).length);
-    console.log('[Notifications] Loaded', newNotifications.length, 'notifications');
   }, [userId]);
 
   /**
@@ -91,11 +89,9 @@ export function useNotifications(userId: string | undefined) {
    */
   const setupSubscriptions = useCallback(() => {
     if (!userId || isSubscribedRef.current) {
-      console.log('[Notifications] Skipping subscription setup:', !userId ? 'no userId' : 'already subscribed');
       return;
     }
 
-    console.log('[Notifications] Setting up Realtime subscriptions...');
     isSubscribedRef.current = true;
 
     // Unsubscribe from any existing subscriptions first
@@ -132,9 +128,7 @@ export function useNotifications(userId: string | undefined) {
           handleNewTask(payload.new as any);
         }
       )
-      .subscribe((status) => {
-        console.log('[Notifications] Task subscription status:', status);
-      });
+      .subscribe();
 
     const announcementSubscription = supabase
       .channel('announcements')
@@ -149,9 +143,7 @@ export function useNotifications(userId: string | undefined) {
           handleNewAnnouncement(payload.new as any);
         }
       )
-      .subscribe((status) => {
-        console.log('[Notifications] Announcement subscription status:', status);
-      });
+      .subscribe();
 
     // Store subscription references for cleanup
     subscriptionsRef.current = {

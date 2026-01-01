@@ -20,7 +20,17 @@ export function AuthPage({ onLogin, onSignup, onForgotPassword, error }: AuthPag
       {/* Left Side - Hero/Branding (Hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-blue-600 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10 mix-blend-overlay" />
+        {/* Decorative pattern instead of external image to avoid ORB blocking */}
+        <div className="absolute inset-0 opacity-10 mix-blend-overlay">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1" fill="white" opacity="0.3" />
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
         
         {/* Decorative circles */}
         <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/10 rounded-full blur-3xl" />

@@ -21,6 +21,8 @@ export function useAuth() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     const savedEmail = localStorage.getItem(SAVED_EMAIL_KEY);
     if (savedEmail) {
       setSavedEmail(savedEmail);
@@ -28,10 +30,9 @@ export function useAuth() {
     
     // Check for cached user immediately before doing anything else
     const cachedUser = localStorage.getItem('nesttask_cached_user');
-    if (cachedUser) {
+    if (cachedUser && mounted) {
       try {
         const parsedUser = JSON.parse(cachedUser);
-        console.log('Found cached user on mount:', parsedUser.email);
         setUser(parsedUser);
       } catch (err) {
         console.error('Failed to parse cached user on mount:', err);
@@ -41,6 +42,7 @@ export function useAuth() {
     checkSession();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

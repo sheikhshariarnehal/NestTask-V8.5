@@ -69,21 +69,23 @@ const StatCard = memo(({
   return (
     <button
       onClick={onClick}
-      className={`rounded-xl p-4 sm:p-5 transition-all duration-200 border ${
+      className={`w-full rounded-xl p-4 sm:p-5 transition-all duration-200 border-2 min-h-stat-card flex items-center ${
         isActive 
           ? config.activeClasses
-          : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-md'
+          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md hover:scale-105'
       }`}
     >
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${config.iconBg}`}>
-          <Icon className={`w-5 h-5 ${config.iconColor}`} />
+      <div className="flex items-center gap-3 w-full">
+        <div className={`p-2.5 rounded-lg ${config.iconBg} flex-shrink-0`}>
+          <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${config.iconColor}`} />
         </div>
-        <div className="text-left">
-          <span className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+        <div className="text-left flex-1 min-w-0">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-0.5">
             {count}
-          </span>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{config.label}</p>
+          </div>
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+            {config.label}
+          </div>
         </div>
       </div>
     </button>
@@ -98,27 +100,29 @@ export const HomePage: React.FC<HomePageProps> = memo(({
   statFilter,
   setStatFilter
 }) => {
-  // Compute all task stats in a single pass
-  const taskStats = useMemo(() => {
-    if (!tasks?.length) return { total: 0, inProgress: 0, completed: 0, overdue: 0 };
+  // Compute all task stats and category counts in a single pass for better performance
+  const { taskStats, categoryCounts } = useMemo(() => {
+    if (!tasks?.length) {
+      return {
+        taskStats: { total: 0, inProgress: 0, completed: 0, overdue: 0 },
+        categoryCounts: {}
+      };
+    }
     
-    return tasks.reduce((stats, task) => {
+    const stats = { total: 0, inProgress: 0, completed: 0, overdue: 0 };
+    const counts: Record<string, number> = {};
+    
+    tasks.forEach(task => {
       stats.total++;
       if (task.status === 'in-progress') stats.inProgress++;
       else if (task.status === 'completed') stats.completed++;
       if (task.status !== 'completed' && isOverdue(task.dueDate)) stats.overdue++;
-      return stats;
-    }, { total: 0, inProgress: 0, completed: 0, overdue: 0 });
-  }, [tasks]);
-
-  // Compute category counts
-  const categoryCounts = useMemo(() => {
-    if (!tasks?.length) return {};
-    return tasks.reduce((acc: Record<string, number>, task) => {
+      
       const category = task.category || 'others';
-      acc[category] = (acc[category] || 0) + 1;
-      return acc;
-    }, {});
+      counts[category] = (counts[category] || 0) + 1;
+    });
+    
+    return { taskStats: stats, categoryCounts: counts };
   }, [tasks]);
 
   // Filter tasks based on category and stat filter
@@ -161,9 +165,9 @@ export const HomePage: React.FC<HomePageProps> = memo(({
   const handleClearFilter = useCallback(() => setStatFilter('all'), [setStatFilter]);
 
   return (
-    <div className="space-y-5 pb-6">
+    <div className="space-y-5 pb-6 animate-fadeIn">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-5 sm:p-6 text-white shadow-lg animate-slideUp">
         <h1 className="text-xl sm:text-2xl font-bold mb-1">
           Welcome back, {user?.name?.split(' ')[0] || 'User'}!
         </h1>
@@ -178,35 +182,52 @@ export const HomePage: React.FC<HomePageProps> = memo(({
       </div>
 
       {/* Task Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          type="all"
-          count={taskStats.total}
-          isActive={statFilter === 'all'}
-          onClick={handleFilterChange('all')}
-        />
-        <StatCard
-          type="overdue"
-          count={taskStats.overdue}
-          isActive={statFilter === 'overdue'}
-          onClick={handleFilterChange('overdue')}
-        />
-        <StatCard
-          type="in-progress"
-          count={taskStats.inProgress}
-          isActive={statFilter === 'in-progress'}
-          onClick={handleFilterChange('in-progress')}
-        />
-        <StatCard
-          type="completed"
-          count={taskStats.completed}
-          isActive={statFilter === 'completed'}
-          onClick={handleFilterChange('completed')}
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="animate-scaleIn stagger-1">
+          <StatCard
+            type="all"
+            count={taskStats.total}
+            isActive={statFilter === 'all'}
+            onClick={handleFilterChange('all')}
+          />
+        </div>
+        <div className="animate-scaleIn stagger-2">
+          <StatCard
+            type="overdue"
+            count={taskStats.overdue}
+            isActive={statFilter === 'overdue'}
+            onClick={handleFilterChange('overdue')}
+          />
+        </div>
+        <div className="animate-scaleIn stagger-3">
+          <StatCard
+            type="in-progress"
+            count={taskStats.inProgress}
+            isActive={statFilter === 'in-progress'}
+            onClick={handleFilterChange('in-progress')}
+          />
+        </div>
+        <div className="animate-scaleIn stagger-4">
+          <StatCard
+            type="completed"
+            count={taskStats.completed}
+            isActive={statFilter === 'completed'}
+            onClick={handleFilterChange('completed')}
+          />
+        </div>
       </div>
 
       {/* Task Categories */}
-      <Suspense fallback={<div className="h-24 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-xl" />}>
+      <Suspense fallback={
+        <div className="space-y-3">
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      }>
         <TaskCategories
           onCategorySelect={handleCategorySelect}
           selectedCategory={selectedCategory}

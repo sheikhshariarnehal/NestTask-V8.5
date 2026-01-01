@@ -10,14 +10,24 @@ interface TaskListProps {
   showDeleteButton?: boolean;
 }
 
+// Optimized batch size for rendering
+const INITIAL_RENDER_COUNT = 20;
+const LOAD_MORE_COUNT = 20;
+
 // Apply memo to the main component to prevent unnecessary re-renders
 export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = false }: TaskListProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
 
   // Memoized task selection handler
   const handleSelectTask = useCallback((task: Task) => {
     setSelectedTask(task);
   }, []);
+
+  // Load more tasks handler
+  const loadMore = useCallback(() => {
+    setVisibleCount(prev => Math.min(prev + LOAD_MORE_COUNT, tasks.length));
+  }, [tasks.length]);
 
   // Sort tasks to move completed tasks to the bottom and handle overdue tasks
   const sortedTasks = useMemo(() => {
@@ -36,6 +46,14 @@ export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = fal
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
   }, [tasks]);
+
+  // Only render visible tasks for performance
+  const visibleTasks = useMemo(() => 
+    sortedTasks.slice(0, visibleCount),
+    [sortedTasks, visibleCount]
+  );
+
+  const hasMore = visibleCount < sortedTasks.length;
 
   // Memoize the empty state to avoid recreation on each render
   const emptyState = useMemo(() => (
@@ -62,7 +80,7 @@ export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = fal
           gap-2 xs:gap-3 md:gap-4 lg:gap-6
           px-1 xs:px-2 md:px-0
           pb-4 md:pb-0">
-          {sortedTasks.map((task, index) => (
+          {visibleTasks.map((task, index) => (
             <TaskCard
               key={task.id}
               task={task}
@@ -71,6 +89,18 @@ export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = fal
             />
           ))}
         </div>
+        
+        {/* Load more button */}
+        {hasMore && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={loadMore}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-sm"
+            >
+              Load More ({sortedTasks.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mobile-optimized modal */}
