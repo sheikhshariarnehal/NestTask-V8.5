@@ -42,6 +42,8 @@ export function useTasks(userId: string | undefined) {
   const wasHiddenRef = useRef(false);
   // Track the last visibility change time
   const lastVisibilityChangeRef = useRef(Date.now());
+  // Throttle resume-triggered refreshes
+  const lastResumeRefreshRef = useRef<number>(0);
 
   // Update ref when userId changes
   useEffect(() => {
@@ -231,6 +233,34 @@ export function useTasks(userId: string | undefined) {
       }
     }
   }, [userId, retryCount]);
+
+  // Refresh tasks when the app resumes or network reconnects.
+  // This covers cases where the WebView stays "visible" while Capacitor is backgrounded.
+  useEffect(() => {
+    const handleResumeRefresh = () => {
+      const now = Date.now();
+      if (now - lastResumeRefreshRef.current < 1500) return;
+      lastResumeRefreshRef.current = now;
+
+      if (!userIdRef.current) return;
+      console.log('[useTasks] Resume/reconnect detected, forcing task refresh');
+      loadTasks({ force: true });
+    };
+
+    window.addEventListener('app-resume', handleResumeRefresh);
+    window.addEventListener('supabase-resume', handleResumeRefresh);
+    window.addEventListener('supabase-session-refreshed', handleResumeRefresh);
+    window.addEventListener('supabase-network-reconnect', handleResumeRefresh);
+    window.addEventListener('supabase-visibility-refresh', handleResumeRefresh);
+
+    return () => {
+      window.removeEventListener('app-resume', handleResumeRefresh);
+      window.removeEventListener('supabase-resume', handleResumeRefresh);
+      window.removeEventListener('supabase-session-refreshed', handleResumeRefresh);
+      window.removeEventListener('supabase-network-reconnect', handleResumeRefresh);
+      window.removeEventListener('supabase-visibility-refresh', handleResumeRefresh);
+    };
+  }, [loadTasks]);
 
   useEffect(() => {
     if (!userId) {

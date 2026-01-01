@@ -21,6 +21,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const isValidatingRef = useRef(false);
   const lastValidationRef = useRef<number>(Date.now());
   const optionsRef = useRef(options);
+  const isAutoRefreshEnabledRef = useRef<boolean>(false);
 
   // Update options ref when they change
   useEffect(() => {
@@ -90,6 +91,9 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
           if (refreshData.session) {
             console.log('[Supabase Lifecycle] Session refreshed successfully');
             optionsRef.current.onSessionRefreshed?.();
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+            }
             return true;
           } else {
             console.warn('[Supabase Lifecycle] Session refresh returned no session');
@@ -111,6 +115,9 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
           if (refreshData.session) {
             console.log('[Supabase Lifecycle] Session proactively refreshed');
             optionsRef.current.onSessionRefreshed?.();
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+            }
             return true;
           }
         } else {
@@ -134,7 +141,21 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
    */
   const handleResume = useCallback(async () => {
     console.log('[Supabase Lifecycle] App resumed, validating session...');
+
+    // In WebViews (Capacitor background/foreground) timers may pause.
+    // Restart supabase-js auto-refresh loop on resume.
+    try {
+      await supabase.auth.startAutoRefresh();
+      isAutoRefreshEnabledRef.current = true;
+    } catch (e) {
+      // startAutoRefresh isn't critical on all platforms; ignore if unavailable.
+    }
+
     await validateSession(true);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('supabase-resume'));
+    }
   }, [validateSession]);
 
   // Use app lifecycle hook to trigger session validation on resume
@@ -150,6 +171,19 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       if (isOnline) {
         // Validate session when network reconnects
         validateSession(false);
+      }
+    },
+    onAppStateChange: async (isActive) => {
+      if (!enabled) return;
+
+      // Stop auto-refresh in background to avoid unnecessary work.
+      if (!isActive) {
+        try {
+          await supabase.auth.stopAutoRefresh();
+          isAutoRefreshEnabledRef.current = false;
+        } catch (e) {
+          // ignore
+        }
       }
     }
   });

@@ -35,6 +35,26 @@ export function useUsers() {
     loadUsers(true);
   }, [loadUsers]);
 
+  useEffect(() => {
+    const handleResumeRefresh = () => {
+      loadUsers(true);
+    };
+
+    window.addEventListener('app-resume', handleResumeRefresh);
+    window.addEventListener('supabase-resume', handleResumeRefresh);
+    window.addEventListener('supabase-session-refreshed', handleResumeRefresh);
+    window.addEventListener('supabase-network-reconnect', handleResumeRefresh);
+    window.addEventListener('supabase-visibility-refresh', handleResumeRefresh);
+
+    return () => {
+      window.removeEventListener('app-resume', handleResumeRefresh);
+      window.removeEventListener('supabase-resume', handleResumeRefresh);
+      window.removeEventListener('supabase-session-refreshed', handleResumeRefresh);
+      window.removeEventListener('supabase-network-reconnect', handleResumeRefresh);
+      window.removeEventListener('supabase-visibility-refresh', handleResumeRefresh);
+    };
+  }, [loadUsers]);
+
   const handleDeleteUser = async (userId: string) => {
     try {
       setError(null);

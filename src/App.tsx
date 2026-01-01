@@ -15,6 +15,7 @@ import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
+import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications, ActionPerformed } from '@capacitor/push-notifications';
@@ -98,6 +99,9 @@ export default function App() {
 
   // Always call all hooks first, regardless of any conditions
   const { user, loading: authLoading, error: authError, login, signup, logout, forgotPassword } = useAuth();
+
+  // Critical: keep Supabase session healthy across tab/app backgrounding.
+  useSupabaseLifecycle({ enabled: true });
   
   // Debug user role
   useEffect(() => {
