@@ -1,10 +1,11 @@
-import { X, Calendar, Tag, Clock, Crown, Download, CheckCircle2, Clipboard, Copy, Link, ExternalLink, Eye, FileText, FileSpreadsheet, Presentation, FileImage, Folder, AlertCircle, Loader2, Paperclip } from 'lucide-react';
+import { X, Calendar, Tag, Download, CheckCircle2, Copy, Link, ExternalLink, Eye, FileText, FileSpreadsheet, Presentation, FileImage, Folder, AlertCircle, Loader2, Paperclip } from 'lucide-react';
 import { parseLinks } from '../../utils/linkParser';
 import { getGoogleDriveResourceType, extractGoogleDriveId, getGoogleDrivePreviewUrl, getGoogleDriveFilenames } from '../../utils/googleDriveUtils';
 import { supabase } from '../../lib/supabase';
 import type { Task } from '../../types';
 import type { TaskStatus } from '../../types/task';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TaskDetailsPopupProps {
   task: Task;
@@ -105,29 +106,22 @@ export function TaskDetailsPopup({
   const formattedDescription = processDescription(regularDescription);
   const overdue = new Date(task.dueDate) < new Date();
 
-  const handleDownload = async (url: string, filename: string) => {
+  // Memoize download handler to prevent recreation on each render
+  const handleDownload = useCallback(async (url: string, filename: string) => {
     try {
-      console.log('Downloading file:', { url, filename });
-      
       // Check if it's a Supabase storage URL
       if (url.includes('supabase.co/storage/v1/object/public/task-attachments/')) {
-        // Extract the file path from the URL
         const urlParts = url.split('/task-attachments/');
         const filePath = urlParts[1];
         
         if (filePath) {
-          // Download the file from Supabase storage
           const { data, error } = await supabase.storage
             .from('task-attachments')
             .download(filePath);
           
-          if (error) {
-            console.error('Error downloading from storage:', error);
-            throw error;
-          }
+          if (error) throw error;
           
           if (data) {
-            // Create a blob URL and trigger download
             const downloadUrl = URL.createObjectURL(data);
             const a = document.createElement('a');
             a.href = downloadUrl;
@@ -135,7 +129,6 @@ export function TaskDetailsPopup({
             document.body.appendChild(a);
             a.click();
             
-            // Clean up
             setTimeout(() => {
               document.body.removeChild(a);
               URL.revokeObjectURL(downloadUrl);
@@ -145,31 +138,24 @@ export function TaskDetailsPopup({
         }
       }
       
-      // For other URLs (like Google Drive), open in new tab
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error downloading file:', error);
-      // Fallback to opening in new tab
       window.open(url, '_blank', 'noopener,noreferrer');
     }
-  };
+  }, []);
 
-  const extractFileInfo = (line: string) => {
-    console.log('Processing attachment line:', line);
-    
-    // Improved regex to extract name and URL from markdown link formats
+  // Memoize file info extraction function
+  const extractFileInfo = useCallback((line: string) => {
     const matches = line.match(/\[(.*?)\]\((.*?)\)/);
     if (matches) {
-      const filename = matches[1];
-      const url = matches[2];
-      console.log('Extracted file info:', { filename, url });
-      return { filename, url };
+      return { filename: matches[1], url: matches[2] };
     }
     return null;
-  };
+  }, []);
 
-  // Google Drive utility functions
-  const getGoogleDriveIcon = (url: string) => {
+  // Memoized Google Drive icon getter
+  const getGoogleDriveIcon = useCallback((url: string) => {
     const resourceType = getGoogleDriveResourceType(url).toLowerCase();
     if (resourceType.includes('document')) return FileText;
     if (resourceType.includes('spreadsheet')) return FileSpreadsheet;
@@ -177,9 +163,10 @@ export function TaskDetailsPopup({
     if (resourceType.includes('folder')) return Folder;
     if (resourceType.includes('image')) return FileImage;
     return Link;
-  };
+  }, []);
 
-  const handleGoogleDriveDownload = async (url: string) => {
+  // Memoized Google Drive download handler
+  const handleGoogleDriveDownload = useCallback(async (url: string) => {
     const fileId = extractGoogleDriveId(url);
     if (!fileId) {
       setDownloadErrors(prev => new Map(prev.set(url, 'Invalid Google Drive URL')));
@@ -194,7 +181,6 @@ export function TaskDetailsPopup({
     });
 
     try {
-      // For Google Drive files, we'll attempt to use the export/download URL
       const resourceType = getGoogleDriveResourceType(url);
       let downloadUrl = '';
 
@@ -205,14 +191,11 @@ export function TaskDetailsPopup({
       } else if (resourceType.includes('Presentation')) {
         downloadUrl = `https://docs.google.com/presentation/d/${fileId}/export?format=pptx`;
       } else {
-        // For regular files, try the direct download
         downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
       }
 
-      // Open download URL in new tab (user will need to be signed in to Google)
       window.open(downloadUrl, '_blank', 'noopener,noreferrer');
 
-      // Clear loading state after a short delay
       setTimeout(() => {
         setDownloadingLinks(prev => {
           const newSet = new Set(prev);
@@ -222,7 +205,6 @@ export function TaskDetailsPopup({
       }, 2000);
 
     } catch (error) {
-      console.error('Error downloading Google Drive file:', error);
       setDownloadErrors(prev => new Map(prev.set(url, 'Download failed. Please try opening the link directly.')));
       setDownloadingLinks(prev => {
         const newSet = new Set(prev);
@@ -230,69 +212,53 @@ export function TaskDetailsPopup({
         return newSet;
       });
     }
-  };
+  }, []);
 
-  const handleSimplePreview = (url: string) => {
-    // Get the preview URL for better viewing experience
+  // Memoized preview handler
+  const handleSimplePreview = useCallback((url: string) => {
     const previewUrl = getGoogleDrivePreviewUrl(url);
-
-    // Open in new tab - use preview URL if available, otherwise use original URL
-    const urlToOpen = previewUrl || url;
-
-    console.log('Opening simple preview:', {
-      originalUrl: url,
-      previewUrl: previewUrl,
-      opening: urlToOpen
-    });
-
-    window.open(urlToOpen, '_blank', 'noopener,noreferrer');
-  };
+    window.open(previewUrl || url, '_blank', 'noopener,noreferrer');
+  }, []);
 
 
 
-  const copyTaskToClipboard = () => {
-    // Format the task information
-    const formattedDate = new Date(task.dueDate).toLocaleDateString('en-US', {
+  // Memoized formatted date for clipboard
+  const formattedDate = useMemo(() => {
+    return new Date(task.dueDate).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
+  }, [task.dueDate]);
 
-    const formattedTask = `
-📋 TASK: ${task.name}
+  // Memoized copy handler
+  const copyTaskToClipboard = useCallback(() => {
+    const formattedTask = `📋 TASK: ${task.name}
 📅 Due Date: ${formattedDate}${overdue ? ' (Overdue)' : ''}
 🏷️ Category: ${task.category.replace('-', ' ')}
 ${task.isAdminTask ? '👑 Admin Task\n' : ''}
 📝 Description:
 ${regularDescription}
 
-🌐 View: https://nesttask.vercel.app/
-`;
+🌐 View: https://nesttask.vercel.app/`;
 
-    // Copy to clipboard
     navigator.clipboard.writeText(formattedTask)
-      .then(() => {
-        setCopied(true);
-      })
-      .catch(err => {
-        console.error('Failed to copy task: ', err);
-      });
-  };
+      .then(() => setCopied(true))
+      .catch(() => {});
+  }, [task.name, task.category, task.isAdminTask, formattedDate, overdue, regularDescription]);
 
-  return (
-    <>
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
       {/* Backdrop overlay - enhanced for full viewport coverage */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] transition-opacity overflow-hidden"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Popup container - optimized responsive design */}
       <div 
-        className="fixed inset-x-3 top-[6%] sm:inset-x-6 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-3xl lg:max-w-4xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl z-[10000] max-h-[90vh] overflow-hidden animate-scale-in flex flex-col"
-        role="dialog"
-        aria-modal="true"
+        className="relative w-full max-w-3xl lg:max-w-4xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-h-[85vh] overflow-hidden animate-scale-in flex flex-col"
         aria-labelledby="task-details-title"
       >
         {/* Header */}
@@ -582,11 +548,10 @@ ${regularDescription}
           )}
         </div>
       </div>
-
-
-    </>
+    </div>,
+    document.body
   );
 }
 
 // Default export for lazy loading
-export default { TaskDetailsPopup };
+export default TaskDetailsPopup;

@@ -99,7 +99,7 @@ export function Navigation({
           <div className="flex justify-between items-center h-12 sm:h-14">
             {/* Logo and Brand */}
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-300">
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-300 whitespace-nowrap">
                 NestTask
               </h1>
             </div>
