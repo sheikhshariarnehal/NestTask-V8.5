@@ -108,6 +108,7 @@ const TaskManagerEnhancedComponent = ({
         filters,
         sort,
         sectionId,
+        abortSignal: abortController.signal,
       });
 
       // Only update state if component is still mounted and request wasn't cancelled
@@ -118,7 +119,12 @@ const TaskManagerEnhancedComponent = ({
       }
     } catch (err: any) {
       // Only set error if not cancelled and component is mounted
-      if (isMountedRef.current && !abortController.signal.aborted && err.message !== 'Operation cancelled') {
+      if (
+        isMountedRef.current &&
+        !abortController.signal.aborted &&
+        err?.name !== 'AbortError' &&
+        err?.message !== 'Operation cancelled'
+      ) {
         const errorMessage = err.message || 'Failed to load tasks';
         setError(errorMessage);
         console.error('Error loading tasks:', err);

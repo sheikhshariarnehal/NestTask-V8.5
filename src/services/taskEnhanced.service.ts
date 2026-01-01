@@ -121,6 +121,15 @@ class SupabaseService {
   }
 }
 
+function withAbortSignal<TQuery>(query: TQuery, abortSignal?: AbortSignal): TQuery {
+  if (!abortSignal) return query;
+  const q: any = query as any;
+  if (typeof q?.abortSignal === 'function') {
+    return q.abortSignal(abortSignal);
+  }
+  return query;
+}
+
 // ==================== TASK CRUD OPERATIONS ====================
 
 /**
@@ -134,9 +143,10 @@ export async function fetchTasksEnhanced(
     filters?: TaskFilters;
     sort?: TaskSortOptions;
     sectionId?: string;
+    abortSignal?: AbortSignal;
   } = {}
 ): Promise<PaginatedTasksResponse> {
-  const { page = 1, pageSize = 50, filters = {}, sort, sectionId } = options;
+  const { page = 1, pageSize = 50, filters = {}, sort, sectionId, abortSignal } = options;
   
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -201,7 +211,8 @@ export async function fetchTasksEnhanced(
   // Apply pagination
   query = query.range(from, to);
 
-  const { data, error, count } = await query;
+  const execQuery = withAbortSignal(query, abortSignal) as any;
+  const { data, error, count } = await execQuery;
 
   if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
 
@@ -242,7 +253,7 @@ export async function createTaskEnhanced(
   };
 
   const data = await SupabaseService.execute(
-    () => supabase.from('tasks').insert(taskData).select('*').single(),
+    () => withAbortSignal(supabase.from('tasks').insert(taskData).select('*').single(), abortSignal) as any,
     'Create task',
     abortSignal
   );
@@ -262,7 +273,8 @@ export async function createTaskEnhanced(
  */
 export async function updateTaskEnhanced(
   taskId: string,
-  updates: UpdateTaskInput
+  updates: UpdateTaskInput,
+  abortSignal?: AbortSignal
 ): Promise<EnhancedTask> {
   const updateData: Record<string, any> = {};
 
@@ -283,7 +295,7 @@ export async function updateTaskEnhanced(
   if (updates.googleDriveLinks !== undefined) updateData.google_drive_links = updates.googleDriveLinks;
 
   const data = await SupabaseService.execute(
-    () => supabase.from('tasks').update(updateData).eq('id', taskId).select('*').single(),
+    () => withAbortSignal(supabase.from('tasks').update(updateData).eq('id', taskId).select('*').single(), abortSignal) as any,
     'Update task'
   );
 

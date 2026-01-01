@@ -31,6 +31,7 @@ const TaskEnhancedFormComponent = ({
   const isEditing = !!task;
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController>();
+  const savingRef = useRef(false);
   
   const [formData, setFormData] = useState({
     name: task?.name || '',
@@ -72,6 +73,11 @@ const TaskEnhancedFormComponent = ({
     };
   }, []);
 
+  // Keep a ref in sync so timeouts/handlers don't read stale state
+  useEffect(() => {
+    savingRef.current = saving;
+  }, [saving]);
+
   // Handle visibility changes to recover from stuck states
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -96,6 +102,31 @@ const TaskEnhancedFormComponent = ({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [saving]);
+
+  // Also handle app-level resume events (Capacitor + focus-based) to recover from stuck states
+  useEffect(() => {
+    const handleResume = () => {
+      if (!savingRef.current || !savingStartTimeRef.current) return;
+
+      const elapsed = Date.now() - savingStartTimeRef.current;
+      if (elapsed > 20000) {
+        console.warn('[TaskEnhancedForm] Resetting stuck saving state after app resume');
+        setSaving(false);
+        setError('Operation may have timed out. Please try again.');
+        abortControllerRef.current?.abort();
+      }
+    };
+
+    window.addEventListener('app-resume', handleResume);
+    window.addEventListener('supabase-resume', handleResume);
+    window.addEventListener('supabase-session-refreshed', handleResume);
+
+    return () => {
+      window.removeEventListener('app-resume', handleResume);
+      window.removeEventListener('supabase-resume', handleResume);
+      window.removeEventListener('supabase-session-refreshed', handleResume);
+    };
+  }, []);
 
   // Track when saving starts
   useEffect(() => {
@@ -190,17 +221,27 @@ const TaskEnhancedFormComponent = ({
     setSaving(true);
     setError(null);
 
+    // Mark start immediately for timeout/visibility handlers
+    savingStartTimeRef.current = Date.now();
+
     // Create abort controller for this request
     abortControllerRef.current = new AbortController();
     
-    // Safety timeout - reset saving state after 30 seconds regardless
+    // Safety timeout - reset saving state after 30 seconds (uses refs to avoid stale closure)
+    const safetyTimeoutMs = 30000;
     const safetyTimeout = setTimeout(() => {
-      if (isMountedRef.current && saving) {
+      if (!isMountedRef.current) return;
+      if (!savingRef.current) return;
+
+      const startedAt = savingStartTimeRef.current;
+      const elapsed = startedAt ? Date.now() - startedAt : safetyTimeoutMs;
+      if (elapsed >= safetyTimeoutMs) {
         console.warn('[TaskEnhancedForm] Safety timeout triggered - resetting saving state');
+        abortControllerRef.current?.abort();
         setSaving(false);
         setError('Request timed out. Please try again.');
       }
-    }, 30000);
+    }, safetyTimeoutMs);
 
     try {
       const googleDriveLinks = formData.googleDriveLinks
@@ -218,7 +259,7 @@ const TaskEnhancedFormComponent = ({
           attachments: uploadedFiles.map(f => f.url),
           googleDriveLinks,
         };
-        const updatedTask = await updateTaskEnhanced(task.id, updates);
+        const updatedTask = await updateTaskEnhanced(task.id, updates, abortControllerRef.current.signal);
         clearTimeout(safetyTimeout);
         if (isMountedRef.current) {
           onTaskUpdated?.(updatedTask);
