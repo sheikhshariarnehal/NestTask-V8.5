@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import {
   BookOpen,
   PenSquare,
@@ -10,9 +11,8 @@ import {
   Building,
   Activity,
   Folder,
-  PencilRuler,
-  GraduationCap,
-  MoreHorizontal
+  MoreHorizontal,
+  LucideIcon
 } from 'lucide-react';
 import type { TaskCategory } from '../../types';
 
@@ -22,98 +22,130 @@ interface TaskCategoriesProps {
   categoryCounts: Record<TaskCategory, number>;
 }
 
-export function TaskCategories({ onCategorySelect, selectedCategory, categoryCounts }: TaskCategoriesProps) {
-  // Calculate total tasks from all categories
-  const totalTasks = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
+interface CategoryItem {
+  id: TaskCategory | null;
+  label: string;
+  icon: LucideIcon;
+}
 
-  const allCategories = [
-    { id: null, label: 'Total Tasks', icon: ListTodo, count: totalTasks },
-    { id: 'task' as TaskCategory, label: 'Task', icon: BookOpen, count: categoryCounts['task'] || 0 },
-    { id: 'presentation' as TaskCategory, label: 'Presentation', icon: Presentation, count: categoryCounts['presentation'] || 0 },
-    { id: 'project' as TaskCategory, label: 'Project', icon: Folder, count: categoryCounts['project'] || 0 },
-    { id: 'assignment' as TaskCategory, label: 'Assignment', icon: PenSquare, count: categoryCounts['assignment'] || 0 },
-    { id: 'quiz' as TaskCategory, label: 'Quiz', icon: BookOpen, count: categoryCounts['quiz'] || 0 },
-    { id: 'lab-report' as TaskCategory, label: 'Lab Report', icon: Beaker, count: categoryCounts['lab-report'] || 0 },
-    { id: 'lab-final' as TaskCategory, label: 'Lab Final', icon: Microscope, count: categoryCounts['lab-final'] || 0 },
-    { id: 'lab-performance' as TaskCategory, label: 'Lab perform..', icon: Activity, count: categoryCounts['lab-performance'] || 0 },
-    { id: 'documents' as TaskCategory, label: 'Documents', icon: FileText, count: categoryCounts['documents'] || 0 },
-    { id: 'blc' as TaskCategory, label: 'BLC', icon: Building, count: categoryCounts['blc'] || 0 },
-    { id: 'groups' as TaskCategory, label: 'Groups', icon: Users, count: categoryCounts['groups'] || 0 },
-    { id: 'others' as TaskCategory, label: 'Others', icon: MoreHorizontal, count: categoryCounts['others'] || 0 },
-  ];
+// Static category configuration
+const CATEGORIES: CategoryItem[] = [
+  { id: null, label: 'All Tasks', icon: ListTodo },
+  { id: 'task', label: 'Task', icon: BookOpen },
+  { id: 'presentation', label: 'Presentation', icon: Presentation },
+  { id: 'project', label: 'Project', icon: Folder },
+  { id: 'assignment', label: 'Assignment', icon: PenSquare },
+  { id: 'quiz', label: 'Quiz', icon: BookOpen },
+  { id: 'lab-report', label: 'Lab Report', icon: Beaker },
+  { id: 'lab-final', label: 'Lab Final', icon: Microscope },
+  { id: 'lab-performance', label: 'Lab Perf.', icon: Activity },
+  { id: 'documents', label: 'Documents', icon: FileText },
+  { id: 'blc', label: 'BLC', icon: Building },
+  { id: 'groups', label: 'Groups', icon: Users },
+  { id: 'others', label: 'Others', icon: MoreHorizontal },
+];
 
+// Mobile category button
+const MobileCategoryButton = memo(({ 
+  item, 
+  isSelected, 
+  onClick 
+}: { 
+  item: CategoryItem; 
+  isSelected: boolean; 
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+      isSelected
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+    }`}
+  >
+    {item.id === null ? 'All' : item.label}
+  </button>
+));
 
+// Desktop category card
+const CategoryCard = memo(({ 
+  item, 
+  count, 
+  isSelected, 
+  onClick 
+}: { 
+  item: CategoryItem; 
+  count: number; 
+  isSelected: boolean; 
+  onClick: () => void;
+}) => {
+  const Icon = item.icon;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 border ${
+        isSelected
+          ? 'bg-blue-600 text-white border-blue-500'
+          : `bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 ${count === 0 ? 'opacity-50' : ''}`
+      }`}
+    >
+      <div className={`p-2 rounded-lg ${isSelected ? 'bg-white/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="text-left min-w-0">
+        <div className="text-sm font-semibold truncate">{item.label}</div>
+        <div className={`text-xs ${isSelected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
+          {count} {count === 1 ? 'task' : 'tasks'}
+        </div>
+      </div>
+    </button>
+  );
+});
+
+export const TaskCategories = memo(function TaskCategories({ 
+  onCategorySelect, 
+  selectedCategory, 
+  categoryCounts 
+}: TaskCategoriesProps) {
+  // Calculate total tasks
+  const totalTasks = useMemo(() => 
+    Object.values(categoryCounts).reduce((sum, count) => sum + count, 0), 
+    [categoryCounts]
+  );
 
   return (
-    <div className="mb-3 sm:mb-4">
-      <div className="mb-3 sm:mb-4 px-1 sm:px-0">
-        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-          Tasks
-        </h2>
-      </div>
+    <div className="space-y-3">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+        Categories
+      </h2>
 
-      {/* Mobile: Fully scrollable categories */}
-      <div className="block sm:hidden">
-        <div className="flex mobile-category-gap-xs gap-2.5 xs:gap-3 overflow-x-auto pb-3 mobile-category-compact px-1 sm:px-0 scrollbar-hide mobile-category-scroll">
-          {allCategories.map(({ id, label, icon: Icon, count }) => (
-            <button
-              key={id || 'total'}
-              onClick={() => onCategorySelect(id)}
-              className={`
-                flex-shrink-0 px-3.5 xs:px-4 sm:px-4 py-2.5 xs:py-3 sm:py-3 rounded-lg
-                mobile-category-text-xs text-sm font-medium whitespace-nowrap
-                min-h-[44px] mobile-touch-target mobile-category-item transition-all duration-200
-                ${selectedCategory === id
-                  ? 'bg-blue-600 text-white shadow-md scale-[1.02]'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:shadow-sm'
-                }
-              `}
-            >
-              {id === null ? 'All' : label}
-            </button>
+      {/* Mobile: Horizontal scroll */}
+      <div className="sm:hidden">
+        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+          {CATEGORIES.map((item) => (
+            <MobileCategoryButton
+              key={item.id || 'all'}
+              item={item}
+              isSelected={selectedCategory === item.id}
+              onClick={() => onCategorySelect(item.id)}
+            />
           ))}
         </div>
       </div>
 
       {/* Desktop: Grid layout */}
-      <div className="hidden sm:block">
-        <div className="space-y-3">
-          {/* Grid for categories */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {allCategories.map(({ id, label, icon: Icon, count }) => (
-              <button
-                key={id || 'total'}
-                onClick={() => onCategorySelect(id)}
-                className={`
-                  group flex items-center gap-3 p-3.5 sm:p-4 rounded-lg transition-all duration-200
-                  border border-transparent
-                  ${selectedCategory === id
-                    ? 'bg-blue-600 text-white shadow-md scale-[1.02] border-blue-500'
-                    : `bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-200 dark:hover:border-gray-700 ${count === 0 ? 'opacity-60 hover:opacity-100' : ''}`
-                  }
-                  hover:shadow-sm hover:-translate-y-0.5
-                `}
-              >
-                <div className={`
-                  p-2 rounded-md transition-colors duration-200 flex-shrink-0
-                  ${selectedCategory === id
-                    ? 'bg-white/20'
-                    : 'bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30'
-                  }
-                `}>
-                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-                <div className="flex-1 text-left min-w-0">
-                  <div className="text-sm font-semibold truncate">{label}</div>
-                  <div className={`text-xs font-medium ${selectedCategory === id ? 'opacity-90' : (count === 0 ? 'opacity-60 group-hover:opacity-80' : 'opacity-70')}`}>
-                    {count} {count === 1 ? 'task' : 'tasks'}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        {CATEGORIES.map((item) => (
+          <CategoryCard
+            key={item.id || 'all'}
+            item={item}
+            count={item.id === null ? totalTasks : (categoryCounts[item.id] || 0)}
+            isSelected={selectedCategory === item.id}
+            onClick={() => onCategorySelect(item.id)}
+          />
+        ))}
       </div>
     </div>
   );
-}
+});
