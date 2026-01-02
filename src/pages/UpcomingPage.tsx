@@ -330,6 +330,13 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
 
     const allTasksList = propTasks || allTasks || [];
     console.log('[UpcomingPage] Searching for task:', openTaskId, 'in', allTasksList.length, 'tasks');
+    
+    // If tasks haven't loaded yet, don't consume the openTaskId - just wait
+    if (allTasksList.length === 0 && loading) {
+      console.log('[UpcomingPage] Tasks still loading, will retry when tasks are available...');
+      return; // Don't consume the taskId, let it retry when loading completes
+    }
+    
     const taskToOpen = allTasksList.find(t => t.id === openTaskId);
     
     if (taskToOpen) {
@@ -347,12 +354,17 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
           // Ignore date parsing failures; popup still opens.
         }
       }
+      // Only consume the taskId when we successfully found and opened it
+      onOpenTaskIdConsumed?.();
     } else {
       console.log('[UpcomingPage] Task not found:', openTaskId);
+      // Only consume if we're sure tasks have loaded (not still loading)
+      if (!loading) {
+        console.log('[UpcomingPage] Tasks loaded but task not found, consuming taskId');
+        onOpenTaskIdConsumed?.();
+      }
     }
-
-    onOpenTaskIdConsumed?.();
-  }, [openTaskId, propTasks, allTasks, onOpenTaskIdConsumed]);
+  }, [openTaskId, propTasks, allTasks, loading]);
 
   // Clear loading state if stuck for too long
   useEffect(() => {

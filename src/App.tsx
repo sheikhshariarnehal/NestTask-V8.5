@@ -7,6 +7,7 @@ import { usePushNotifications } from './hooks/usePushNotifications';
 import { AuthPage } from './pages/AuthPage';
 import { Navigation } from './components/Navigation';
 import { BottomNavigation } from './components/BottomNavigation';
+import { LoadingScreen } from './components/LoadingScreen';
 import { isSameDay } from './utils/dateUtils';
 import type { NavPage } from './types/navigation';
 import type { TaskCategory } from './types/task';
@@ -255,6 +256,11 @@ export default function App() {
     window.history.pushState({ page }, '', newPath);
   }, []);
 
+  // Memoized callback to consume notification task ID
+  const handleOpenTaskIdConsumed = useCallback(() => {
+    setNotificationOpenTaskId(null);
+  }, []);
+
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -455,9 +461,9 @@ export default function App() {
             </div>
           }>
             <UpcomingPage
-              tasks={tasks || []}
+              tasks={tasksLoading ? undefined : tasks}
               openTaskId={notificationOpenTaskId}
-              onOpenTaskIdConsumed={() => setNotificationOpenTaskId(null)}
+              onOpenTaskIdConsumed={handleOpenTaskIdConsumed}
             />
           </Suspense>
         );
