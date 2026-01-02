@@ -1,6 +1,7 @@
 import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 // Import Ionic CSS for pull-to-refresh and other components
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
@@ -49,9 +50,11 @@ const Analytics = import.meta.env.PROD
   ? lazy(() => import('@vercel/analytics/react').then(mod => ({ default: mod.Analytics })))
   : () => null;
 
+const shouldRenderAnalytics = import.meta.env.PROD && !Capacitor.isNativePlatform();
+
 // Simple error boundary for analytics
 const AnalyticsErrorBoundary = ({ children }: { children: React.ReactNode }) => {
-  if (!import.meta.env.PROD) return null;
+  if (!shouldRenderAnalytics) return null;
   return <>{children}</>;
 };
 
@@ -143,7 +146,7 @@ function initApp() {
     <StrictMode>
       <Suspense fallback={<MicroLoader />}>
         <RouterProvider router={router} />
-        {import.meta.env.PROD && (
+        {shouldRenderAnalytics && (
           <AnalyticsErrorBoundary>
             <Suspense fallback={null}><Analytics /></Suspense>
           </AnalyticsErrorBoundary>
