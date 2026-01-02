@@ -181,14 +181,8 @@
       // Backwards compatibility
       window.toggleTheme = window.themeController.toggle.bind(window.themeController);
     </script>
-    <script type="module" crossorigin src="/assets/js/index.Dd-q_lPC.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/js/capacitor-vendor.WkpnXCg6.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/charts.DA0G0eQf.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/react-vendor.M3Il-enX.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/ionic-vendor.LSiBRiWN.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/supabase-vendor.BXgxktDk.js">
-    <link rel="stylesheet" crossorigin href="/assets/css/ionic-vendor.5aKpPXL6.css">
-    <link rel="stylesheet" crossorigin href="/assets/css/index.CuRZEGNH.css">
+    <script type="module" crossorigin src="/assets/js/index.BCrl8GCy.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/css/index.Dw3OEDwV.css">
   </head>
   <body>
     <div id="root"></div>
@@ -214,8 +208,10 @@
         }
       });
     
-      // Register service worker
-      if ('serviceWorker' in navigator) {
+      // Register service worker (PWA only). Do NOT register inside Capacitor,
+      // because SW caching can serve stale index/assets and cause a white screen.
+      const isCapacitor = typeof window !== 'undefined' && !!window.Capacitor;
+      if (!isCapacitor && 'serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
             .catch(err => {

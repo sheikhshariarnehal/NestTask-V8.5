@@ -39,11 +39,11 @@ export default defineConfig({
       brotliSize: true
     })
   ],
-  appType: 'spa', // Ensure Vite treats this as a SPA
   build: {
-    // Enable minification and tree shaking
-    minify: 'terser',
-    terserOptions: {
+    // For Capacitor, prefer maximum runtime compatibility over aggressive minification.
+    // (Prevents rare TDZ/circular-init crashes like "Cannot access 'E' before initialization" in WebView.)
+    minify: isCapacitorBuild ? 'esbuild' : 'terser',
+    terserOptions: isCapacitorBuild ? undefined : {
       compress: {
         drop_console: true,
         drop_debugger: true,
@@ -62,56 +62,43 @@ export default defineConfig({
     reportCompressedSize: true,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Core React dependencies
+        // In native WebView (Capacitor), avoid custom chunking to reduce the chance
+        // of circular-init ordering issues across chunks.
+        manualChunks: isCapacitorBuild ? undefined : (id) => {
+          // Only split truly independent vendor chunks to avoid circular dependencies
+          
+          // Core React dependencies - keep together
           if (id.includes('node_modules/react/') || 
               id.includes('node_modules/react-dom/') || 
-              id.includes('node_modules/scheduler/')) {
-            return 'react-vendor';
-          }
-          
-          // React Router
-          if (id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/scheduler/') ||
+              id.includes('node_modules/react-router-dom/') ||
               id.includes('node_modules/react-router/')) {
             return 'react-vendor';
           }
           
-          // Ionic React - separate chunk
+          // Ionic React - separate chunk (has no deps on our code)
           if (id.includes('node_modules/@ionic/react/') ||
-              id.includes('node_modules/@ionic/core/')) {
+              id.includes('node_modules/@ionic/core/') ||
+              id.includes('node_modules/ionicons/')) {
             return 'ionic-vendor';
           }
           
-          // Supabase
+          // Supabase - standalone
           if (id.includes('node_modules/@supabase/')) {
             return 'supabase-vendor';
           }
           
-          // Date handling
-          if (id.includes('node_modules/date-fns/')) {
-            return 'date-utils';
-          }
-          
-          // UI component libraries
-          if (id.includes('node_modules/@radix-ui/') || 
-              id.includes('node_modules/framer-motion/')) {
-            return 'ui-vendor';
-          }
-          
-          // Icons
-          if (id.includes('node_modules/lucide-react/')) {
-            return 'icons';
-          }
-          
-          // Charts
+          // Charts - large and independent (combine d3 and recharts to avoid circular deps)
           if (id.includes('node_modules/recharts/') || 
-              id.includes('node_modules/d3/')) {
+              id.includes('node_modules/d3-') ||
+              id.includes('node_modules/d3/') ||
+              id.includes('node_modules/victory-vendor/')) {
             return 'charts';
           }
           
-          // Capacitor plugins
-          if (id.includes('node_modules/@capacitor/')) {
-            return 'capacitor-vendor';
+          // All other node_modules go to a common vendor chunk
+          if (id.includes('node_modules/')) {
+            return 'vendor';
           }
         },
         // Ensure proper file types and names
@@ -132,9 +119,14 @@ export default defineConfig({
           }
           return 'assets/[name].[hash][extname]';
         },
-        // Optimize chunk names
+        // Optimize chunk names - ensure all output files have .js extension
         chunkFileNames: 'assets/js/[name].[hash].js',
-        entryFileNames: 'assets/js/[name].[hash].js',
+        // Force .js extension for entry files (fixes Capacitor MIME type issues with .tsx)
+        entryFileNames: (chunkInfo) => {
+          // Remove any .tsx/.ts extension from the name and always use .js
+          const name = chunkInfo.name.replace(/\.(tsx?|jsx?)$/, '');
+          return `assets/js/${name}.[hash].js`;
+        },
       }
     },
     // Enable source map optimization

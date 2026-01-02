@@ -2,6 +2,12 @@
  * Initialize PWA features
  */
 export function initPWA(): void {
+  // PWA features are for browsers. In Capacitor (native WebView), service workers
+  // can cause stale caching and blank screens after updates.
+  if (typeof window !== 'undefined' && (window as any).Capacitor) {
+    return;
+  }
+
   // Check for updates periodically
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     // Check for service worker updates every hour

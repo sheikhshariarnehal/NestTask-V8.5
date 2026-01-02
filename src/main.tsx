@@ -60,26 +60,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
-  },
-  {
-    path: '/home',
-    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
-  },
-  {
-    path: '/upcoming',
-    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
-  },
-  {
-    path: '/search',
-    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
-  },
-  {
-    path: '/routine',
-    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
-  },
-  {
-    path: '/lecture-slides',
-    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
+    children: []
   },
   {
     path: '/auth',
