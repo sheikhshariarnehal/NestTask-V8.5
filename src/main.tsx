@@ -56,18 +56,20 @@ const AnalyticsErrorBoundary = ({ children }: { children: React.ReactNode }) => 
 };
 
 // Define app routes
+//
+// Note: The app manages in-app navigation by updating `window.history` directly
+// (e.g. /routine, /upcoming). React Router only evaluates the URL on initial load
+// and on navigations it owns, so we must ensure those URLs are valid routes.
+//
+// A catch-all route guarantees that refreshing on /routine (etc.) renders <App />
+// instead of the default React Router 404 error boundary.
 const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>,
-    children: []
-  },
   {
     path: '/auth',
     element: (
       <Suspense fallback={<MicroLoader />}>
-        <AuthPage 
-          onLogin={async (credentials: LoginCredentials, rememberMe?: boolean) => {
+        <AuthPage
+          onLogin={async (credentials: LoginCredentials, _rememberMe?: boolean) => {
             try {
               const { error } = await supabase.auth.signInWithPassword({
                 email: credentials.email,
@@ -105,6 +107,10 @@ const router = createBrowserRouter([
   {
     path: '/reset-password',
     element: <Suspense fallback={<MicroLoader />}><ResetPasswordPage /></Suspense>
+  },
+  {
+    path: '*',
+    element: <Suspense fallback={<MicroLoader />}><App /></Suspense>
   }
 ]);
 

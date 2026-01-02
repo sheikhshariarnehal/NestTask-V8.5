@@ -272,6 +272,10 @@ export function useTasks(userId: string | undefined) {
     // Set mounted ref
     isMountedRef.current = true;
     
+    // Initial load - show loading immediately, then fetch.
+    // This makes initial skeletons (e.g., Home task cards) reliably visible.
+    setLoading(true);
+
     // Initial load - fetch data once on mount
     loadTasks();
 

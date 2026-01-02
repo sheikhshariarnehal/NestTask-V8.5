@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, memo, lazy, Suspense } from 'react';
+import React, { useMemo, useCallback, memo, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { ListTodo, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { TaskList } from '../components/TaskList';
 import { isOverdue } from '../utils/dateUtils';
@@ -13,6 +13,8 @@ type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
 interface HomePageProps {
   user: User;
   tasks: Task[];
+  tasksLoading: boolean;
+  hasCompletedInitialTasksLoad: boolean;
   selectedCategory: TaskCategory | null;
   setSelectedCategory: (category: TaskCategory | null) => void;
   statFilter: StatFilter;
@@ -95,11 +97,52 @@ const StatCard = memo(({
 export const HomePage: React.FC<HomePageProps> = memo(({
   user,
   tasks,
+  tasksLoading,
+  hasCompletedInitialTasksLoad,
   selectedCategory,
   setSelectedCategory,
   statFilter,
   setStatFilter
 }) => {
+  // Keep the task skeleton perceptible even on fast connections.
+  const [showTaskSkeleton, setShowTaskSkeleton] = useState(() => tasksLoading || !hasCompletedInitialTasksLoad);
+  const skeletonStartRef = useRef<number | null>(null);
+
+  const MIN_SKELETON_MS = 500;
+
+  useEffect(() => {
+    let hideTimer: number | undefined;
+
+    const consideredLoading = tasksLoading || !hasCompletedInitialTasksLoad;
+
+    if (consideredLoading) {
+      if (skeletonStartRef.current == null) {
+        skeletonStartRef.current = Date.now();
+      }
+      setShowTaskSkeleton(true);
+      return () => {
+        if (hideTimer) window.clearTimeout(hideTimer);
+      };
+    }
+
+    if (!tasksLoading && showTaskSkeleton) {
+      const startedAt = skeletonStartRef.current ?? Date.now();
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(MIN_SKELETON_MS - elapsed, 0);
+
+      hideTimer = window.setTimeout(() => {
+        setShowTaskSkeleton(false);
+        skeletonStartRef.current = null;
+      }, remaining);
+    } else {
+      skeletonStartRef.current = null;
+    }
+
+    return () => {
+      if (hideTimer) window.clearTimeout(hideTimer);
+    };
+  }, [tasksLoading, hasCompletedInitialTasksLoad, showTaskSkeleton]);
+
   // Compute all task stats and category counts in a single pass for better performance
   const { taskStats, categoryCounts } = useMemo(() => {
     if (!tasks?.length) {
@@ -262,7 +305,52 @@ export const HomePage: React.FC<HomePageProps> = memo(({
           </div>
         )}
         
-        {filteredTasks.length > 0 ? (
+        {showTaskSkeleton ? (
+          <div className="w-full max-w-7xl mx-auto">
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+                gap-2 xs:gap-3 md:gap-4 lg:gap-6
+                px-1 xs:px-2 md:px-0
+                pb-4 md:pb-0"
+            >
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div
+                  key={i}
+                  className="relative bg-white dark:bg-gray-800 md:bg-white md:dark:bg-gray-800
+                    rounded-2xl md:rounded-lg
+                    border border-gray-100 dark:border-gray-700/50
+                    p-3 md:p-4 lg:p-5
+                    min-h-[110px]
+                    animate-pulse"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="h-4 md:h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                        <div className="h-4 md:h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                      </div>
+                      <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-gray-600/50 bg-gray-50 dark:bg-gray-700/50 flex-shrink-0 mt-0.5">
+                        <div className="w-2.5 h-2.5 bg-gray-200 dark:bg-gray-700 rounded hidden md:inline-block" />
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-14" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                      <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                    </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+                        <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-14" />
+                      </div>
+                      <div className="w-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : filteredTasks.length > 0 ? (
           <TaskList tasks={filteredTasks} showDeleteButton={false} />
         ) : (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
