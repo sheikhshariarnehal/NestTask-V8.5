@@ -39,6 +39,7 @@ export default defineConfig({
       brotliSize: true
     })
   ],
+  appType: 'spa', // Ensure Vite treats this as a SPA
   build: {
     // Enable minification and tree shaking
     minify: 'terser',

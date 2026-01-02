@@ -1,0 +1,590 @@
+{
+  "department": "Computer Science and Engineering",
+  "faculty": "Science and Information Technology",
+  "university": "Daffodil International University",
+  "semester": "Summer-2025",
+  "head_of_department": "Dr. Sheak Rashed Haider Noori",
+  "position": "Professor & Head, Department of CSE",
+  "courses": [
+    {
+      "code": "ENG101",
+      "title": "Basic Functional English and English Spoken",
+      "level_term": "L-1, T-1 (Batch-69)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "MAT101",
+      "title": "Mathematics - I",
+      "level_term": "L-1, T-1 (Batch-69)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE112",
+      "title": "Computer Fundamentals",
+      "level_term": "L-1, T-1 (Batch-69)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE115",
+      "title": "Introduction to Biology and Chemistry for Computation",
+      "level_term": "L-1, T-1 (Batch-69)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "ENG102",
+      "title": "Writing and Comprehension",
+      "level_term": "L-1, T-2 (Batch-68)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "ENG101",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "MAT102",
+      "title": "Mathematics-II: Calculus, Complex Variables and Linear Algebra",
+      "level_term": "L-1, T-2 (Batch-68)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "MAT101",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "PHY101",
+      "title": "Physics - I",
+      "level_term": "L-1, T-2 (Batch-68)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE113",
+      "title": "Programming and Problem Solving",
+      "level_term": "L-1, T-2 (Batch-68)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE114",
+      "title": "Programming and Problem Solving Lab",
+      "level_term": "L-1, T-2 (Batch-68)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "MAT211",
+      "title": "Engineering Mathematics",
+      "level_term": "L-2, T-3 (Batch-67)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE123",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE212",
+      "title": "Discrete Mathematics",
+      "level_term": "L-2, T-3 (Batch-67)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE124",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE213",
+      "title": "Algorithms",
+      "level_term": "L-2, T-3 (Batch-67)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "PHY101",
+      "credit": 1.5,
+      "lab": false
+    },
+    {
+      "code": "CSE214",
+      "title": "Algorithms Lab",
+      "level_term": "L-2, T-3 (Batch-67)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "PHY101",
+      "credit": 3,
+      "lab": true
+    },
+    {
+      "code": "CSE121",
+      "title": "Electrical Circuits",
+      "level_term": "L-2, T-3 (Batch-67)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE122",
+      "title": "Electrical Circuits Lab",
+      "level_term": "L-2, T-3 (Batch-67)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "AOL101",
+      "title": "Art of Living",
+      "level_term": "L-2, T-2 (Batch-66)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE221",
+      "title": "Object Oriented Programming",
+      "level_term": "L-2, T-2 (Batch-66)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE113, CSE213",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE222",
+      "title": "Object Oriented Programming Lab",
+      "level_term": "L-2, T-2 (Batch-66)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE114, CSE214",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "CSE215",
+      "title": "Electronic Devices and Circuits",
+      "level_term": "L-2, T-2 (Batch-66)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE121",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE216",
+      "title": "Electronic Devices and Circuits Lab",
+      "level_term": "L-2, T-2 (Batch-66)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE122",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "CSE226",
+      "title": "Numerical Methods",
+      "level_term": "L-2, T-3 (Batch-65)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "MAT211, CSE113, CSE212",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE227",
+      "title": "Systems Analysis and Design",
+      "level_term": "L-2, T-3 (Batch-65)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE134, CSE221",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE311",
+      "title": "Database Management System",
+      "level_term": "L-2, T-3 (Batch-65)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE311",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE312",
+      "title": "Database Management System Lab",
+      "level_term": "L-2, T-3 (Batch-65)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "CSE225",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "CSE321",
+      "title": "Computer Networks",
+      "level_term": "L-2, T-3 (Batch-65)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE322",
+      "title": "Computer Networks Lab",
+      "level_term": "L-2, T-3 (Batch-65)",
+      "curriculum": "New Curriculum-3, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "STA101",
+      "title": "Statistics and Probability",
+      "level_term": "L-3, T-1 (Batch-64)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2023",
+      "prerequisite": "MAT211, CSE223",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE413",
+      "title": "Computer Architecture and Organization",
+      "level_term": "L-3, T-1 (Batch-64)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2023",
+      "prerequisite": "CSE228",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE317",
+      "title": "Microprocessor and Microcontrollers",
+      "level_term": "L-3, T-1 (Batch-64)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2023",
+      "prerequisite": "CSE114",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE313",
+      "title": "Compiler Design",
+      "level_term": "L-3, T-1 (Batch-64)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE314",
+      "title": "Compiler Design Lab",
+      "level_term": "L-3, T-1 (Batch-64)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2023",
+      "prerequisite": "Null",
+      "credit": 1.5,
+      "lab": true
+    },
+    {
+      "code": "CSE333",
+      "title": "Software Engineering",
+      "level_term": "L-3, T-2 (Batch-63)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE321",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE325",
+      "title": "Data Mining and Machine Learning",
+      "level_term": "L-3, T-2 (Batch-63)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE311, CSE312",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE326",
+      "title": "Data Mining and Machine Learning Lab",
+      "level_term": "L-3, T-2 (Batch-63)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE325",
+      "credit": 1,
+      "lab": true
+    },
+    {
+      "code": "CSE411",
+      "title": "Artificial Intelligence",
+      "level_term": "L-3, T-2 (Batch-63)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE233",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE412",
+      "title": "Artificial Intelligence Lab",
+      "level_term": "L-3, T-2 (Batch-63)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE411",
+      "credit": 1,
+      "lab": true
+    },
+    {
+      "code": "CSE423",
+      "title": "Information Security (Elective I)",
+      "level_term": "L-3, T-2 (Batch-63)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false,
+      "elective": true
+    },
+    {
+      "code": "CSE323",
+      "title": "Operating Systems",
+      "level_term": "L-3, T-3 (Batch-62)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE123, CSE134, CSE231",
+      "credit": 2,
+      "lab": false
+    },
+    {
+      "code": "CSE324",
+      "title": "Operating Systems Lab",
+      "level_term": "L-3, T-3 (Batch-62)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE323",
+      "credit": 2,
+      "lab": true
+    },
+    {
+      "code": "CSE331",
+      "title": "Compiler Design",
+      "level_term": "L-3, T-3 (Batch-62)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE323",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE332",
+      "title": "Compiler Design Lab",
+      "level_term": "L-3, T-3 (Batch-62)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "CSE331",
+      "credit": 1,
+      "lab": true
+    },
+    {
+      "code": "CSE334",
+      "title": "Research and Innovation in CSE",
+      "level_term": "L-3, T-3 (Batch-62)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "Null",
+      "credit": 1,
+      "lab": false
+    },
+    {
+      "code": "CSE445",
+      "title": "Natural Language Processing (Elective II)",
+      "level_term": "L-3, T-3 (Batch-62)",
+      "curriculum": "New Curriculum-2, Effective from Spring 2022",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false,
+      "elective": true
+    },
+    {
+      "code": "CSE333",
+      "title": "Software Engineering",
+      "level_term": "L-4, T-2 (Batch-61)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2022",
+      "prerequisite": "CSE231, CSE132, CSE223",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE233",
+      "title": "Embedded Systems and IoT",
+      "level_term": "L-4, T-2 (Batch-61)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2022",
+      "prerequisite": "CSE233, CSE132, CSE223",
+      "credit": 2,
+      "lab": false
+    },
+    {
+      "code": "CSE234",
+      "title": "Embedded Systems and IoT Lab",
+      "level_term": "L-4, T-2 (Batch-61)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2022",
+      "prerequisite": "CSE223",
+      "credit": 2,
+      "lab": true
+    },
+    {
+      "code": "CSE415",
+      "title": "Web Engineering",
+      "level_term": "L-4, T-2 (Batch-61)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2022",
+      "prerequisite": "CSE231, CSE415",
+      "credit": 2,
+      "lab": false
+    },
+    {
+      "code": "CSE416",
+      "title": "Web Engineering Lab",
+      "level_term": "L-4, T-2 (Batch-61)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2022",
+      "prerequisite": "CSE499: Title",
+      "credit": 2,
+      "lab": true
+    },
+    {
+      "code": "CSE499",
+      "title": "Project / Internship (Phase I, continued from Level 4 Term 1)",
+      "level_term": "L-4, T-2 (Batch-61)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2022",
+      "prerequisite": "Defense",
+      "credit": 2,
+      "lab": false
+    },
+    {
+      "code": "CSE498",
+      "title": "Social and Professional Issues in Computing",
+      "level_term": "L-4, T-3 (Batch-60)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2019",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false
+    },
+    {
+      "code": "CSE 426",
+      "title": "Principles of Robotics (Elective)",
+      "level_term": "L-4, T-3 (Batch-60)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2019",
+      "prerequisite": "Null",
+      "credit": 3,
+      "lab": false,
+      "elective": true
+    },
+    {
+      "code": "CSE499",
+      "title": "Project / Internship (Phase II, continued from Level 4 Term 2)",
+      "level_term": "L-4, T-3 (Batch-60)",
+      "curriculum": "New Curriculum-1, Effective from Spring 2019",
+      "prerequisite": "CSE499: Project / Internship (Phase I)",
+      "credit": 4,
+      "lab": false
+    }
+  ],
+  "additional_course_mentions": [
+    {
+      "code": "PHY102",
+      "title": "Physics - II",
+      "level_term": "L1T2_B66"
+    },
+    {
+      "code": "CSE123",
+      "title": "Data Structure",
+      "level_term": "L1T2_B66"
+    },
+    {
+      "code": "BNS101",
+      "title": "Bangladesh Studies (History of Independence and Contemporary Issues)",
+      "level_term": "L2T1_B65"
+    },
+    {
+      "code": "CSE223",
+      "title": "Digital Logic Design",
+      "level_term": "L2T2_B64"
+    },
+    {
+      "code": "CSE225",
+      "title": "Data Communication",
+      "level_term": "L2T2_B64"
+    },
+    {
+      "code": "CSE228",
+      "title": "Theory of Computation",
+      "level_term": "L2T2_B64"
+    },
+    {
+      "code": "CSE335",
+      "title": "Computer Architecture and Organization",
+      "level_term": "L3T1_B63"
+    },
+    {
+      "code": "CSE315",
+      "title": "Introduction to Data Science",
+      "level_term": "L3T1_B63"
+    },
+    {
+      "code": "ACT322",
+      "title": "Financial and Managerial Accounting",
+      "level_term": "L3T1_B62"
+    },
+    {
+      "code": "CSE414",
+      "title": "Web Engineering",
+      "level_term": "L4T1_B59"
+    },
+    {
+      "code": "CSE421",
+      "title": "Computer Graphics",
+      "level_term": "L4T1_B59"
+    },
+    {
+      "code": "CSE427",
+      "title": "Digital Image Processing (Elective -II)",
+      "level_term": "L4T2_B58"
+    },
+    {
+      "code": "CSE432",
+      "title": "Computer and Network Security",
+      "level_term": "B61_221_DSC"
+    }
+  ],
+  "total_credits_by_level": [
+    {
+      "level_term": "L-1, T-1 (Batch-69)",
+      "total_credits": 12
+    },
+    {
+      "level_term": "L-1, T-2 (Batch-68)",
+      "total_credits": 13.5
+    },
+    {
+      "level_term": "L-2, T-3 (Batch-67)",
+      "total_credits": 15
+    },
+    {
+      "level_term": "L-2, T-2 (Batch-66)",
+      "total_credits": 12
+    },
+    {
+      "level_term": "L-2, T-3 (Batch-65)",
+      "total_credits": 15
+    },
+    {
+      "level_term": "L-3, T-1 (Batch-64)",
+      "total_credits": 10.5
+    },
+    {
+      "level_term": "L-3, T-2 (Batch-63)",
+      "total_credits": 14
+    },
+    {
+      "level_term": "L-3, T-3 (Batch-62)",
+      "total_credits": 12
+    },
+    {
+      "level_term": "L-4, T-2 (Batch-61)",
+      "total_credits": 13
+    },
+    {
+      "level_term": "L-4, T-3 (Batch-60)",
+      "total_credits": 10
+    }
+  ]
+}
