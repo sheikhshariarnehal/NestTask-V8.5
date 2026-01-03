@@ -1,0 +1,3 @@
+import{Q as i,R as a,U as m,V as p,W as c}from"./App.Bq1bAq62.js";import"./index._Njr3ecQ.js";import"./AuthPage.CwtCXbtT.js";import"./AuthSubmitButton.mfRRfzoj.js";import"./ResetPasswordPage.B_9Vym2W.js";/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */const y=()=>{const e=window;e.addEventListener("statusTap",()=>{i(()=>{const n=e.innerWidth,s=e.innerHeight,o=document.elementFromPoint(n/2,s/2);if(!o)return;const t=a(o);t&&new Promise(r=>m(t,r)).then(()=>{p(async()=>{t.style.setProperty("--overflow","hidden"),await c(t,300),t.style.removeProperty("--overflow")})})})})};export{y as startStatusTap};

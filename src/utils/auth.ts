@@ -1,12 +1,15 @@
 // Auth utilities for handling auth-related functions across the app
-
-import { supabase } from '../lib/supabase';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Clears application caches after login/logout without forcing a page reload
  * This helps ensure PWA cache is refreshed for authenticated views
  */
 export function forceCleanReload(): void {
+  if (Capacitor.isNativePlatform()) {
+    return;
+  }
+
   // Check if we're on a super admin page
   const isSuperAdmin = window.location.pathname.includes('super-admin') || 
                        sessionStorage.getItem('is_super_admin') === 'true' ||
@@ -67,6 +70,10 @@ export function forceCleanReload(): void {
  * for proper caching behavior
  */
 export function updateAuthStatus(isLoggedIn: boolean): void {
+  if (Capacitor.isNativePlatform()) {
+    return;
+  }
+
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
       type: 'AUTH_STATE_CHANGED',

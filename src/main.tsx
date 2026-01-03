@@ -37,10 +37,15 @@ const AuthPage = lazy(() => import(/* webpackChunkName: "auth" */ './pages/AuthP
 if (import.meta.env.PROD) {
   console.log('[Debug] Running in production mode - checking environment variables');
   // Check if we need to add environment variables to window for runtime access
-  if (!import.meta.env.VITE_SUPABASE_URL && !((window as any).ENV_SUPABASE_URL)) {
+  const runtimeEnv = window as unknown as {
+    ENV_SUPABASE_URL?: string;
+    ENV_SUPABASE_ANON_KEY?: string;
+  };
+
+  if (!import.meta.env.VITE_SUPABASE_URL && !runtimeEnv.ENV_SUPABASE_URL) {
     console.error('[Error] Missing Supabase URL in production environment');
   }
-  if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !((window as any).ENV_SUPABASE_ANON_KEY)) {
+  if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !runtimeEnv.ENV_SUPABASE_ANON_KEY) {
     console.error('[Error] Missing Supabase Anon Key in production environment');
   }
 }
@@ -72,36 +77,24 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<MicroLoader />}>
         <AuthPage
-          onLogin={async (credentials: LoginCredentials, _rememberMe?: boolean) => {
-            try {
-              const { error } = await supabase.auth.signInWithPassword({
-                email: credentials.email,
-                password: credentials.password
-              });
-              if (error) throw error;
-            } catch (error) {
-              throw error;
-            }
+          onLogin={async (credentials: LoginCredentials) => {
+            const { error } = await supabase.auth.signInWithPassword({
+              email: credentials.email,
+              password: credentials.password
+            });
+            if (error) throw error;
           }}
           onSignup={async (credentials: SignupCredentials) => {
-            try {
-              const { error } = await supabase.auth.signUp({
-                email: credentials.email,
-                password: credentials.password,
-                options: { data: { name: credentials.name } }
-              });
-              if (error) throw error;
-            } catch (error) {
-              throw error;
-            }
+            const { error } = await supabase.auth.signUp({
+              email: credentials.email,
+              password: credentials.password,
+              options: { data: { name: credentials.name } }
+            });
+            if (error) throw error;
           }}
           onForgotPassword={async (email: string) => {
-            try {
-              const { error } = await supabase.auth.resetPasswordForEmail(email);
-              if (error) throw error;
-            } catch (error) {
-              throw error;
-            }
+            const { error } = await supabase.auth.resetPasswordForEmail(email);
+            if (error) throw error;
           }}
         />
       </Suspense>
@@ -130,7 +123,7 @@ function initApp() {
       link.rel = 'dns-prefetch';
       link.href = url.origin;
       document.head.appendChild(link);
-    } catch (e) {
+    } catch {
       // Silently fail - non-critical
     }
   }
@@ -156,8 +149,8 @@ function initApp() {
   );
   
   // Initialize PWA features (service worker registered in index.html)
-  // Only initialize PWA utilities here, don't double-register SW
-  if ('serviceWorker' in navigator) {
+  // Never run PWA utilities in native Capacitor WebView.
+  if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
     // Wait for existing registration before initializing PWA utilities
     navigator.serviceWorker.ready.then(() => {
       setTimeout(() => initPWA(), 500);

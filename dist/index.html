@@ -181,7 +181,7 @@
       // Backwards compatibility
       window.toggleTheme = window.themeController.toggle.bind(window.themeController);
     </script>
-    <script type="module" crossorigin src="/assets/js/index.BxpwrciU.js"></script>
+    <script type="module" crossorigin src="/assets/js/index._Njr3ecQ.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/css/index.CZD8ypfQ.css">
   </head>
   <body>
@@ -210,7 +210,7 @@
     
       // Register service worker (PWA only). Do NOT register inside Capacitor,
       // because SW caching can serve stale index/assets and cause a white screen.
-      const isCapacitor = typeof window !== 'undefined' && !!window.Capacitor;
+      const isCapacitor = typeof window !== 'undefined' && (!!window.Capacitor || /\bCapacitor\b/i.test(navigator.userAgent));
       if (!isCapacitor && 'serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')

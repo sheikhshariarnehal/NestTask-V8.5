@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "build:capacitor": "set CAPACITOR_BUILD=true&& tsc && vite build",
     "vercel-build": "node vercel-build.js",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "analyze": "vite build --mode analyze",
     "android:build": "npm run build:capacitor && npx cap sync android",

@@ -209,7 +209,7 @@
     
       // Register service worker (PWA only). Do NOT register inside Capacitor,
       // because SW caching can serve stale index/assets and cause a white screen.
-      const isCapacitor = typeof window !== 'undefined' && !!window.Capacitor;
+      const isCapacitor = typeof window !== 'undefined' && (!!window.Capacitor || /\bCapacitor\b/i.test(navigator.userAgent));
       if (!isCapacitor && 'serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
