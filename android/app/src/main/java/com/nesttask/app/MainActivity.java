@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -12,6 +13,18 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Disable autofill to prevent NullPointerException in Chrome WebView
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                WebView webView = getBridge().getWebView();
+                if (webView != null) {
+                    webView.setImportantForAutofill(WebView.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Failed to disable autofill: " + e.getMessage());
+            }
+        }
         
         // Create notification channels for Android 8.0+
         createNotificationChannels();
