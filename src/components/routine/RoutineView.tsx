@@ -10,13 +10,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getInitials } from '../../utils/stringUtils';
 import { transformRoutineData, extractCoursesFromSlots } from '../../utils/routineTransformer';
 import type { RawRoutineData } from '../../types/rawRoutine';
+import { useAuth } from '../../hooks/useAuth';
 
 export function RoutineView() {
+  const { user } = useAuth();
   const [routineData, setRoutineData] = useState<{ currentRoutine: any; courses: any[] } | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [isMobileSearchVisible, setIsMobileSearchVisible] = useState(false);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
   
   // Load and transform the raw university JSON data
   useEffect(() => {
@@ -103,6 +106,28 @@ export function RoutineView() {
     });
     return Array.from(uniqueSections).sort();
   }, [enrichedSlots]);
+
+  // Auto-select user's section based on batch and section name
+  useEffect(() => {
+    if (hasAutoSelected || !user || sections.length === 0) {
+      return;
+    }
+
+    // Construct the expected section format: "batchNumber_sectionLetter"
+    // e.g., Batch "63" + Section "G" = "63_G"
+    const batchNumber = user.batchName?.replace(/\D/g, ''); // Extract digits only (e.g., "Batch 63" -> "63")
+    const sectionLetter = user.sectionName?.split(' ').pop()?.toUpperCase(); // Get last word (e.g., "Section G" -> "G")
+
+    if (batchNumber && sectionLetter) {
+      const expectedSection = `${batchNumber}_${sectionLetter}`;
+      
+      // Check if this section exists in the available sections
+      if (sections.includes(expectedSection)) {
+        setSelectedSection(expectedSection);
+        setHasAutoSelected(true);
+      }
+    }
+  }, [sections, user, hasAutoSelected]);
 
   // Memoize handlers to prevent recreating functions on each render
   const toggleMobileSearch = useCallback(() => {
@@ -292,7 +317,19 @@ export function RoutineView() {
           </div>
         ) : (
           filteredSlots
-            .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime))
+            .sort((a: any, b: any) => {
+              // Convert time strings (HH:MM:SS or HH:MM) to comparable numbers
+              // Bangladesh day shift: treat times 1:00-6:59 as PM (add 12 hours)
+              const getTimeValue = (timeStr: string) => {
+                let [hours, minutes] = timeStr.split(':').map(Number);
+                // If hour is between 1 and 6, it's PM (13:00-18:00)
+                if (hours >= 1 && hours <= 6) {
+                  hours += 12;
+                }
+                return hours * 60 + minutes;
+              };
+              return getTimeValue(a.startTime) - getTimeValue(b.startTime);
+            })
             .map((slot: any) => (
               <div
                 key={slot.id}
@@ -303,10 +340,14 @@ export function RoutineView() {
                   <div className="w-20 sm:w-24 bg-blue-50 dark:bg-blue-900/20 flex flex-col justify-center items-center py-4 border-r-2 border-blue-500 flex-shrink-0">
                     <div className="text-center">
                       <div className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
-                        {format(new Date(`2000-01-01T${slot.startTime}`), 'h:mm')}
-                      </div>
-                      <div className="text-[10px] sm:text-xs text-blue-500">
-                        {format(new Date(`2000-01-01T${slot.startTime}`), 'a')}
+                        {(() => {
+                          let [hours, minutes] = slot.startTime.split(':').map(Number);
+                          // Convert to PM if stored as early morning hours
+                          if (hours >= 1 && hours <= 6) hours += 12;
+                          // Convert to 12-hour format
+                          const display12Hour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+                          return `${display12Hour}:${String(minutes).padStart(2, '0')}`;
+                        })()}
                       </div>
                     </div>
                     
@@ -314,10 +355,14 @@ export function RoutineView() {
                     
                     <div className="text-center">
                       <div className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
-                        {format(new Date(`2000-01-01T${slot.endTime}`), 'h:mm')}
-                      </div>
-                      <div className="text-[10px] sm:text-xs text-blue-500">
-                        {format(new Date(`2000-01-01T${slot.endTime}`), 'a')}
+                        {(() => {
+                          let [hours, minutes] = slot.endTime.split(':').map(Number);
+                          // Convert to PM if stored as early morning hours
+                          if (hours >= 1 && hours <= 6) hours += 12;
+                          // Convert to 12-hour format
+                          const display12Hour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+                          return `${display12Hour}:${String(minutes).padStart(2, '0')}`;
+                        })()}
                       </div>
                     </div>
                   </div>
