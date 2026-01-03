@@ -11,6 +11,7 @@ import { getInitials } from '../../utils/stringUtils';
 import { transformRoutineData, extractCoursesFromSlots } from '../../utils/routineTransformer';
 import type { RawRoutineData } from '../../types/rawRoutine';
 import { useAuth } from '../../hooks/useAuth';
+import { RoutineSkeleton } from './RoutineSkeleton';
 
 export function RoutineView() {
   const { user } = useAuth();
@@ -49,6 +50,7 @@ export function RoutineView() {
       });
   }, []);
 
+  // Use optional chaining for currentRoutine and provide fallback
   const currentRoutine = routineData?.currentRoutine;
   const courses = routineData?.courses || [];
 
@@ -146,15 +148,10 @@ export function RoutineView() {
     setSelectedDate(day);
   }, []);
 
-  // Show loading state while data is being fetched
-  if (!routineData) {
-    return (
-      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div className="flex items-center justify-center py-12">
-          <Clock className="w-12 h-12 text-gray-400 dark:text-gray-500 animate-spin" />
-        </div>
-      </div>
-    );
+  // Show loading skeleton while data is being fetched
+  // Note: This uses early return AFTER all hooks are declared
+  if (!routineData || !currentRoutine) {
+    return null; // Suspense boundary in App.tsx will show RoutineSkeleton
   }
 
   return (

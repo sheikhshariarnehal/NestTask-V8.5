@@ -21,6 +21,7 @@ import { Capacitor } from '@capacitor/core';
 import { getPendingOpenTaskId } from './services/pushNavigationService';
 import { IonApp, IonContent, IonRefresher, IonRefresherContent, setupIonicReact } from '@ionic/react';
 import type { RefresherEventDetail } from '@ionic/react';
+import { RoutineSkeleton } from './components/routine/RoutineSkeleton';
 
 // Initialize Ionic React
 setupIonicReact({
@@ -443,23 +444,7 @@ export default function App() {
     switch (activePage) {
       case 'upcoming':
         return (
-          <Suspense fallback={
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 animate-pulse">
-              <div className="h-7 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-28 sm:w-32" />
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 space-y-2">
-                      <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-                    </div>
-                    <div className="w-16 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          }>
+          <Suspense fallback={null}>
             <UpcomingPage
               tasks={tasksLoading ? undefined : tasks}
               openTaskId={notificationOpenTaskId}
@@ -506,18 +491,7 @@ export default function App() {
         );
       case 'routine':
         return (
-          <Suspense fallback={
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 animate-pulse">
-              <div className="h-7 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-24 sm:w-28" />
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 sm:p-8">
-                <div className="max-w-md mx-auto space-y-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto" />
-                  <div className="h-6 sm:h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mx-auto" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 mx-auto" />
-                </div>
-              </div>
-            </div>
-          }>
+          <Suspense fallback={<RoutineSkeleton />}>
             <RoutinePage />
           </Suspense>
         );
