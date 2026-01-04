@@ -24,6 +24,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Firebase Cloud Messaging Service -->
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_click_action"
             android:value="PUSH_NOTIFICATION_CLICK" />

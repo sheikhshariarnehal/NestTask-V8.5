@@ -57,27 +57,27 @@ public class MainActivity extends BridgeActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             
+            // Tasks channel - must match AndroidManifest.xml default_notification_channel_id
+            NotificationChannel tasksChannel = new NotificationChannel(
+                "tasks",
+                "Task Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            );
+            tasksChannel.setDescription("Notifications for tasks, reminders and deadlines");
+            tasksChannel.enableLights(true);
+            tasksChannel.enableVibration(true);
+            tasksChannel.setShowBadge(true);
+            
             // Default channel for general notifications
             NotificationChannel defaultChannel = new NotificationChannel(
                 "default",
                 "Default Notifications",
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_DEFAULT
             );
             defaultChannel.setDescription("General app notifications");
             defaultChannel.enableLights(true);
             defaultChannel.enableVibration(true);
             defaultChannel.setShowBadge(true);
-            
-            // Task reminders channel
-            NotificationChannel taskChannel = new NotificationChannel(
-                "task_reminders",
-                "Task Reminders",
-                NotificationManager.IMPORTANCE_HIGH
-            );
-            taskChannel.setDescription("Notifications for task reminders and deadlines");
-            taskChannel.enableLights(true);
-            taskChannel.enableVibration(true);
-            taskChannel.setShowBadge(true);
             
             // Announcements channel
             NotificationChannel announcementChannel = new NotificationChannel(
@@ -91,8 +91,8 @@ public class MainActivity extends BridgeActivity {
             
             // Register channels
             if (notificationManager != null) {
+                notificationManager.createNotificationChannel(tasksChannel);
                 notificationManager.createNotificationChannel(defaultChannel);
-                notificationManager.createNotificationChannel(taskChannel);
                 notificationManager.createNotificationChannel(announcementChannel);
             }
         }

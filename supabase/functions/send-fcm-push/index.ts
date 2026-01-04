@@ -240,12 +240,15 @@ serve(async (req) => {
 
     // Query FCM tokens
     // If sectionId is provided, only get tokens for users in that section
+    console.log('Fetching FCM tokens...')
+    
     let query = supabase
       .from('fcm_tokens')
       .select('id, token, user_id')
       .eq('is_active', true)
 
     if (sectionId) {
+      console.log('Filtering by section:', sectionId)
       // Join with users table to filter by section
       const { data: sectionUsers, error: usersError } = await supabase
         .from('users')
@@ -256,15 +259,21 @@ serve(async (req) => {
         console.error('Error fetching section users:', usersError)
       } else if (sectionUsers && sectionUsers.length > 0) {
         const userIds = sectionUsers.map(u => u.id)
+        console.log('Found', userIds.length, 'users in section')
         query = query.in('user_id', userIds)
+      } else {
+        console.log('No users found in section')
       }
     }
 
     const { data: tokens, error: tokensError } = await query
 
     if (tokensError) {
+      console.error('Tokens query error:', tokensError)
       throw new Error(`Failed to fetch tokens: ${tokensError.message}`)
     }
+
+    console.log('Found', tokens?.length || 0, 'FCM tokens')
 
     if (!tokens || tokens.length === 0) {
       return new Response(

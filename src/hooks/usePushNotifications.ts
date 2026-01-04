@@ -95,35 +95,52 @@ function formatSupabaseError(error: unknown) {
 async function upsertFcmToken(userId: string, token: string) {
   const now = Date.now();
   if (lastSavedToken && lastSavedToken.userId === userId && lastSavedToken.token === token && now - lastSavedToken.savedAt < 2 * 60 * 1000) {
+    console.log('[FCM] Token already saved recently, skipping');
     return;
   }
 
+  console.log('[FCM] Starting token upsert for user:', userId);
+  console.log('[FCM] Token preview:', token.substring(0, 20) + '...');
+  console.log('[FCM] Platform:', Capacitor.getPlatform());
+
   const deviceInfo: DeviceInfo = {
     platform: Capacitor.getPlatform(),
-    model: undefined,
-    osVersion: undefined
+    model: 'unknown',
+    osVersion: 'unknown',
+    appVersion: '1.0.0'
   };
 
-  const { error } = await supabase
+  const tokenData = {
+    user_id: userId,
+    token,
+    platform: Capacitor.getPlatform() as 'android' | 'ios' | 'web',
+    device_info: deviceInfo,
+    is_active: true,
+    updated_at: new Date().toISOString()
+  };
+
+  console.log('[FCM] Upserting token to database...');
+
+  const { data, error } = await supabase
     .from('fcm_tokens')
-    .upsert(
-      {
-        user_id: userId,
-        token,
-        platform: Capacitor.getPlatform() as 'android' | 'ios' | 'web',
-        device_info: deviceInfo,
-        is_active: true,
-        updated_at: new Date().toISOString()
-      },
-      {
-        onConflict: 'token'
-      }
-    );
+    .upsert(tokenData, {
+      onConflict: 'token',
+      ignoreDuplicates: false
+    })
+    .select();
 
   if (error) {
+    console.error('[FCM] ❌ Upsert FAILED');
+    console.error('[FCM] Error message:', error.message);
+    console.error('[FCM] Error code:', error.code);
+    console.error('[FCM] Error details:', error.details);
+    console.error('[FCM] Error hint:', error.hint);
+    console.error('[FCM] Full error:', error);
     throw error;
   }
 
+  console.log('[FCM] ✅ Token saved successfully!');
+  console.log('[FCM] Saved data:', data);
   lastSavedToken = { userId, token, savedAt: now };
 }
 
