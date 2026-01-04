@@ -270,7 +270,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
             return (
               <tr
                 key={task.id}
-                className={`group transition-all duration-150 ${
+                className={`group task-table-row transition-all duration-150 ${
                   isOverdue 
                     ? 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100/50 dark:hover:bg-red-900/20' 
                     : 'hover:bg-blue-50/50 dark:hover:bg-gray-750'
@@ -336,7 +336,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  <div className="flex items-center justify-end gap-1 task-action-buttons">
                     <button
                       onClick={() => onTaskClick(task)}
                       className="p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200"

@@ -101,6 +101,25 @@
   pointer-events: none;
 }
 
+/* Task Management Performance Optimizations */
+.task-table-row {
+  contain: layout style;
+  will-change: background-color;
+}
+
+.task-action-buttons {
+  visibility: hidden;
+  transform: translateX(10px);
+  transition: transform 200ms ease, visibility 0ms 200ms;
+}
+
+.group:hover .task-action-buttons,
+.group:focus-within .task-action-buttons {
+  visibility: visible;
+  transform: translateX(0);
+  transition: transform 200ms ease, visibility 0ms;
+}
+
 .dark .animate-pulse::after {
   background: linear-gradient(
     90deg,

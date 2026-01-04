@@ -298,25 +298,53 @@ const TaskManagerEnhancedComponent = ({
     URL.revokeObjectURL(url);
   }, [tasks]);
 
+  // Memoized filter handler
+  const handleFilterChange = useCallback((key: keyof TaskFilters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  // Memoized sort handler
+  const handleSortChange = useCallback((newSort: TaskSortOptions) => {
+    setSort(newSort);
+  }, []);
+
   const filteredTasks = useMemo(() => {
-    if (!filters.search) return tasks;
+    let result = tasks;
     
-    const searchLower = filters.search.toLowerCase();
-    return tasks.filter(task => {
-      return (
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(task => 
         task.name.toLowerCase().includes(searchLower) ||
         task.description.toLowerCase().includes(searchLower)
       );
-    });
-  }, [tasks, filters.search]);
+    }
+    
+    // Apply category filter
+    if (filters.category !== 'all') {
+      result = result.filter(task => task.category === filters.category);
+    }
+    
+    // Apply status filter
+    if (filters.status !== 'all') {
+      result = result.filter(task => task.status === filters.status);
+    }
+    
+    // Apply priority filter
+    if (filters.priority !== 'all') {
+      result = result.filter(task => task.priority === filters.priority);
+    }
+    
+    return result;
+  }, [tasks, filters]);
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
       {/* Header */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               Task Management
             </h1>
             <div className="flex items-center gap-3 text-sm">
@@ -340,7 +368,7 @@ const TaskManagerEnhancedComponent = ({
                 setFormKey(prev => prev + 1);
                 setShowCreateForm(true);
               }}
-              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 active:scale-95"
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
               aria-label="Create new task"
             >
               <Plus className="w-5 h-5" />
@@ -351,7 +379,7 @@ const TaskManagerEnhancedComponent = ({
       </div>
 
       {/* Toolbar */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4">
             {/* Search */}
             <div className="flex-1 lg:max-w-lg">
@@ -377,6 +405,8 @@ const TaskManagerEnhancedComponent = ({
                     ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                     : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300'
                 }`}
+                aria-label={showFilters ? 'Hide filters' : 'Show filters'}
+                aria-expanded={showFilters}
               >
                 <Filter className="w-4 h-4" />
                 <span className="text-sm">Filters</span>
@@ -388,6 +418,7 @@ const TaskManagerEnhancedComponent = ({
                     onClick={() => handleBulkStatusUpdate('completed')}
                     disabled={isBulkOperationLoading}
                     className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed font-medium transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation whitespace-nowrap active:scale-95"
+                    aria-label={`Mark ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''} as completed`}
                   >
                     <CheckSquare className="w-4 h-4" />
                     <span className="text-sm">{isBulkOperationLoading ? 'Processing...' : 'Complete'}</span>
@@ -396,6 +427,7 @@ const TaskManagerEnhancedComponent = ({
                     onClick={handleBulkDelete}
                     disabled={isBulkOperationLoading}
                     className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation whitespace-nowrap active:scale-95"
+                    aria-label={`Delete ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''}`}
                   >
                     <Trash2 className="w-4 h-4" />
                     <span className="text-sm">{isBulkOperationLoading ? 'Deleting...' : 'Delete'}</span>
@@ -406,6 +438,7 @@ const TaskManagerEnhancedComponent = ({
               <button
                 onClick={handleExportCSV}
                 className="flex items-center gap-2 px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-all duration-200 touch-manipulation whitespace-nowrap"
+                aria-label="Export tasks to CSV"
               >
                 <Download className="w-4 h-4" />
                 <span className="text-sm">Export</span>
@@ -415,15 +448,16 @@ const TaskManagerEnhancedComponent = ({
 
           {/* Advanced Filters Panel */}
           {showFilters && (
-            <div className="mt-4 p-5 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-700/50 rounded-2xl border-2 border-gray-200 dark:border-gray-600 shadow-sm">
+            <div className="mt-4 p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600 shadow-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="category-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Category
                   </label>
                   <select
+                    id="category-filter"
                     value={filters.category}
-                    onChange={(e) => setFilters({ ...filters, category: e.target.value as any })}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
                     className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none"
                     aria-label="Filter by category"
                   >
@@ -441,13 +475,15 @@ const TaskManagerEnhancedComponent = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="status-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Status
                   </label>
                   <select
+                    id="status-filter"
                     value={filters.status}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
                     className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none"
+                    aria-label="Filter by status"
                   >
                     <option value="all">All Status</option>
                     <option value="my-tasks">To Do</option>
@@ -457,13 +493,15 @@ const TaskManagerEnhancedComponent = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="priority-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Priority
                   </label>
                   <select
+                    id="priority-filter"
                     value={filters.priority}
-                    onChange={(e) => setFilters({ ...filters, priority: e.target.value as any })}
+                    onChange={(e) => handleFilterChange('priority', e.target.value)}
                     className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none"
+                    aria-label="Filter by priority"
                   >
                     <option value="all">All Priorities</option>
                     <option value="low">Low</option>
@@ -485,6 +523,7 @@ const TaskManagerEnhancedComponent = ({
                       });
                     }}
                     className="w-full px-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 font-medium transition-all duration-200 active:scale-95"
+                    aria-label="Reset all filters"
                   >
                     Reset Filters
                   </button>
@@ -525,7 +564,7 @@ const TaskManagerEnhancedComponent = ({
             onTaskEdit={handleTaskEdit}
             onTaskDelete={handleTaskDeleted}
             sort={sort}
-            onSortChange={setSort}
+            onSortChange={handleSortChange}
           />
         )}
       </div>

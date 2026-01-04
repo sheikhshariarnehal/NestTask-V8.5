@@ -1,0 +1,1 @@
+import{r as e}from"./react-vendor.BQ9wcLSU.js";function t(){const[t,r]=e.useState((()=>{const e=localStorage.getItem("dark-mode");return"true"===e||"false"!==e&&!!e&&JSON.parse(e)}));return e.useEffect((()=>{document.documentElement.classList.toggle("dark",t),localStorage.setItem("dark-mode",JSON.stringify(t))}),[t]),{isDark:t,toggle:()=>r(!t)}}export{t as u};
