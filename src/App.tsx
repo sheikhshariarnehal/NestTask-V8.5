@@ -304,21 +304,23 @@ export default function App() {
   // Track if we just returned from a hidden state to prevent blank screens
   const [wasRecentlyHidden, setWasRecentlyHidden] = useState(false);
   
-  // Handle admin redirect after successful login
+  // Handle admin redirect after successful login - only from non-admin routes
   useEffect(() => {
+    const currentPath = window.location.pathname;
+    
+    // Skip redirect logic entirely if we're already on admin routes
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/superadmin')) {
+      return;
+    }
+
+    // Redirect admins from regular user pages to their dashboard
     if (user && (user.role === 'admin' || user.role === 'super-admin' || user.role === 'section_admin')) {
-      const currentPath = window.location.pathname;
+      console.log(`[Admin Redirect] User role: ${user.role}, redirecting from ${currentPath}...`);
       
-      // Don't redirect if already on admin routes
-      if (!currentPath.startsWith('/admin') && !currentPath.startsWith('/superadmin')) {
-        console.log(`[Admin Redirect] User role: ${user.role}, redirecting...`);
-        
-        if (user.role === 'super-admin') {
-          navigate('/superadmin/dashboard', { replace: true });
-        } else {
-          // admin and section_admin go to dashboard
-          navigate('/admin/dashboard', { replace: true });
-        }
+      if (user.role === 'super-admin') {
+        navigate('/superadmin/dashboard', { replace: true });
+      } else {
+        navigate('/admin/dashboard', { replace: true });
       }
     }
   }, [user, navigate]);

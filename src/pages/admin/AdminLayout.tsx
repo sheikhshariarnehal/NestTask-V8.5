@@ -11,7 +11,7 @@ import { LoadingScreen } from '../../components/LoadingScreen';
 export function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const [error] = useState<string | null>(null);
   const [openTaskFormV2, setOpenTaskFormV2] = useState(false);
 
@@ -26,6 +26,11 @@ export function AdminLayout() {
 
   // Check authorization
   useEffect(() => {
+    // Don't redirect while auth is still loading
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
       navigate('/auth', { replace: true });
       return;
@@ -38,9 +43,9 @@ export function AdminLayout() {
       return;
     }
 
-    // Redirect super-admin to their dashboard
+    // Redirect super-admin to their dashboard (only for base /admin path)
     if (user.role === 'super-admin') {
-      if (location.pathname === '/admin' || location.pathname === '/admin/' || location.pathname === '/admin/dashboard' || location.pathname.startsWith('/admin/')) {
+      if (location.pathname === '/admin' || location.pathname === '/admin/') {
         navigate('/superadmin/dashboard', { replace: true });
         return;
       }
@@ -51,7 +56,7 @@ export function AdminLayout() {
         (location.pathname === '/admin' || location.pathname === '/admin/')) {
       navigate('/admin/dashboard', { replace: true });
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate, location.pathname, authLoading]);
 
   // Get current active tab from URL
   const getCurrentTab = (): AdminTab => {
