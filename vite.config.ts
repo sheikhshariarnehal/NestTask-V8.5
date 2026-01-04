@@ -67,7 +67,7 @@ export default defineConfig({
         manualChunks: isCapacitorBuild ? undefined : (id) => {
           // Only split truly independent vendor chunks to avoid circular dependencies
           
-          // Core React dependencies - keep together
+          // Core React dependencies - keep together for better caching
           if (id.includes('node_modules/react/') || 
               id.includes('node_modules/react-dom/') || 
               id.includes('node_modules/scheduler/') ||
@@ -76,16 +76,26 @@ export default defineConfig({
             return 'react-vendor';
           }
           
-          // Ionic React - separate chunk (has no deps on our code)
+          // Ionic React - separate chunk (deferred for admin pages)
           if (id.includes('node_modules/@ionic/react/') ||
               id.includes('node_modules/@ionic/core/') ||
               id.includes('node_modules/ionicons/')) {
             return 'ionic-vendor';
           }
           
-          // Supabase - standalone
+          // Supabase - standalone (load on demand)
           if (id.includes('node_modules/@supabase/')) {
             return 'supabase-vendor';
+          }
+          
+          // Capacitor plugins - separate for conditional loading
+          if (id.includes('node_modules/@capacitor/')) {
+            return 'capacitor-vendor';
+          }
+          
+          // Framer Motion - heavy animation library, lazy load
+          if (id.includes('node_modules/framer-motion/')) {
+            return 'framer-vendor';
           }
           
           // Date utilities - separate chunk for better caching

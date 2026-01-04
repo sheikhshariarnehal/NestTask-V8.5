@@ -1,12 +1,12 @@
 import { Suspense, lazy, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { UserStats } from '../../components/admin/UserStats';
-import { UserActivity } from '../../components/admin/UserActivity';
 import type { User } from '../../types/auth';
 import type { Task } from '../../types/index';
 
 const Dashboard = lazy(() => import('../../components/admin/dashboard/Dashboard').then(module => ({ default: module.Dashboard })));
 const UserActiveGraph = lazy(() => import('../../components/admin/dashboard/UserActiveGraph').then(module => ({ default: module.UserActiveGraph })));
+const UserStats = lazy(() => import('../../components/admin/UserStats').then(module => ({ default: module.UserStats })));
+const UserActivity = lazy(() => import('../../components/admin/UserActivity').then(module => ({ default: module.UserActivity })));
 
 interface AdminContext {
   users: User[];
@@ -46,7 +46,11 @@ export function DashboardPage() {
       </Suspense>
 
       {/* User Statistics */}
-      <UserStats users={filteredUsers} tasks={filteredTasks} />
+      <Suspense fallback={
+        <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+      }>
+        <UserStats users={filteredUsers} tasks={filteredTasks} />
+      </Suspense>
 
       {/* User Activity Graph */}
       <Suspense fallback={
@@ -56,7 +60,11 @@ export function DashboardPage() {
       </Suspense>
 
       {/* Recent User Activity */}
-      <UserActivity users={filteredUsers} />
+      <Suspense fallback={
+        <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+      }>
+        <UserActivity users={filteredUsers} />
+      </Suspense>
     </div>
   );
 }

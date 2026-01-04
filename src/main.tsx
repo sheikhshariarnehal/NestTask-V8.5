@@ -2,13 +2,13 @@ import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-// Import Ionic CSS for pull-to-refresh and other components
+// Import CSS (Vite handles this correctly)
+import './index.css';
+// Import Ionic CSS for components (non-critical, loaded after)
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
 import '@ionic/react/css/structure.css';
 import '@ionic/react/css/typography.css';
-// Import CSS (Vite handles this correctly)
-import './index.css';
 import { MicroLoader } from './components/MicroLoader';
 import { initPWA } from './utils/pwa';
 import { supabase } from './lib/supabase';
@@ -19,9 +19,19 @@ import { initPushNotificationListeners } from './services/pushNavigationService'
 const prefetchModules = () => {
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
-      import('./App');
-      import('./pages/AuthPage');
-    });
+      // Check current path to prefetch appropriate modules
+      const path = window.location.pathname;
+      
+      if (path.startsWith('/admin') || path.startsWith('/superadmin')) {
+        // Prefetch admin modules
+        import('./pages/admin/AdminLayout');
+        import('./pages/admin/DashboardPage');
+      } else {
+        // Prefetch user modules
+        import('./App');
+        import('./pages/AuthPage');
+      }
+    }, { timeout: 2000 });
   }
 };
 
