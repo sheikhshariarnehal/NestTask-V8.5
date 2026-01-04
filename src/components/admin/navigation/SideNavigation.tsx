@@ -36,6 +36,18 @@ export const SideNavigation = React.memo(function SideNavigation({
   const [currentTime, setCurrentTime] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  // Close mobile menu when window is resized to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024 && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobileMenuOpen]);
+
   useEffect(() => {
     // Update time
     const updateTime = () => {
@@ -145,7 +157,7 @@ export const SideNavigation = React.memo(function SideNavigation({
         transform transition-all duration-300 ease-in-out z-40 shadow-md will-change-transform
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         ${isCollapsed ? 'w-20' : 'w-64'}
-        lg:translate-x-0
+        lg:relative lg:translate-x-0 lg:shadow-none
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}

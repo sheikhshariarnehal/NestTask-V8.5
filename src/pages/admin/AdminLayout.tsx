@@ -4,12 +4,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useUsers } from '../../hooks/useUsers';
 import { useTasks } from '../../hooks/useTasks';
 import { SideNavigation } from '../../components/admin/navigation/SideNavigation';
-import { IonContent, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/react';
 import { AlertTriangle, Plus } from 'lucide-react';
 import type { AdminTab } from '../../types/admin';
 import { LoadingScreen } from '../../components/LoadingScreen';
-
-const MIN_REFRESH_DURATION = 500;
 
 export function AdminLayout() {
   const navigate = useNavigate();
@@ -55,35 +52,6 @@ export function AdminLayout() {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [user, navigate, location.pathname]);
-
-  // Handle pull-to-refresh
-  const handleRefresh = useCallback(async (event: RefresherCustomEvent) => {
-    const startTime = Date.now();
-    
-    try {
-      // Haptic feedback
-      if ('vibrate' in navigator) navigator.vibrate(10);
-      
-      const success = await refreshTasks(true);
-      await refreshUsers();
-      
-      // Ensure minimum display time for smooth UX
-      const elapsed = Date.now() - startTime;
-      if (elapsed < MIN_REFRESH_DURATION) {
-        await new Promise(resolve => setTimeout(resolve, MIN_REFRESH_DURATION - elapsed));
-      }
-      
-      // Success haptic feedback
-      if (success && 'vibrate' in navigator) {
-        navigator.vibrate([5, 50, 5]);
-      }
-    } catch (error) {
-      console.error('[AdminLayout] Refresh error:', error);
-      if ('vibrate' in navigator) navigator.vibrate(100);
-    } finally {
-      event.detail.complete();
-    }
-  }, [refreshTasks, refreshUsers]);
 
   // Get current active tab from URL
   const getCurrentTab = (): AdminTab => {
@@ -139,18 +107,14 @@ export function AdminLayout() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <IonContent scrollY fullscreen className="h-full">
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent />
-          </IonRefresher>
-
-          <div className="h-full p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 flex flex-col overflow-hidden w-full min-w-0">
+        <div className="h-full overflow-y-auto">
+          <div className="h-full p-4 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
             {/* Header */}
             <header className="mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
                     {isSectionAdmin ? `${sectionName} Admin` : 'Admin Dashboard'}
                   </h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -158,11 +122,11 @@ export function AdminLayout() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {new Date().toLocaleDateString('en-US', {
-                      weekday: 'long',
+                      weekday: 'short',
                       year: 'numeric',
-                      month: 'long',
+                      month: 'short',
                       day: 'numeric'
                     })}
                   </div>
@@ -198,13 +162,13 @@ export function AdminLayout() {
               }} />
             </div>
           </div>
-        </IonContent>
+        </div>
       </main>
 
       {/* Mobile FAB - Create Task */}
       <button
         onClick={handleCreateTask}
-        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-50 active:scale-95"
+        className="lg:hidden fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-40 active:scale-95"
         aria-label="Create Task"
       >
         <Plus className="w-6 h-6" />
