@@ -273,6 +273,7 @@ const TaskEnhancedFormComponent = ({
           category: formData.category,
           dueDate: formData.dueDate,
           priority: formData.priority,
+          status: 'in-progress',
           sectionId,
           attachments: uploadedFiles.map(f => f.url),
           googleDriveLinks,
@@ -319,9 +320,6 @@ const TaskEnhancedFormComponent = ({
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
               {isEditing ? 'Edit Task' : 'Create New Task'}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Fill in the details below to {isEditing ? 'update the' : 'create a new'} task.
-            </p>
           </div>
           <button
             onClick={onClose}

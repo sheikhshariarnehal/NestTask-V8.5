@@ -141,7 +141,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                       {task.category.replace('-', ' ')}
                     </span>
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full capitalize ${
+                      className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full capitalize whitespace-nowrap ${
                         statusColors[task.status as keyof typeof statusColors] || statusColors['my-tasks']
                       }`}
                     >
@@ -306,7 +306,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                 </td>
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
+                    className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full capitalize whitespace-nowrap ${
                       statusColors[task.status as keyof typeof statusColors] || statusColors['my-tasks']
                     }`}
                   >

@@ -254,6 +254,8 @@ serve(async (req) => {
       console.log('Found ' + matchingUsers.length + ' matching users')
 
       const userIds = matchingUsers.map((u: { id: string }) => u.id)
+      console.log('Fetching FCM tokens for ' + userIds.length + ' users...')
+      
       const { data: tokens, error: tokensError } = await supabase
         .from('fcm_tokens')
         .select('id, token, user_id')
@@ -262,6 +264,7 @@ serve(async (req) => {
 
       if (tokensError) {
         console.error('Error fetching tokens for task ' + task.id + ':', tokensError)
+        console.error('Token error details:', tokensError.message, tokensError.code)
         continue
       }
 
