@@ -103,16 +103,16 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
   return (
     <>
       {/* Mobile Card View */}
-      <div className="md:hidden space-y-3 p-4">
+      <div className="md:hidden space-y-4">
         {tasks.map((task, index) => {
           const isOverdue = new Date(task.dueDate) < new Date() && task.status !== 'completed';
           return (
             <div
               key={task.id}
-              className={`group relative bg-white dark:bg-gray-800 rounded-lg border transition-all duration-200 ${
+              className={`group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 shadow-md hover:shadow-lg ${
                 isOverdue 
-                  ? 'border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10' 
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? 'border-red-200 dark:border-red-800 bg-red-50/40 dark:bg-red-900/15' 
+                  : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
               }`}
             >
               {isOverdue && (
@@ -121,83 +121,75 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                 </div>
               )}
               
-              <div className="p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedTaskIds.includes(task.id)}
-                    onChange={(e) => handleSelectTask(task.id, e.target.checked)}
-                    className="mt-0.5 w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-colors"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <button
-                      onClick={() => onTaskClick(task)}
-                      className="font-semibold text-sm text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 text-left mb-1.5 line-clamp-2 transition-colors"
+              <div className="p-5">
+                <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => onTaskClick(task)}
+                    className="font-semibold text-base text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 text-left mb-2 line-clamp-2 transition-colors"
+                  >
+                    {task.name}
+                  </button>
+                  
+                  {task.description && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed">
+                      {task.description}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2.5 mb-4">
+                    <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
+                      {task.category.replace('-', ' ')}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full capitalize ${
+                        statusColors[task.status as keyof typeof statusColors] || statusColors['my-tasks']
+                      }`}
                     >
-                      {task.name}
-                    </button>
-                    
-                    {task.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
-                        {task.description}
-                      </p>
-                    )}
+                      {task.status === 'my-tasks' ? 'To Do' : task.status === 'pending' ? 'Pending' : task.status.replace('-', ' ')}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full capitalize ${
+                        priorityColors[task.priority]
+                      }`}
+                    >
+                      {task.priority}
+                    </span>
+                  </div>
 
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
-                        {task.category.replace('-', ' ')}
-                      </span>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full capitalize ${
-                          statusColors[task.status as keyof typeof statusColors] || statusColors['my-tasks']
-                        }`}
-                      >
-                        {task.status === 'my-tasks' ? 'To Do' : task.status === 'pending' ? 'Pending' : task.status.replace('-', ' ')}
-                      </span>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full capitalize ${
-                          priorityColors[task.priority]
-                        }`}
-                      >
-                        {task.priority}
-                      </span>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 font-medium">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                      {isOverdue && (
+                        <span className="ml-1 inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
+                          <span className="w-1 h-1 bg-red-600 dark:bg-red-400 rounded-full animate-pulse"></span>
+                          Overdue
+                        </span>
+                      )}
                     </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{new Date(task.dueDate).toLocaleDateString()}</span>
-                        {isOverdue && (
-                          <span className="ml-1 inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
-                            <span className="w-1 h-1 bg-red-600 dark:bg-red-400 rounded-full animate-pulse"></span>
-                            Overdue
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => onTaskClick(task)}
-                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 touch-manipulation active:scale-95"
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onTaskEdit(task)}
-                          className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 dark:text-gray-400 dark:hover:text-green-400 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200 touch-manipulation active:scale-95"
-                          title="Edit task"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(task.id)}
-                          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 touch-manipulation active:scale-95"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => onTaskClick(task)}
+                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 touch-manipulation active:scale-95"
+                        title="View details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onTaskEdit(task)}
+                        className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 dark:text-gray-400 dark:hover:text-green-400 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200 touch-manipulation active:scale-95"
+                        title="Edit task"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 touch-manipulation active:scale-95"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -208,11 +200,11 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="hidden md:block">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 overflow-hidden">
       <div className="overflow-x-auto">
       <table className="w-full table-fixed">
-        <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+        <thead className="bg-gray-50 dark:bg-gray-800/80 border-b-2 border-gray-200 dark:border-gray-700">
           <tr>
             <th className="w-12 px-6 py-4 text-left">
               <input
@@ -224,7 +216,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
             </th>
             <th
               onClick={() => handleSort('name')}
-              className="w-auto px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
+              className="w-auto px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
             >
               <div className="flex items-center gap-2">
                 Task Name
@@ -233,7 +225,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
             </th>
             <th
               onClick={() => handleSort('category')}
-              className="w-40 px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
+              className="w-40 px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
             >
               <div className="flex items-center gap-2">
                 Category
@@ -242,7 +234,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
             </th>
             <th
               onClick={() => handleSort('status')}
-              className="w-32 px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
+              className="w-32 px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
             >
               <div className="flex items-center gap-2">
                 Status
@@ -251,7 +243,7 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
             </th>
             <th
               onClick={() => handleSort('priority')}
-              className="w-32 px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
+              className="w-32 px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
             >
               <div className="flex items-center gap-2">
                 Priority
@@ -260,14 +252,14 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
             </th>
             <th
               onClick={() => handleSort('dueDate')}
-              className="w-40 px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
+              className="w-40 px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors select-none"
             >
               <div className="flex items-center gap-2">
                 Due Date
                 <SortIcon field="dueDate" />
               </div>
             </th>
-            <th className="w-36 px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+            <th className="w-36 px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -280,8 +272,8 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                 key={task.id}
                 className={`group task-table-row transition-all duration-200 border-b border-gray-100 dark:border-gray-700/50 last:border-0 ${
                   isOverdue 
-                    ? 'bg-red-50/30 dark:bg-red-900/5 hover:bg-red-50/50 dark:hover:bg-red-900/10' 
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                    ? 'bg-red-50/40 dark:bg-red-900/10 hover:bg-red-50/60 dark:hover:bg-red-900/15' 
+                    : 'hover:bg-blue-50/30 dark:hover:bg-gray-800/70'
                 }`}
               >
                 <td className="px-6 py-4">

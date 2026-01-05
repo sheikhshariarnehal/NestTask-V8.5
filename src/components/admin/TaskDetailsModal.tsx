@@ -121,9 +121,9 @@ export function TaskDetailsModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex-1 mr-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
               {task.name}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
@@ -166,10 +166,10 @@ export function TaskDetailsModal({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 px-6">
+        <div className="flex border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('details')}
-            className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+            className={`px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'details'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -179,7 +179,7 @@ export function TaskDetailsModal({
           </button>
           <button
             onClick={() => setActiveTab('comments')}
-            className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'comments'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -190,7 +190,7 @@ export function TaskDetailsModal({
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'history'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -202,7 +202,7 @@ export function TaskDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {activeTab === 'details' && (
             <div className="space-y-6">
               {/* Description */}

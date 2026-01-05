@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, Link as LinkIcon, AlertCircle, RefreshCw, FileText, Trash2, CheckCircle } from 'lucide-react';
 import type { EnhancedTask, CreateTaskInput, UpdateTaskInput, TaskPriority } from '../../types/taskEnhanced';
 import type { TaskCategory } from '../../types/task';
@@ -309,16 +310,16 @@ const TaskEnhancedFormComponent = ({
     }
   }, [saving, formData, isEditing, task, uploadedFiles, userId, sectionId, onTaskCreated, onTaskUpdated, onClose]);
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
               {isEditing ? 'Edit Task' : 'Create New Task'}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
               Fill in the details below to {isEditing ? 'update the' : 'create a new'} task.
             </p>
           </div>
@@ -352,7 +353,7 @@ const TaskEnhancedFormComponent = ({
 
         {/* Form */}
         <div className="overflow-y-auto flex-1 admin-scrollbar">
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
           {/* Task Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -369,7 +370,7 @@ const TaskEnhancedFormComponent = ({
           </div>
 
           {/* Row 1: Category, Priority, Due Date */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Category <span className="text-red-500">*</span>
@@ -424,7 +425,7 @@ const TaskEnhancedFormComponent = ({
               </div>
             </div>
 
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Due Date <span className="text-red-500">*</span>
               </label>
@@ -474,16 +475,16 @@ const TaskEnhancedFormComponent = ({
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.svg,.zip,.rar,.7z,.mp4,.mp3,.wav"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
               />
-              <div className="w-full px-6 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center group-hover:border-blue-500 dark:group-hover:border-blue-400 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-all duration-200">
+              <div className="w-full px-6 py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center group-hover:border-blue-500 dark:group-hover:border-blue-400 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-all duration-200">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-sm group-hover:scale-110 transition-transform duration-200">
-                    <Upload className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="p-2.5 bg-white dark:bg-gray-700 rounded-full shadow-sm group-hover:scale-110 transition-transform duration-200">
+                    <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       Support for documents, images, and archives
                     </p>
                   </div>
@@ -562,7 +563,7 @@ const TaskEnhancedFormComponent = ({
             <textarea
               value={formData.googleDriveLinks}
               onChange={(e) => setFormData({ ...formData, googleDriveLinks: e.target.value })}
-              rows={3}
+              rows={2}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm resize-none placeholder:text-gray-400 font-mono text-sm"
               placeholder="https://drive.google.com/file/d/..."
             />
@@ -574,7 +575,7 @@ const TaskEnhancedFormComponent = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+        <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
           <div className="flex gap-3 justify-end">
             <button
               type="button"
@@ -604,7 +605,8 @@ const TaskEnhancedFormComponent = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

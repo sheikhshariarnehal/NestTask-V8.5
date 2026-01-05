@@ -339,112 +339,94 @@ const TaskManagerEnhancedComponent = ({
   }, [tasks, filters]);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-              Task Management
-            </h1>
-            <div className="flex items-center gap-3 text-sm">
-              <p className="text-gray-600 dark:text-gray-400">
-                <span className="font-semibold text-gray-900 dark:text-white">{total}</span> total tasks
-              </p>
-              {selectedTaskIds.length > 0 && (
-                <>
-                  <span className="text-gray-300 dark:text-gray-600">•</span>
-                  <p className="text-blue-600 dark:text-blue-400 font-medium">
-                    {selectedTaskIds.length} selected
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="hidden lg:flex items-center gap-2">
-            <button
-              onClick={() => {
-                setFormKey(prev => prev + 1);
-                setShowCreateForm(true);
-              }}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
-              aria-label="Create new task"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Create Task</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <>
       {/* Toolbar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 lg:gap-4">
-            {/* Search */}
-            <div className="flex-1 lg:max-w-lg">
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search tasks by name or description..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors outline-none"
-                  aria-label="Search tasks"
-                />
+      <div className="mb-6">
+        <div className="pt-6">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            {/* Left Section - Search & Filters */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-3xl">
+              {/* Search */}
+              <div className="flex-1 sm:max-w-md">
+                <div className="relative group">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:focus:border-blue-500 dark:focus:ring-blue-900/30 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all outline-none shadow-sm"
+                    aria-label="Search tasks"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar sm:flex-wrap">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg font-medium transition-all duration-200 whitespace-nowrap shadow-sm ${
+                    showFilters
+                      ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-500 shadow-blue-100 dark:shadow-blue-900/20'
+                      : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                  }`}
+                  aria-label={showFilters ? 'Hide filters' : 'Show filters'}
+                  aria-expanded={showFilters}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm font-medium">Filters</span>
+                </button>
+
+                {selectedTaskIds.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => handleBulkStatusUpdate('completed')}
+                      disabled={isBulkOperationLoading}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap shadow-sm"
+                      aria-label={`Mark ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''} as completed`}
+                    >
+                      <CheckSquare className="w-4 h-4" />
+                      <span className="text-sm">{isBulkOperationLoading ? 'Processing...' : 'Complete'}</span>
+                    </button>
+                    <button
+                      onClick={handleBulkDelete}
+                      disabled={isBulkOperationLoading}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap shadow-sm"
+                      aria-label={`Delete ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="text-sm">{isBulkOperationLoading ? 'Deleting...' : 'Delete'}</span>
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={handleExportCSV}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium transition-all duration-200 whitespace-nowrap shadow-sm"
+                  aria-label="Export tasks to CSV"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="text-sm font-medium">Export</span>
+                </button>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {/* Right Section - Create Task Button */}
+            <div className="flex items-center justify-end sm:w-auto w-full">
               <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg font-medium transition-all duration-200 whitespace-nowrap ${
-                  showFilters
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-                aria-label={showFilters ? 'Hide filters' : 'Show filters'}
-                aria-expanded={showFilters}
+                onClick={() => {
+                  setFormKey(prev => prev + 1);
+                  setShowCreateForm(true);
+                }}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg font-semibold transition-all duration-200 whitespace-nowrap shadow-md hover:shadow-lg"
+                aria-label="Create new task"
               >
-                <Filter className="w-4 h-4" />
-                <span className="text-sm">Filters</span>
-              </button>
-
-              {selectedTaskIds.length > 0 && (
-                <>
-                  <button
-                    onClick={() => handleBulkStatusUpdate('completed')}
-                    disabled={isBulkOperationLoading}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap"
-                    aria-label={`Mark ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''} as completed`}
-                  >
-                    <CheckSquare className="w-4 h-4" />
-                    <span className="text-sm">{isBulkOperationLoading ? 'Processing...' : 'Complete'}</span>
-                  </button>
-                  <button
-                    onClick={handleBulkDelete}
-                    disabled={isBulkOperationLoading}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap"
-                    aria-label={`Delete ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="text-sm">{isBulkOperationLoading ? 'Deleting...' : 'Delete'}</span>
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200 whitespace-nowrap"
-                aria-label="Export tasks to CSV"
-              >
-                <Download className="w-4 h-4" />
-                <span className="text-sm">Export</span>
+                <Plus className="w-5 h-5" />
+                <span className="text-sm">Create Task</span>
               </button>
             </div>
           </div>
+        </div>
 
           {/* Advanced Filters Panel */}
           {showFilters && (
@@ -534,40 +516,38 @@ const TaskManagerEnhancedComponent = ({
         </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
-        {error ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30">
-              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-            </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Failed to Load Tasks</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">{error}</p>
-            </div>
-            <button
-              onClick={() => loadTasks(false)}
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors duration-200 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Retry</span>
-            </button>
+      {error ? (
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-        ) : loading ? (
-          <TaskTableSkeleton />
-        ) : (
-          <TaskEnhancedTable
-            tasks={filteredTasks}
-            selectedTaskIds={selectedTaskIds}
-            onSelectTasks={setSelectedTaskIds}
-            onTaskClick={setSelectedTask}
-            onTaskEdit={handleTaskEdit}
-            onTaskDelete={handleTaskDeleted}
-            sort={sort}
-            onSortChange={handleSortChange}
-          />
-        )}
-      </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Failed to Load Tasks</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">{error}</p>
+          </div>
+          <button
+            onClick={() => loadTasks(false)}
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors duration-200 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Retry</span>
+          </button>
+        </div>
+      ) : loading ? (
+        <TaskTableSkeleton />
+      ) : (
+        <TaskEnhancedTable
+          tasks={filteredTasks}
+          selectedTaskIds={selectedTaskIds}
+          onSelectTasks={setSelectedTaskIds}
+          onTaskClick={setSelectedTask}
+          onTaskEdit={handleTaskEdit}
+          onTaskDelete={handleTaskDeleted}
+          sort={sort}
+          onSortChange={handleSortChange}
+        />
+      )}
 
       {/* Create Task Modal */}
       {showCreateForm && (
@@ -604,7 +584,7 @@ const TaskManagerEnhancedComponent = ({
           onTaskDeleted={handleTaskDeleted}
         />
       )}
-    </div>
+    </>
   );
 };
 
