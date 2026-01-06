@@ -421,8 +421,17 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       console.log('[UpcomingPage] Task not found:', openTaskId);
       // Only consume if we're sure tasks have loaded (not still loading)
       if (!loading) {
-        console.log('[UpcomingPage] Tasks loaded but task not found, consuming taskId');
-        onOpenTaskIdConsumed?.();
+        console.log('[UpcomingPage] Tasks loaded but task not found. Waiting 2s before giving up...');
+        // Add a delay before giving up, to allow for any final updates or race conditions
+        const timer = setTimeout(() => {
+          // Check one last time if the task exists in the current list (in case it updated during timeout)
+          // Note: We use the ref or state here if we could, but inside timeout we rely on the fact that
+          // if tasks updated, the effect would have re-run and cleared this timeout.
+          console.log('[UpcomingPage] Giving up on finding task:', openTaskId);
+          onOpenTaskIdConsumed?.();
+        }, 2000);
+        
+        return () => clearTimeout(timer);
       }
     }
   }, [openTaskId, propTasks, allTasks, loading]);

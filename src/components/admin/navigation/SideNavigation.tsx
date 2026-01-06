@@ -6,7 +6,6 @@ import {
   MessageCircle, Search, CheckCircle, Clock, Plus, UserCog
 } from 'lucide-react';
 import { SideNavLink } from './SideNavLink';
-import { MobileMenuButton } from './MobileMenuButton';
 import { useTheme } from '../../../hooks/useTheme';
 import { useAuth } from '../../../hooks/useAuth';
 import { showSuccessToast, showErrorToast } from '../../../utils/notifications';
@@ -19,6 +18,8 @@ interface SideNavigationProps {
   onCollapse?: (collapsed: boolean) => void;
   isSectionAdmin?: boolean;
   onCreateTask?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const SideNavigation = React.memo(function SideNavigation({
@@ -27,9 +28,10 @@ export const SideNavigation = React.memo(function SideNavigation({
   onLogout,
   onCollapse,
   isSectionAdmin = false,
-  onCreateTask
+  onCreateTask,
+  isOpen,
+  onClose
 }: SideNavigationProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { isDark, toggle } = useTheme();
   const { user } = useAuth();
@@ -39,24 +41,24 @@ export const SideNavigation = React.memo(function SideNavigation({
   // Close mobile menu when window is resized to desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024 && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
+      if (window.innerWidth >= 1024 && isOpen) {
+        onClose();
       }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isMobileMenuOpen]);
+  }, [isOpen, onClose]);
+
 
   useEffect(() => {
-    // Update time
+    // Update time only once per minute to reduce re-renders
     const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     };
 
     updateTime();
-    const interval = setInterval(updateTime, 60000);
+    const interval = setInterval(updateTime, 60000); // Update every minute instead of continuous
     return () => clearInterval(interval);
   }, []);
 
@@ -111,9 +113,9 @@ export const SideNavigation = React.memo(function SideNavigation({
 
   const handleNavigation = useCallback((tab: AdminTab) => {
     onTabChange(tab);
-    setIsMobileMenuOpen(false);
+    onClose();
     setShowProfileMenu(false);
-  }, [onTabChange]);
+  }, [onTabChange, onClose]);
 
   const toggleCollapse = useCallback(() => {
     setIsCollapsed(prev => {
@@ -143,42 +145,43 @@ export const SideNavigation = React.memo(function SideNavigation({
 
   return (
     <>
-      <MobileMenuButton isOpen={isMobileMenuOpen} onClick={toggleMobileMenu} />
-
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden dark:bg-opacity-70 backdrop-blur-sm will-change-transform"
-          onClick={closeMobileMenu}
-        />
-      )}
+      {/* Mobile Backdrop with transition */}
+      <div
+        className={`fixed inset-0 bg-gray-900/50 z-[25] lg:hidden backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       <aside className={`
-        fixed left-0 top-0 h-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800
-        transform transition-all duration-300 ease-in-out z-40 shadow-md will-change-transform
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        fixed left-0 top-0 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
+        transform transition-all duration-300 ease-in-out z-40 shadow-2xl lg:shadow-none will-change-transform
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         ${isCollapsed ? 'w-20' : 'w-64'}
-        lg:relative lg:translate-x-0 lg:shadow-none
+        lg:relative lg:translate-x-0
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className={`p-4 border-b border-gray-100 dark:border-gray-800 flex ${isCollapsed ? 'justify-center' : 'justify-between'} items-center`}>
+          <div className={`h-[72px] px-4 pl-5 border-b border-gray-200 dark:border-gray-800 flex ${isCollapsed ? 'justify-center' : 'justify-between'} items-center shrink-0`}>
             {!isCollapsed && (
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
-                  <Settings className="w-4.5 h-4.5 text-white" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
+                  <Settings className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-base font-bold text-gray-900 dark:text-white">NestTask</h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{isSectionAdmin ? "Section Admin" : "Admin Panel"}</p>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-gray-900 dark:text-white leading-none tracking-tight">NestTask</span>
+                  <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">{isSectionAdmin ? "Section Panel" : "Admin Panel"}</span>
                 </div>
               </div>
             )}
 
             {isCollapsed && (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
                 <Settings className="w-5 h-5 text-white" />
               </div>
             )}
+
 
             <button
               onClick={toggleCollapse}
@@ -217,7 +220,7 @@ export const SideNavigation = React.memo(function SideNavigation({
               </div>
             )}
 
-            {isCollapsed && <div className="my-3 border-t border-gray-100 dark:border-gray-800 mx-2"></div>}
+            {isCollapsed && <div className="my-3 border-t border-gray-200 dark:border-gray-800 mx-2"></div>}
 
             <nav className="space-y-1">
               {managementNavItems.map((item) => (
@@ -268,7 +271,7 @@ export const SideNavigation = React.memo(function SideNavigation({
           </div>
 
           {/* Footer with improved profile section */}
-          <div className="p-3 border-t border-gray-100 dark:border-gray-800 relative profile-menu-container">
+          <div className="p-3 border-t border-gray-200 dark:border-gray-800 relative profile-menu-container">
             {!isCollapsed ? (
               <div className="flex items-center justify-between">
                 <button
@@ -319,10 +322,10 @@ export const SideNavigation = React.memo(function SideNavigation({
             {/* Dropdown menu for profile actions */}
             {showProfileMenu && (
               <div className={`
-                absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50
+                absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50
                 ${isCollapsed ? 'left-full ml-2 bottom-auto top-0' : ''}
               `}>
-                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
                       {user?.avatar ? (
@@ -367,7 +370,7 @@ export const SideNavigation = React.memo(function SideNavigation({
                     <span>Help Center</span>
                   </button>
 
-                  <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
 
                   <button
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"

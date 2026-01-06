@@ -15,7 +15,7 @@ import type { NewTask } from '../types/task';
 import type { AdminTab } from '../types/admin';
 import { useAuth } from '../hooks/useAuth';
 import { useTasks } from '../hooks/useTasks';
-import { RefreshCcw, AlertTriangle, Loader2, Plus } from 'lucide-react';
+import { RefreshCcw, AlertTriangle, Loader2, Plus, Home, ChevronRight, Calendar } from 'lucide-react';
 import {
   IonContent,
   IonRefresher,
@@ -518,48 +518,77 @@ export function AdminDashboard({
         onCreateTask={() => setOpenTaskFormV2(true)}
       />
 
-      <main className={`
-        flex-1 w-full transition-all duration-300 h-full flex flex-col relative
-        ${isMobileView ? 'pt-16' : isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
-      `}>
+      <main className="flex-1 w-full transition-all duration-300 h-full flex flex-col relative bg-gray-50 dark:bg-gray-900">
+        {/* Professional Header */}
+        <header 
+          className={`
+            bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 
+            px-4 sm:px-6 py-4 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm
+            transition-all duration-200
+            ${isMobileView ? 'pl-20' : ''}
+          `}
+        >
+          <div className="flex flex-col gap-1.5">
+            {/* Breadcrumbs */}
+            <nav className="flex items-center text-xs font-medium text-gray-500 dark:text-gray-400">
+               <Home className="w-3.5 h-3.5 mr-1.5" />
+               <span>Admin</span>
+               <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-gray-300 dark:text-gray-600" />
+               <span className="text-gray-900 dark:text-blue-400">
+                 {activeTab === 'dashboard' && 'Dashboard'}
+                 {activeTab === 'users' && 'Users'}
+                 {activeTab === 'tasks' && 'Tasks'}
+                 {activeTab === 'task-management-v2' && 'Tasks'}
+                 {activeTab === 'announcements' && 'Announcements'}
+                 {activeTab === 'lecture-slides' && 'Slides'}
+               </span>
+            </nav>
+            
+            <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  {activeTab === 'dashboard' && 'Overview'}
+                  {activeTab === 'users' && 'User Management'}
+                  {activeTab === 'tasks' && 'Legacy Tasks'}
+                  {activeTab === 'task-management-v2' && 'Task Management'}
+                  {activeTab === 'announcements' && 'Announcements'}
+                  {activeTab === 'lecture-slides' && 'Lecture Slides'}
+                </h1>
+                {isSectionAdmin && sectionName && (
+                   <span className="px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold border border-green-200 dark:border-green-800 tracking-wide">
+                     {sectionName}
+                   </span>
+                )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+               <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+               <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                 {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+               </span>
+            </div>
+            
+            <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
+
+            <button
+               onClick={handleManualRefresh}
+               disabled={isRefreshing}
+               className={`p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-900 transition-all shadow-sm active:scale-95 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`}
+               title="Refresh Data"
+               aria-label="Refresh Data"
+            >
+               <RefreshCcw className="w-4.5 h-4.5" />
+            </button>
+          </div>
+        </header>
+
         <IonContent className="flex-1" style={{ '--background': 'transparent' }}>
           <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
             <IonRefresherContent></IonRefresherContent>
           </IonRefresher>
 
           <div className="max-w-full mx-auto p-3 sm:p-5 lg:p-6 pb-24 lg:pb-6">
-            <header className="mb-4 sm:mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    {activeTab === 'dashboard' && 'Dashboard'}
-                    {activeTab === 'users' && 'User Management'}
-                    {activeTab === 'tasks' && 'Task Management (Legacy)'}
-                    {activeTab === 'task-management-v2' && 'Task Management'}
-                    {activeTab === 'announcements' && 'Announcements'}
-
-
-                    {activeTab === 'lecture-slides' && 'Lecture Slides'}
-
-                  </h1>
-                  {isSectionAdmin && sectionName && (
-                    <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
-                      Section Admin: {sectionName}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {new Date().toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </div>
-                </div>
-              </div>
-            </header>
 
             {error && (
               <div className="mb-4 p-3 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm">

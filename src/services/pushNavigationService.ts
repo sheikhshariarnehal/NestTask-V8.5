@@ -104,7 +104,7 @@ function handleNotificationAction(action: ActionPerformed): void {
 
     // Dispatch again after a delay to ensure React listener is ready
     setTimeout(() => {
-      console.log('[PushNav] Dispatching delayed event for taskId:', taskId);
+      console.log('[PushNav] Dispatching delayed event (500ms) for taskId:', taskId);
       window.dispatchEvent(
         new CustomEvent('open-task-from-notification', {
           detail: {
@@ -116,6 +116,21 @@ function handleNotificationAction(action: ActionPerformed): void {
         })
       );
     }, 500);
+
+    // Dispatch again after a longer delay for slower devices
+    setTimeout(() => {
+      console.log('[PushNav] Dispatching delayed event (1500ms) for taskId:', taskId);
+      window.dispatchEvent(
+        new CustomEvent('open-task-from-notification', {
+          detail: {
+            taskId,
+            data,
+            actionId: action.actionId,
+            notification: action.notification,
+          },
+        })
+      );
+    }, 1500);
 
     return;
   }
