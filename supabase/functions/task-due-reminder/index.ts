@@ -152,15 +152,32 @@ serve(async (req) => {
   }
 
   const startTime = Date.now()
+  const requestUrl = new URL(req.url)
+  const testMode = requestUrl.searchParams.get('test') === 'true'
+  
   console.log('=== Task Due Reminder Job Started ===')
+  console.log('Test mode:', testMode)
+  console.log('Request method:', req.method)
 
   try {
+    // Validate Firebase configuration
     if (!FIREBASE_PROJECT_ID || !FIREBASE_PRIVATE_KEY || !FIREBASE_CLIENT_EMAIL) {
+      console.error('❌ Firebase configuration missing!')
+      console.error('FIREBASE_PROJECT_ID:', FIREBASE_PROJECT_ID ? 'Set' : 'Missing')
+      console.error('FIREBASE_PRIVATE_KEY:', FIREBASE_PRIVATE_KEY ? 'Set' : 'Missing')
+      console.error('FIREBASE_CLIENT_EMAIL:', FIREBASE_CLIENT_EMAIL ? 'Set' : 'Missing')
       throw new Error('Firebase configuration missing')
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('❌ Supabase configuration missing!')
+      throw new Error('Supabase configuration missing')
+    }
+    
+    console.log('✅ All configurations validated')
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const now = new Date()
@@ -169,8 +186,10 @@ serve(async (req) => {
     const tomorrowStr = tomorrow.toISOString().split('T')[0]
     const todayStr = now.toISOString().split('T')[0]
 
-    console.log('Looking for tasks due on: ' + tomorrowStr)
+    console.log('📅 Current date:', todayStr)
+    console.log('📅 Looking for tasks due on:', tomorrowStr)
 
+    console.log('🔍 Querying tasks...')
     const { data: tasks, error: tasksError } = await supabase
       .from('tasks')
       .select('id, name, due_date, department_id, batch_id, section_id, status')
@@ -179,38 +198,58 @@ serve(async (req) => {
       .not('section_id', 'is', null)
 
     if (tasksError) {
+      console.error('❌ Failed to fetch tasks:', tasksError.message)
+      console.error('Error details:', tasksError)
       throw new Error('Failed to fetch tasks: ' + tasksError.message)
     }
 
+    console.log('📊 Query returned', tasks?.length || 0, 'tasks')
+    
     if (!tasks || tasks.length === 0) {
-      console.log('No tasks due tomorrow')
+      console.log('ℹ️ No tasks due tomorrow')
       return new Response(
         JSON.stringify({ message: 'No tasks due tomorrow', tasksProcessed: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('Found ' + tasks.length + ' tasks due tomorrow')
+    console.log('✅ Found ' + tasks.length + ' tasks due tomorrow')
 
     const taskIds = tasks.map(t => t.id)
-    const { data: existingLogs } = await supabase
-      .from('task_reminder_logs')
-      .select('task_id')
-      .in('task_id', taskIds)
-      .eq('reminder_date', todayStr)
+    
+    // In test mode, skip the duplicate check
+    let tasksToProcess = tasks
+    let alreadySentCount = 0
+    
+    if (!testMode) {
+      console.log('🔍 Checking for already sent reminders...')
+      const { data: existingLogs, error: logsError } = await supabase
+        .from('task_reminder_logs')
+        .select('task_id')
+        .in('task_id', taskIds)
+        .eq('reminder_date', todayStr)
 
-    const alreadySentTaskIds = new Set((existingLogs || []).map((l: { task_id: string }) => l.task_id))
-    const tasksToProcess = tasks.filter(t => !alreadySentTaskIds.has(t.id))
+      if (logsError) {
+        console.warn('⚠️ Error checking logs:', logsError.message)
+      }
+
+      const alreadySentTaskIds = new Set((existingLogs || []).map((l: { task_id: string }) => l.task_id))
+      alreadySentCount = alreadySentTaskIds.size
+      tasksToProcess = tasks.filter(t => !alreadySentTaskIds.has(t.id))
+      console.log('📋 Already sent:', alreadySentCount, '| To process:', tasksToProcess.length)
+    } else {
+      console.log('⚠️ Test mode: Skipping duplicate check')
+    }
 
     if (tasksToProcess.length === 0) {
-      console.log('All task reminders already sent today')
+      console.log('ℹ️ All task reminders already sent today')
       return new Response(
         JSON.stringify({ message: 'All reminders already sent', tasksProcessed: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('Processing ' + tasksToProcess.length + ' tasks (' + alreadySentTaskIds.size + ' already sent)')
+    console.log('🔄 Processing ' + tasksToProcess.length + ' tasks (skipped: ' + alreadySentCount + ')')
 
     const accessToken = await getFirebaseAccessToken()
 
@@ -251,10 +290,10 @@ serve(async (req) => {
         continue
       }
 
-      console.log('Found ' + matchingUsers.length + ' matching users')
+      console.log('✅ Found ' + matchingUsers.length + ' matching users')
 
       const userIds = matchingUsers.map((u: { id: string }) => u.id)
-      console.log('Fetching FCM tokens for ' + userIds.length + ' users...')
+      console.log('🔍 Fetching FCM tokens for ' + userIds.length + ' users...')
       
       const { data: tokens, error: tokensError } = await supabase
         .from('fcm_tokens')
@@ -263,13 +302,15 @@ serve(async (req) => {
         .eq('is_active', true)
 
       if (tokensError) {
-        console.error('Error fetching tokens for task ' + task.id + ':', tokensError)
-        console.error('Token error details:', tokensError.message, tokensError.code)
+        console.error('❌ Error fetching tokens for task ' + task.id + ':', tokensError)
+        console.error('Token error details:', tokensError.message, tokensError.code, tokensError.details)
         continue
       }
 
+      console.log('📱 Found ' + (tokens?.length || 0) + ' active FCM tokens')
+
       if (!tokens || tokens.length === 0) {
-        console.log('No active FCM tokens for matching users')
+        console.warn('⚠️ No active FCM tokens for matching users')
         await supabase.from('task_reminder_logs').insert({
           task_id: task.id,
           reminder_date: todayStr,
@@ -279,29 +320,40 @@ serve(async (req) => {
         continue
       }
 
-      console.log('Sending to ' + tokens.length + ' FCM tokens')
+      console.log('📤 Sending to ' + tokens.length + ' FCM tokens')
 
       const notification = {
-        title: 'Task Due Tomorrow',
-        body: 'Your task "' + task.name + '" is due tomorrow'
+        title: '⏰ Task Due Tomorrow',
+        body: '"' + task.name + '" is due tomorrow. Don\'t forget!'
       }
 
       const notificationData = {
         taskId: task.id,
+        taskName: task.name,
         type: 'TASK_REMINDER',
-        route: '/task/view/' + task.id
+        route: '/task/view/' + task.id,
+        dueDate: tomorrowStr
       }
+
+      console.log('📨 Notification:', notification.title)
+      console.log('📦 Data payload:', notificationData)
 
       let taskSent = 0
       let taskFailed = 0
+      const failedReasons: string[] = []
 
       const sendPromises = tokens.map(async (tokenRecord: { id: string; token: string }) => {
         const result = await sendFCMMessage(accessToken, tokenRecord.token, notification, notificationData)
         if (result.success) {
           taskSent++
+          console.log('✅ Sent to token ending:', tokenRecord.token.slice(-6))
         } else {
           taskFailed++
+          const reason = result.error || 'Unknown error'
+          failedReasons.push(reason)
+          console.error('❌ Failed to send to token ending:', tokenRecord.token.slice(-6), '- Reason:', reason)
           if (result.tokenInvalid) {
+            console.log('🗑️ Marking invalid token as inactive')
             await supabase.from('fcm_tokens').update({ is_active: false }).eq('id', tokenRecord.id)
           }
         }
@@ -310,7 +362,10 @@ serve(async (req) => {
 
       await Promise.all(sendPromises)
 
-      console.log('Sent: ' + taskSent + ', Failed: ' + taskFailed)
+      console.log('📊 Results - Sent: ' + taskSent + ', Failed: ' + taskFailed)
+      if (failedReasons.length > 0) {
+        console.log('❌ Failure reasons:', [...new Set(failedReasons)].join(', '))
+      }
 
       const status = taskFailed === 0 ? 'sent' : (taskSent > 0 ? 'partial' : 'failed')
       await supabase.from('task_reminder_logs').insert({
@@ -326,25 +381,49 @@ serve(async (req) => {
     }
 
     const duration = Date.now() - startTime
-    console.log('=== Job Completed in ' + duration + 'ms ===')
-    console.log('Total: ' + totalSent + ' sent, ' + totalFailed + ' failed')
+    console.log('=== ✅ Job Completed in ' + duration + 'ms ===')
+    console.log('📊 Final Stats:')
+    console.log('  • Tasks processed:', tasksToProcess.length)
+    console.log('  • Total sent:', totalSent)
+    console.log('  • Total failed:', totalFailed)
+    console.log('  • Success rate:', tasksToProcess.length > 0 ? Math.round((totalSent / (totalSent + totalFailed)) * 100) + '%' : 'N/A')
 
-    return new Response(
-      JSON.stringify({
-        success: true,
+    const response = {
+      success: true,
+      message: 'Task reminders processed successfully',
+      data: {
         tasksProcessed: tasksToProcess.length,
+        totalTasksFound: tasks.length,
         totalSent,
         totalFailed,
+        successRate: totalSent + totalFailed > 0 ? Math.round((totalSent / (totalSent + totalFailed)) * 100) : 0,
         durationMs: duration,
-        results
-      }),
+        timestamp: new Date().toISOString(),
+        testMode
+      },
+      results
+    }
+
+    return new Response(
+      JSON.stringify(response, null, 2),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error'
-    console.error('Task reminder job error:', errMsg)
+    const errStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('=== ❌ Task Reminder Job Failed ===')
+    console.error('Error:', errMsg)
+    if (errStack) {
+      console.error('Stack:', errStack)
+    }
+    
     return new Response(
-      JSON.stringify({ error: errMsg }),
+      JSON.stringify({ 
+        success: false,
+        error: errMsg,
+        timestamp: new Date().toISOString()
+      }, null, 2),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

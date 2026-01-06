@@ -95,13 +95,14 @@ function formatSupabaseError(error: unknown) {
 async function upsertFcmToken(userId: string, token: string) {
   const now = Date.now();
   if (lastSavedToken && lastSavedToken.userId === userId && lastSavedToken.token === token && now - lastSavedToken.savedAt < 2 * 60 * 1000) {
-    console.log('[FCM] Token already saved recently, skipping');
+    console.log('[FCM] ✔️ Token already saved recently, skipping');
     return;
   }
 
-  console.log('[FCM] Starting token upsert for user:', userId);
-  console.log('[FCM] Token preview:', token.substring(0, 20) + '...');
-  console.log('[FCM] Platform:', Capacitor.getPlatform());
+  console.log('[FCM] 📦 Starting token upsert');
+  console.log('[FCM]   User ID:', userId);
+  console.log('[FCM]   Token preview:', token.substring(0, 30) + '...');
+  console.log('[FCM]   Platform:', Capacitor.getPlatform());
 
   const deviceInfo: DeviceInfo = {
     platform: Capacitor.getPlatform(),
@@ -119,7 +120,7 @@ async function upsertFcmToken(userId: string, token: string) {
     updated_at: new Date().toISOString()
   };
 
-  console.log('[FCM] Upserting token to database...');
+  console.log('[FCM] 💾 Upserting token to database...');
 
   const { data, error } = await supabase
     .from('fcm_tokens')
@@ -131,16 +132,18 @@ async function upsertFcmToken(userId: string, token: string) {
 
   if (error) {
     console.error('[FCM] ❌ Upsert FAILED');
-    console.error('[FCM] Error message:', error.message);
-    console.error('[FCM] Error code:', error.code);
-    console.error('[FCM] Error details:', error.details);
-    console.error('[FCM] Error hint:', error.hint);
-    console.error('[FCM] Full error:', error);
+    console.error('[FCM]   Error message:', error.message);
+    console.error('[FCM]   Error code:', error.code);
+    console.error('[FCM]   Error details:', error.details);
+    console.error('[FCM]   Error hint:', error.hint);
     throw error;
   }
 
   console.log('[FCM] ✅ Token saved successfully!');
-  console.log('[FCM] Saved data:', data);
+  console.log('[FCM]   Records affected:', data?.length || 0);
+  if (import.meta.env.DEV && data && data.length > 0) {
+    console.log('[FCM]   Saved record ID:', data[0].id);
+  }
   lastSavedToken = { userId, token, savedAt: now };
 }
 
@@ -173,12 +176,14 @@ async function ensureInitialized(isNativePlatform: boolean) {
   // Attach listeners once; broadcast updates to all hook instances via shared state.
   PushNotifications.addListener('registration', async (token: Token) => {
     const tokenValue = token?.value;
-    if (!tokenValue) return;
+    if (!tokenValue) {
+      console.error('[FCM] Registration event received but token is empty');
+      return;
+    }
 
+    console.log('[FCM] ✅ Push registration success');
     if (import.meta.env.DEV) {
-      console.log('Push registration success, token:', redactToken(tokenValue));
-    } else {
-      console.log('Push registration success');
+      console.log('[FCM] Token preview:', redactToken(tokenValue));
     }
 
     updateSharedState(prev => ({
@@ -189,16 +194,18 @@ async function ensureInitialized(isNativePlatform: boolean) {
       error: null
     }));
 
-    if (!latestUserId) return;
+    if (!latestUserId) {
+      console.warn('[FCM] ⚠️ No user logged in, token not saved yet');
+      return;
+    }
 
     try {
+      console.log('[FCM] Saving token to database for user:', latestUserId);
       await upsertFcmToken(latestUserId, tokenValue);
-      if (import.meta.env.DEV) {
-        console.log('FCM token saved successfully');
-      }
+      console.log('[FCM] ✅ Token saved successfully');
     } catch (error) {
       const formatted = formatSupabaseError(error);
-      console.error('Failed to save FCM token:', formatted);
+      console.error('[FCM] ❌ Failed to save FCM token:', formatted);
       updateSharedState(prev => ({ ...prev, error: formatted }));
     }
   });
@@ -363,7 +370,20 @@ export function usePushNotifications() {
 
   // Keep the latest user id available for the shared registration listener.
   useEffect(() => {
+    const previousUserId = latestUserId;
     latestUserId = user?.id ?? null;
+    
+    // If user just logged in and we have a token, save it immediately
+    if (latestUserId && !previousUserId && sharedState.token) {
+      console.log('[FCM] User logged in, saving existing token...');
+      upsertFcmToken(latestUserId, sharedState.token)
+        .then(() => {
+          console.log('[FCM] ✅ Token saved for newly logged in user');
+        })
+        .catch((error) => {
+          console.error('[FCM] ❌ Failed to save token for logged in user:', formatSupabaseError(error));
+        });
+    }
   }, [user?.id]);
 
   // Initialize once.
