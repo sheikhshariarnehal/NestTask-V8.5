@@ -327,7 +327,7 @@ const TaskCard = memo(({
               rounded-md border
               ${categoryInfo.color.replace('bg-', 'bg-opacity-75 bg-').replace('text-', 'text-opacity-90 text-')}
               transition-all duration-200
-              shadow-sm backdrop-blur-sm
+              shadow-sm
               border-opacity-30
               ${categoryInfo.color.includes('blue') ? 'border-blue-200 dark:border-blue-700' :
                 categoryInfo.color.includes('purple') ? 'border-purple-200 dark:border-purple-700' :
@@ -817,7 +817,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
 
       {/* Loading Overlay */}
       {(isUpdating || (loading && !isInitialLoad)) && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/20 z-40 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-xl animate-scale-in">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
@@ -950,7 +950,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
 
       {/* Task Details Modal */}
       <Suspense fallback={
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
         </div>
       }>
@@ -966,7 +966,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
 
       {/* Monthly Calendar */}
       <Suspense fallback={
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
         </div>
       }>

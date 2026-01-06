@@ -129,7 +129,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-gray-950/80 backdrop-blur-xl z-50 border-b border-gray-800/50">
+      <nav className="fixed top-0 w-full bg-gray-950/95 z-50 border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <motion.div 
@@ -206,7 +206,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="md:hidden absolute top-16 left-0 right-0 bg-gray-950/95 backdrop-blur-xl border-b border-gray-800/50 shadow-2xl"
+              className="md:hidden absolute top-16 left-0 right-0 bg-gray-950/98 border-b border-gray-800/50 shadow-2xl"
             >
               <div className="px-4 py-6 space-y-4">
                 <button
@@ -312,7 +312,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="group border-2 border-gray-600 hover:border-blue-500 text-gray-300 hover:text-white px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center space-x-3 backdrop-blur-sm hover:bg-gray-800/30"
+                  className="group border-2 border-gray-600 hover:border-blue-500 text-gray-300 hover:text-white px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center space-x-3 hover:bg-gray-800/30"
                 >
                   <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   <span>Watch Demo</span>
@@ -371,7 +371,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -5 }}
-                className="group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 hover:border-gray-700 transition-all duration-300"
+                className="group relative bg-gray-900/60 border border-gray-800 rounded-2xl p-8 hover:border-gray-700 transition-all duration-300"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-800/20 to-gray-900/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -428,7 +428,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -10, scale: 1.05 }}
-                className={`group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 text-center hover:border-gray-700 transition-all duration-300 ${tech.glow} hover:shadow-2xl`}
+                className={`group relative bg-gray-900/60 border border-gray-800 rounded-2xl p-6 text-center hover:border-gray-700 transition-all duration-300 ${tech.glow} hover:shadow-2xl`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-800/20 to-gray-900/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -475,7 +475,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -10 }}
-                className="group relative bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-3xl p-8 hover:border-gray-700 transition-all duration-300 overflow-hidden"
+                className="group relative bg-gray-900/60 border border-gray-800 rounded-3xl p-8 hover:border-gray-700 transition-all duration-300 overflow-hidden"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${role.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
 

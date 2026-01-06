@@ -57,7 +57,7 @@ export function AuthPage({ onLogin, onSignup, onForgotPassword, error }: AuthPag
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors duration-300">
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/8 border border-white/5 hover:bg-white/10 transition-colors duration-300">
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <CheckCircle2 className="w-6 h-6 text-blue-200" />
               </div>
@@ -66,7 +66,7 @@ export function AuthPage({ onLogin, onSignup, onForgotPassword, error }: AuthPag
                 <p className="text-sm text-blue-200">Stay on top of assignments and deadlines</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:bg-white/10 transition-colors duration-300">
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/8 border border-white/5 hover:bg-white/10 transition-colors duration-300">
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <Users className="w-6 h-6 text-blue-200" />
               </div>

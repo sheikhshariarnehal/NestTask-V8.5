@@ -1,8 +1,18 @@
 {
   "status": "commited",
   "type": "frontend",
-  "scope": "diff",
-  "localEndpoint": "http://localhost:5173/admin/tasks",
-  "loginUser": "admin@diu.edu.bd",
-  "loginPassword": "Admin123!"
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5174",
+  "loginUser": "guser2@diu.edu.bd",
+  "loginPassword": "098765",
+  "executionArgs": {
+    "projectName": "NestTask-V8.5-405c6cbb2acb5d998b0913600ad38728e2fef09e",
+    "projectPath": "e:\\Poject\\NESTTASK\\NestTask-V8.5-405c6cbb2acb5d998b0913600ad38728e2fef09e",
+    "testIds": [],
+    "additionalInstruction": "Focus on performance analysis including Core Web Vitals (LCP, FID, CLS), bundle size analysis, load time metrics, rendering performance, memory usage, and identify any performance bottlenecks or optimization opportunities",
+    "envs": {
+      "API_KEY": "sk-user-e0YVygW4OrxQfilFUgv0YPsLxYDlXUXQ4NDyInBW7WVkeJakY9PQWhCUc63y8Pz5s7gbVH1Z4qB7PztGWv13OFfX-MaBf4lts14tDNboj70p-sFjSNINQqaSr3YOfpL-1w0"
+    }
+  },
+  "proxy": "http://572ab760-75eb-4ccf-afd5-7997790cfd1b:IDWiCTAzcqED5OQkdkljP6wwSXJESzd9@tun.testsprite.com:8080"
 }

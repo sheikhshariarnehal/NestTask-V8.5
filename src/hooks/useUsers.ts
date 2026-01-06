@@ -35,9 +35,18 @@ export function useUsers() {
     loadUsers(true);
   }, [loadUsers]);
 
+  // Use stable callback reference to prevent memory leaks
+  const handleResumeRefreshRef = useRef<() => void>();
+  
+  useEffect(() => {
+    handleResumeRefreshRef.current = () => {
+      loadUsers(true);
+    };
+  }, [loadUsers]);
+
   useEffect(() => {
     const handleResumeRefresh = () => {
-      loadUsers(true);
+      handleResumeRefreshRef.current?.();
     };
 
     window.addEventListener('app-resume', handleResumeRefresh);
@@ -53,7 +62,7 @@ export function useUsers() {
       window.removeEventListener('supabase-network-reconnect', handleResumeRefresh);
       window.removeEventListener('supabase-visibility-refresh', handleResumeRefresh);
     };
-  }, [loadUsers]);
+  }, []);
 
   const handleDeleteUser = async (userId: string) => {
     try {
