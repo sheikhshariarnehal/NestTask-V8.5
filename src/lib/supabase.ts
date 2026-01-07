@@ -15,8 +15,25 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
   (typeof window !== 'undefined' && (window as any).ENV_SUPABASE_ANON_KEY);
 
+// Log environment check in production
+if (import.meta.env.PROD) {
+  console.log('[Supabase] Environment check:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlPrefix: supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'missing'
+  });
+}
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please click "Connect to Supabase" to set up your project.');
+  const errorMsg = 'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.';
+  console.error(errorMsg);
+  
+  // In production, show a more user-friendly error
+  if (import.meta.env.PROD) {
+    console.error('Please configure environment variables in Vercel dashboard: Settings → Environment Variables');
+  }
+  
+  throw new Error(errorMsg);
 }
 
 // Create optimized Supabase client with retry logic

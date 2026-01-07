@@ -1,3 +1,4 @@
+
 # Vercel Deployment Guide
 
 ## Overview
@@ -86,6 +87,55 @@ Use Vercel Speed Insights to monitor:
 - Geographic performance data
 
 ## Troubleshooting
+
+### Blank Page After Deployment
+
+If you see a loading screen followed by a blank page:
+
+1. **Check Browser Console** (F12):
+   - Look for error messages (especially red errors)
+   - Common errors:
+     - "Missing Supabase environment variables"
+     - Network errors
+     - Module loading errors
+
+2. **Verify Environment Variables**:
+   ```bash
+   # In Vercel Dashboard → Settings → Environment Variables
+   # Make sure these are set:
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_anon_key_here
+   ```
+   
+   **Important**: After adding/changing environment variables:
+   - Go to Deployments tab
+   - Click "..." menu on latest deployment
+   - Select "Redeploy"
+   - Environment variables only apply to NEW deployments!
+
+3. **Check Vercel Build Logs**:
+   - Go to Vercel Dashboard → Deployments
+   - Click on the deployment
+   - Check "Build Logs" for errors
+   - Look for:
+     - Failed module imports
+     - Missing dependencies
+     - Build errors
+
+4. **Common Fixes**:
+   
+   **Missing Environment Variables:**
+   - Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+   - Redeploy after setting
+
+   **Browser Cache:**
+   - Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+   - Or clear site data in DevTools
+
+   **Service Worker Issues:**
+   - Open DevTools → Application → Service Workers
+   - Click "Unregister" if present
+   - Hard refresh the page
 
 ### Build Fails
 - Check environment variables are set
