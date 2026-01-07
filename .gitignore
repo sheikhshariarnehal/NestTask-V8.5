@@ -83,6 +83,10 @@ ios/
 .capacitor/
 dist/
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+android/
+>>>>>>> Stashed changes
+=======
 android/
 >>>>>>> Stashed changes
 =======
