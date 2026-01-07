@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { ErrorBoundary, EnvErrorFallback } from './components/ErrorBoundary';
 // Import CSS (Vite handles this correctly)
 import './index.css';
 // Import Ionic CSS for components (non-critical, loaded after)
@@ -240,6 +241,20 @@ initPushNotificationListeners();
 
 // Initialize app with minimal operations
 function initApp() {
+  // Check for environment variables first
+  const hasEnvVars = Boolean(
+    import.meta.env.VITE_SUPABASE_URL && 
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+  );
+  
+  if (!hasEnvVars) {
+    console.error('❌ Missing environment variables!');
+    console.log('Required variables:', {
+      VITE_SUPABASE_URL: Boolean(import.meta.env.VITE_SUPABASE_URL),
+      VITE_SUPABASE_ANON_KEY: Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY)
+    });
+  }
+  
   // Add DNS prefetch for critical domains
   if (import.meta.env.VITE_SUPABASE_URL) {
     try {
@@ -255,24 +270,34 @@ function initApp() {
   
   // Get root element and create React root
   const root = document.getElementById('root');
-  if (!root) return;
+  if (!root) {
+    console.error('❌ Root element not found!');
+    return;
+  }
   
   const reactRoot = createRoot(root);
   
-  // Render app with minimal surrounding components
+  // Render app with error boundaries
+  // Show environment error screen if vars are missing
   reactRoot.render(
     <StrictMode>
-      <Suspense fallback={<MicroLoader />}>
-        <RouterProvider router={router} />
-        {shouldRenderAnalytics && (
-          <AnalyticsErrorBoundary>
-            <Suspense fallback={null}>
-              <Analytics />
-              <SpeedInsights />
-            </Suspense>
-          </AnalyticsErrorBoundary>
+      <ErrorBoundary>
+        {!hasEnvVars ? (
+          <EnvErrorFallback />
+        ) : (
+          <Suspense fallback={<MicroLoader />}>
+            <RouterProvider router={router} />
+            {shouldRenderAnalytics && (
+              <AnalyticsErrorBoundary>
+                <Suspense fallback={null}>
+                  <Analytics />
+                  <SpeedInsights />
+                </Suspense>
+              </AnalyticsErrorBoundary>
+            )}
+          </Suspense>
         )}
-      </Suspense>
+      </ErrorBoundary>
     </StrictMode>
   );
   
@@ -288,5 +313,31 @@ function initApp() {
   }
 }
 
+// Add global error handler
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
+
 // Start the app
-initApp();
+try {
+  initApp();
+} catch (error) {
+  console.error('Failed to initialize app:', error);
+  // Fallback rendering
+  const root = document.getElementById('root');
+  if (root) {
+    root.innerHTML = `
+      <div style="min-height: 100vh; display: flex; align-items: center; justify-center; padding: 20px; background: #f3f4f6;">
+        <div style="max-width: 500px; background: white; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h1 style="color: #dc2626; font-size: 24px; font-weight: bold; margin-bottom: 16px;">Failed to Start Application</h1>
+          <p style="color: #6b7280; margin-bottom: 16px;">The application encountered a critical error during startup.</p>
+          <button onclick="window.location.reload()" style="width: 100%; background: #3b82f6; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">Reload Page</button>
+        </div>
+      </div>
+    `;
+  }
+}

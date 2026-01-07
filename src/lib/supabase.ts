@@ -1,6 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
+// Export initialization error if any
+export const getSupabaseInitError = () => {
+  if (typeof window !== 'undefined') {
+    return (window as any).__supabaseInitError || null;
+  }
+  return null;
+};
+
 // Check if we're running in StackBlitz
 const isStackBlitz = Boolean(
   typeof window !== 'undefined' && 
@@ -15,12 +23,29 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
   (typeof window !== 'undefined' && (window as any).ENV_SUPABASE_ANON_KEY);
 
+// Store error state for later display instead of throwing immediately
+let initError: string | null = null;
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please click "Connect to Supabase" to set up your project.');
+  initError = 'Missing Supabase environment variables';
+  console.error('⚠️ Supabase configuration error:', {
+    hasUrl: Boolean(supabaseUrl),
+    hasKey: Boolean(supabaseAnonKey),
+    env: import.meta.env.MODE
+  });
+  
+  // Store error in window for early access
+  if (typeof window !== 'undefined') {
+    (window as any).__supabaseInitError = initError;
+  }
 }
 
 // Create optimized Supabase client with retry logic and lifecycle management
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Use dummy values if env vars missing to prevent immediate crash
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || 'placeholder-key', 
+  {
   auth: {
     persistSession: true,
     detectSessionInUrl: true,
