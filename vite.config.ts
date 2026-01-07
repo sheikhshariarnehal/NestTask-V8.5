@@ -65,60 +65,59 @@ export default defineConfig({
         // In native WebView (Capacitor), avoid custom chunking to reduce the chance
         // of circular-init ordering issues across chunks.
         manualChunks: isCapacitorBuild ? undefined : (id) => {
-          // Only split truly independent vendor chunks to avoid circular dependencies
+          // Simplified chunking strategy to avoid module initialization errors
           
-          // Core React dependencies - keep together for better caching
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') || 
-              id.includes('node_modules/scheduler/') ||
-              id.includes('node_modules/react-router-dom/') ||
-              id.includes('node_modules/react-router/')) {
+          // Core React ecosystem - MUST stay together to avoid "Cannot read properties of undefined"
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/scheduler') ||
+              id.includes('node_modules/react-dom') ||
+              id.includes('node_modules/react-router') ||
+              id.includes('node_modules/prop-types')) {
             return 'react-vendor';
           }
           
-          // Ionic React - separate chunk (deferred for admin pages)
-          if (id.includes('node_modules/@ionic/react/') ||
-              id.includes('node_modules/@ionic/core/') ||
+          // Ionic - depends on React, separate chunk
+          if (id.includes('node_modules/@ionic/') ||
               id.includes('node_modules/ionicons/')) {
             return 'ionic-vendor';
           }
           
-          // Supabase - standalone (load on demand)
+          // Supabase - standalone
           if (id.includes('node_modules/@supabase/')) {
             return 'supabase-vendor';
           }
           
-          // Capacitor plugins - separate for conditional loading
+          // Capacitor plugins
           if (id.includes('node_modules/@capacitor/')) {
             return 'capacitor-vendor';
           }
           
-          // Framer Motion - heavy animation library, lazy load
+          // Framer Motion - animation library
           if (id.includes('node_modules/framer-motion/')) {
             return 'framer-vendor';
           }
           
-          // Date utilities - separate chunk for better caching
+          // Date utilities
           if (id.includes('node_modules/date-fns/')) {
             return 'date-utils';
           }
           
-          // Icons - separate chunk for better caching
+          // Icons - large bundle
           if (id.includes('node_modules/lucide-react/')) {
             return 'icons';
           }
           
-          // Capacitor plugins - separate chunk
-          if (id.includes('node_modules/@capacitor/')) {
-            return 'capacitor-vendor';
-          }
-          
-          // Charts - large and independent (combine d3 and recharts to avoid circular deps)
+          // Charts - combine all chart-related libraries
           if (id.includes('node_modules/recharts/') || 
               id.includes('node_modules/d3-') ||
               id.includes('node_modules/d3/') ||
-              id.includes('node_modules/victory-vendor/')) {
+              id.includes('node_modules/victory-')) {
             return 'charts';
+          }
+          
+          // Vercel Analytics - small, can be separate
+          if (id.includes('node_modules/@vercel/')) {
+            return 'vercel-vendor';
           }
           
           // All other node_modules go to a common vendor chunk
