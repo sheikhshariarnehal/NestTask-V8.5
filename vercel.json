@@ -94,6 +94,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!assets|manifest\\.json|service-worker\\.js|sw\\.js|workbox-.*\\.js|registerSW\\.js|.*\\.webmanifest).*)", "destination": "/index.html" }
   ]
 }

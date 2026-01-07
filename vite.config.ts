@@ -10,6 +10,7 @@ type CompressionAlgorithm = 'gzip' | 'brotliCompress' | 'deflate' | 'deflateRaw'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/',
   resolve: {
     // Add aliases for better import paths
     alias: {
@@ -107,9 +108,8 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: false, // Keep console logs for debugging in production
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info'],
         passes: 2
       },
       mangle: {

@@ -66,9 +66,27 @@ class ErrorBoundary extends Component<
 }
 
 // Lazy-load core pages
-const App = lazy(() => import('./App'));
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
-const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
+const App = lazy(() => import('./App').catch(err => {
+  console.error('Failed to load App:', err);
+  window.location.reload();
+  return { default: () => null };
+}));
+
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage')
+  .then(module => ({ default: module.ResetPasswordPage }))
+  .catch(err => {
+    console.error('Failed to load ResetPasswordPage:', err);
+    return { default: () => null };
+  })
+);
+
+const AuthPage = lazy(() => import('./pages/AuthPage')
+  .then(module => ({ default: module.AuthPage }))
+  .catch(err => {
+    console.error('Failed to load AuthPage:', err);
+    return { default: () => null };
+  })
+);
 
 // Ensure environment variables are properly loaded in production
 if (import.meta.env.PROD) {
