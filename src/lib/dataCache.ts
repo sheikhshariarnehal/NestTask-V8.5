@@ -110,6 +110,17 @@ class DataCache {
   }
 
   /**
+   * Clear all cache and notify listeners
+   */
+  clearAll(): void {
+    console.log('[DataCache] Clearing all cache');
+    this.cache.clear();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cache-cleared'));
+    }
+  }
+
+  /**
    * Get cache statistics
    */
   getStats() {
@@ -140,6 +151,18 @@ if (typeof window !== 'undefined') {
   setInterval(() => {
     dataCache.cleanup();
   }, 5 * 60 * 1000);
+
+  // Clear cache on app resume to ensure fresh data
+  window.addEventListener('app-resume', () => {
+    console.log('[DataCache] App resumed, clearing cache');
+    dataCache.clearAll();
+  });
+
+  // Clear cache when session is refreshed
+  window.addEventListener('supabase-session-refreshed', () => {
+    console.log('[DataCache] Session refreshed, clearing cache');
+    dataCache.clearAll();
+  });
 }
 
 // Helper function to generate cache keys

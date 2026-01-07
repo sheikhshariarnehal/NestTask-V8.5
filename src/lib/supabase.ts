@@ -69,6 +69,12 @@ export const supabase = createClient<Database>(
     // Configure realtime to automatically reconnect on network changes
     params: {
       eventsPerSecond: 10
+    },
+    // Enable automatic reconnection
+    heartbeatIntervalMs: 30000, // 30 seconds
+    reconnectAfterMs: (tries: number) => {
+      // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+      return Math.min(1000 * Math.pow(2, tries), 30000);
     }
   }
 });
@@ -294,6 +300,38 @@ export async function testConnection(forceCheck = false) {
 setTimeout(() => {
   testConnection().catch(console.error);
 }, 1000);
+
+// Handle app resume to reconnect realtime and refresh session
+if (typeof window !== 'undefined') {
+  window.addEventListener('app-resume', async () => {
+    console.log('[Supabase] App resumed, reconnecting...');
+    
+    // Reconnect realtime channels
+    const channels = supabase.getChannels();
+    for (const channel of channels) {
+      console.log(`[Supabase] Reconnecting channel: ${channel.topic}`);
+      await channel.unsubscribe();
+      await channel.subscribe();
+    }
+    
+    // Test connection
+    await testConnection();
+  });
+
+  // Handle visibility change
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      console.log('[Supabase] Tab visible, checking connection...');
+      testConnection().catch(console.error);
+    }
+  });
+
+  // Handle online event
+  window.addEventListener('online', async () => {
+    console.log('[Supabase] Network online, reconnecting...');
+    await testConnection();
+  });
+}
 
 // Export connection status utility
 export function getConnectionStatus() {

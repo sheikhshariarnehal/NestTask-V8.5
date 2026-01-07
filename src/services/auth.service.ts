@@ -498,9 +498,21 @@ export async function logoutUser(): Promise<void> {
     
     const indexedDBPromise = initializeIndexedDB()
       .then(db => {
-        const transaction = db.transaction(STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
-        return store.clear().then(() => db.close());
+        return new Promise<void>((resolve, reject) => {
+          const transaction = db.transaction(STORE_NAME, 'readwrite');
+          const store = transaction.objectStore(STORE_NAME);
+          const clearRequest = store.clear();
+          
+          clearRequest.onsuccess = () => {
+            db.close();
+            resolve();
+          };
+          
+          clearRequest.onerror = () => {
+            db.close();
+            reject(clearRequest.error);
+          };
+        });
       })
       .catch(e => {
         console.warn('Failed to clear IndexedDB:', e);

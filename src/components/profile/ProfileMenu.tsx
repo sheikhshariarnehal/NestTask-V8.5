@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { User, LogOut, Code, Settings, ChevronRight, Shield, BookOpen, Users, Layers, UserCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getDepartmentById, getBatchById, getSectionById } from '../../services/department.service';
@@ -64,24 +64,31 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
   ];
 
   const userInitial = user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?';
-  // Force image reload by appending timestamp if avatar exists to bypass browser caching
-  const avatarUrl = user?.avatar ? `${user.avatar}${user.avatar.includes('?') ? '&' : '?'}t=${Date.now()}` : null;
+  const [imageError, setImageError] = useState(false);
+  
+  // Use a stable timestamp for cache busting that only updates when the avatar URL actually changes
+  // This prevents the image from flickering/reloading on every render
+  const avatarUrl = useMemo(() => {
+    if (!user?.avatar) return null;
+    return `${user.avatar}${user.avatar.includes('?') ? '&' : '?'}t=${Date.now()}`;
+  }, [user?.avatar]);
 
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50/90 dark:bg-gray-800/90 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:focus-visible:ring-blue-400/50 active:scale-95"
+        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:focus-visible:ring-blue-400/50 active:scale-95 transition-transform"
         aria-label="Open profile menu"
       >
-        {user?.avatar ? (
+        {user?.avatar && !imageError ? (
           <img 
             src={avatarUrl || user.avatar} 
             alt={user.name} 
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-white/30 dark:border-gray-700/80"
+            onError={() => setImageError(true)}
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700"
           />
         ) : (
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs sm:text-sm font-medium shadow-inner">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-xs sm:text-sm font-semibold shadow-sm border-2 border-white dark:border-gray-800 ring-1 ring-gray-200 dark:ring-gray-700">
             {userInitial}
           </div>
         )}
@@ -106,16 +113,17 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
             divide-y divide-gray-100 dark:divide-gray-700
           ">
             {/* Profile Section */}
-            <div className="p-3 xs:p-4">
-              <div className="flex items-center gap-3.5">
-                {user?.avatar ? (
+            <div className="p-3 xs:p-4 bg-gray-50/50 dark:bg-gray-800/50">
+              <div className="flex items-center gap-4">
+                {user?.avatar && !imageError ? (
                   <img 
                     src={avatarUrl || user.avatar} 
                     alt={user.name} 
-                    className="w-10 h-10 xs:w-12 xs:h-12 rounded-full object-cover shadow-md border-2 border-white/50 dark:border-gray-700"
+                    onError={() => setImageError(true)}
+                    className="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white dark:border-gray-800 ring-1 ring-gray-200 dark:ring-gray-700"
                   />
                 ) : (
-                  <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md text-base xs:text-xl font-semibold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-sm text-xl font-bold border-2 border-white dark:border-gray-800 ring-1 ring-gray-200 dark:ring-gray-700">
                     {userInitial}
                   </div>
                 )}

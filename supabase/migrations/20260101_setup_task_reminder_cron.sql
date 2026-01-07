@@ -18,10 +18,10 @@ END $$;
 -- Schedule the new cron job
 SELECT cron.schedule(
   'task-due-reminder-daily',   -- Job name
-  '30 14 * * *',               -- Cron expression: 14:30 UTC = 8:30 PM BDT
+  '30 14 * * *',               -- Cron expression: 14:30 UTC = 8:30 PM BDT (PRODUCTION)
   $$
   SELECT net.http_post(
-    url := 'https://ycuymjlcsvigorskvsdr.supabase.co/functions/v1/task-due-reminder',
+    url := 'https://nglfbbdoyyfslzyjarqs.supabase.co/functions/v1/task-due-reminder',
     headers := '{"Content-Type": "application/json"}'::jsonb,
     body := '{}'::jsonb
   ) AS request_id;

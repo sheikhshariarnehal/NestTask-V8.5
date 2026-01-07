@@ -180,13 +180,15 @@ serve(async (req) => {
     console.log('✅ All configurations validated')
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Use Bangladesh time (UTC+6) for date calculations
     const now = new Date()
-    const tomorrow = new Date(now)
+    const bangladeshTime = new Date(now.getTime() + (6 * 60 * 60 * 1000)) // Add 6 hours for UTC+6
+    const tomorrow = new Date(bangladeshTime)
     tomorrow.setDate(tomorrow.getDate() + 1)
     const tomorrowStr = tomorrow.toISOString().split('T')[0]
-    const todayStr = now.toISOString().split('T')[0]
+    const todayStr = bangladeshTime.toISOString().split('T')[0]
 
-    console.log('📅 Current date:', todayStr)
+    console.log('📅 Current date (Bangladesh):', todayStr)
     console.log('📅 Looking for tasks due on:', tomorrowStr)
 
     console.log('🔍 Querying tasks...')

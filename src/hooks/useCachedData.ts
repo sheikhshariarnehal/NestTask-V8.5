@@ -3,8 +3,33 @@
  * Provides automatic caching, deduplication, and loading states
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { dataCache } from '../lib/dataCache';
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000;
+
+/**
+ * Retry with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  retries = MAX_RETRIES,
+  delay = INITIAL_RETRY_DELAY
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries === 0) throw error;
+    if (error?.status === 401 || error?.status === 403 || error?.status === 404) {
+      throw error;
+    }
+    console.log(`[useCachedData] Retrying after ${delay}ms... (${retries} retries left)`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return retryWithBackoff(fn, retries - 1, delay * 2);
+  }
+}
 
 interface UseCachedDataOptions<T> {
   cacheKey: string;
@@ -35,13 +60,17 @@ export function useCachedData<T>({
   });
   const [loading, setLoading] = useState<boolean>(!data && enabled);
   const [error, setError] = useState<Error | null>(null);
+  const fetchDataRef = useRef<() => Promise<void>>();
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const result = await dataCache.getOrFetch(cacheKey, fetchFn, ttl);
+      // Use retry logic with exponential backoff
+      const result = await retryWithBackoff(() => 
+        dataCache.getOrFetch(cacheKey, fetchFn, ttl)
+      );
       setData(result);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
@@ -54,6 +83,8 @@ export function useCachedData<T>({
     }
   }, [cacheKey, fetchFn, ttl, onError]);
 
+  fetchDataRef.current = fetchData;
+
   const invalidate = useCallback(() => {
     dataCache.invalidate(cacheKey);
     setData(null);
@@ -64,6 +95,36 @@ export function useCachedData<T>({
       fetchData();
     }
   }, [enabled, fetchData]);
+
+  // Listen for app resume events
+  useEffect(() => {
+    const handleAppResume = () => {
+      console.log(`[useCachedData] App resumed, invalidating cache for ${cacheKey}`);
+      dataCache.invalidate(cacheKey);
+      if (enabled && fetchDataRef.current) {
+        fetchDataRef.current().catch(err => {
+          console.error(`[useCachedData] Failed to refetch on resume:`, err);
+        });
+      }
+    };
+
+    const handleSessionRefreshed = () => {
+      console.log(`[useCachedData] Session refreshed, refetching ${cacheKey}`);
+      if (enabled && fetchDataRef.current) {
+        fetchDataRef.current().catch(err => {
+          console.error(`[useCachedData] Failed to refetch after session refresh:`, err);
+        });
+      }
+    };
+
+    window.addEventListener('app-resume', handleAppResume);
+    window.addEventListener('supabase-session-refreshed', handleSessionRefreshed);
+
+    return () => {
+      window.removeEventListener('app-resume', handleAppResume);
+      window.removeEventListener('supabase-session-refreshed', handleSessionRefreshed);
+    };
+  }, [cacheKey, enabled]);
 
   return {
     data,
