@@ -74,3 +74,13 @@ out
 
 # Local Netlify folder
 .netlify
+<<<<<<< Updated upstream
+=======
+
+# Capacitor
+
+ios/
+.capacitor/
+dist/
+android/
+>>>>>>> Stashed changes

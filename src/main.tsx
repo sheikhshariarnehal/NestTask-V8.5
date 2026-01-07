@@ -25,9 +25,13 @@ if (import.meta.env.PROD) {
   }
 }
 
-// Conditionally import Analytics only in production
+// Conditionally import Analytics and Speed Insights only in production
 const Analytics = import.meta.env.PROD 
   ? lazy(() => import('@vercel/analytics/react').then(mod => ({ default: mod.Analytics })))
+  : () => null;
+
+const SpeedInsights = import.meta.env.PROD 
+  ? lazy(() => import('@vercel/speed-insights/react').then(mod => ({ default: mod.SpeedInsights })))
   : () => null;
 
 // Simple error boundary for analytics
@@ -117,7 +121,10 @@ function initApp() {
         <RouterProvider router={router} />
         {import.meta.env.PROD && (
           <AnalyticsErrorBoundary>
-            <Suspense fallback={null}><Analytics /></Suspense>
+            <Suspense fallback={null}>
+              <Analytics />
+              <SpeedInsights />
+            </Suspense>
           </AnalyticsErrorBoundary>
         )}
       </Suspense>

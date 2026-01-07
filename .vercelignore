@@ -14,3 +14,18 @@ README.md
 .vscode
 .idea
 *.test.* 
+
+# Android build files (large and unnecessary for web deployment)
+android/build
+android/app/build
+android/capacitor-cordova-android-plugins/build
+
+# Cache and temporary files
+.vite
+.cache
+stats.html
+coverage
+
+# Supabase local development files
+supabase/.branches
+supabase/.temp

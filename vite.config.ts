@@ -148,6 +148,11 @@ export default defineConfig({
             return 'supabase';
           }
           
+          // Vercel Analytics - separate chunk for better caching
+          if (id.includes('node_modules/@vercel/')) {
+            return 'vercel-analytics';
+          }
+          
           // Icons
           if (id.includes('node_modules/lucide-react/')) {
             return 'icons';
