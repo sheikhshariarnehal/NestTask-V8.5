@@ -610,6 +610,20 @@ export function useAuth() {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Clear cache before fetching fresh data
+        const cacheKey = cacheKeys.userWithFullInfo(session.user.id);
+        dataCache.clear();
+        await updateUserState(session.user);
+      }
+    } catch (err) {
+      console.error('Error refreshing user:', err);
+    }
+  };
+
   return {
     user,
     loading,
@@ -619,5 +633,6 @@ export function useAuth() {
     logout,
     forgotPassword,
     savedEmail,
+    refreshUser,
   };
 }

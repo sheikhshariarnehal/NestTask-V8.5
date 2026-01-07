@@ -55,6 +55,9 @@ const LectureSlidesPage = lazy(() => import(/* webpackChunkName: "admin-slides" 
 const FCMManagementPage = lazy(() => import(/* webpackChunkName: "admin-fcm" */ './pages/admin/FCMManagementPage'));
 const SuperAdminPage = lazy(() => import(/* webpackChunkName: "admin-super" */ './pages/admin/SuperAdminPage').then(module => ({ default: module.SuperAdminPage })));
 
+// Lazy-load profile page
+const ProfilePage = lazy(() => import(/* webpackChunkName: "profile" */ './pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+
 // Ensure environment variables are properly loaded in production
 if (import.meta.env.PROD) {
   console.log('[Debug] Running in production mode - checking environment variables');

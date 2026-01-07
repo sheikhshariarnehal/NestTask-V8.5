@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, startTransition } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useAuth } from './hooks/useAuth';
@@ -37,17 +37,20 @@ const importUpcomingPage = () => import('./pages/UpcomingPage').then(module => (
 const importSearchPage = () => import('./pages/SearchPage').then(module => ({ default: module.SearchPage }));
 const importLectureSlidesPage = () => import('./pages/LectureSlidesPage').then(module => ({ default: module.LectureSlidesPage }));
 const importRoutinePage = () => import('./pages/RoutinePage').then(module => ({ default: module.RoutinePage }));
+const importProfilePage = () => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage }));
 
 // Lazy-loaded components
 const UpcomingPage = lazy(importUpcomingPage);
 const SearchPage = lazy(importSearchPage);
 const LectureSlidesPage = lazy(importLectureSlidesPage);
 const RoutinePage = lazy(importRoutinePage);
+const ProfilePage = lazy(importProfilePage);
 
 type StatFilter = 'all' | 'overdue' | 'in-progress' | 'completed';
 
 export default function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Initialize Status Bar for native mobile apps - optimized for proper safe area handling
   useEffect(() => {
@@ -236,7 +239,7 @@ export default function App() {
   // Initialize activePage from URL pathname
   const getInitialPage = (): NavPage => {
     const path = window.location.pathname.slice(1); // Remove leading slash
-    const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides'];
+    const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides', 'profile'];
     return validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
   };
 
@@ -260,29 +263,27 @@ export default function App() {
       setActivePage(page);
     });
     
-    // Update URL without reload
+    // Update URL using router
     const newPath = page === 'home' ? '/' : `/${page}`;
-    window.history.pushState({ page }, '', newPath);
-  }, [activePage]);
+    navigate(newPath);
+  }, [activePage, navigate]);
 
   // Memoized callback to consume notification task ID
   const handleOpenTaskIdConsumed = useCallback(() => {
     setNotificationOpenTaskId(null);
   }, []);
 
-  // Handle browser back/forward navigation
+  // Handle URL changes (both internal and external)
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const path = window.location.pathname.slice(1);
-      const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides'];
+    const path = location.pathname.slice(1);
+    const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides', 'profile'];
+    const newPage = validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
+    
+    if (newPage !== activePage) {
       setHasStartedInitialTasksLoad(false);
-      const newPage = validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
       setActivePage(newPage);
     }
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [location, activePage]);
 
   // Track initial tasks load completion (used to show Home skeleton before first data arrives)
   useEffect(() => {
@@ -522,6 +523,16 @@ export default function App() {
         return (
           <Suspense fallback={<RoutineSkeleton />}>
             <RoutinePage />
+          </Suspense>
+        );
+      case 'profile':
+        return (
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-[50vh]">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          }>
+            <ProfilePage />
           </Suspense>
         );
       default:

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { User, LogOut, Code, Settings, ChevronRight, Shield, BookOpen, Users, Layers } from 'lucide-react';
+import { User, LogOut, Code, Settings, ChevronRight, Shield, BookOpen, Users, Layers, UserCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getDepartmentById, getBatchById, getSectionById } from '../../services/department.service';
 import { DeveloperModal } from './DeveloperModal';
 import { SettingsModal } from '../settings/SettingsModal';
+import { useNavigate } from 'react-router-dom';
 
 interface ProfileMenuProps {
   onLogout: () => void;
@@ -14,6 +15,7 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
   const [showDeveloperModal, setShowDeveloperModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Get department, batch, and section names from user object (already loaded by useAuth)
   // These come from users_with_full_info view, eliminating 3 separate queries
@@ -22,6 +24,16 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
   const sectionName = (user as any)?.sectionName || null;
 
   const menuItems = [
+    {
+      id: 'profile',
+      label: 'My Profile',
+      icon: UserCircle,
+      description: 'View & Edit Profile',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/profile');
+      }
+    },
     {
       id: 'developer',
       label: 'Developer',
@@ -52,22 +64,24 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
   ];
 
   const userInitial = user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?';
+  // Force image reload by appending timestamp if avatar exists to bypass browser caching
+  const avatarUrl = user?.avatar ? `${user.avatar}${user.avatar.includes('?') ? '&' : '?'}t=${Date.now()}` : null;
 
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gray-50/90 dark:bg-gray-800/90 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:focus-visible:ring-blue-400/50 active:scale-95"
+        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50/90 dark:bg-gray-800/90 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:focus-visible:ring-blue-400/50 active:scale-95"
         aria-label="Open profile menu"
       >
         {user?.avatar ? (
           <img 
-            src={user.avatar} 
+            src={avatarUrl || user.avatar} 
             alt={user.name} 
-            className="w-6 h-6 sm:w-7 sm:h-7 rounded-md object-cover border border-white/30 dark:border-gray-700/80"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-white/30 dark:border-gray-700/80"
           />
         ) : (
-          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs sm:text-sm font-medium shadow-inner">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs sm:text-sm font-medium shadow-inner">
             {userInitial}
           </div>
         )}
@@ -96,12 +110,12 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
               <div className="flex items-center gap-3.5">
                 {user?.avatar ? (
                   <img 
-                    src={user.avatar} 
+                    src={avatarUrl || user.avatar} 
                     alt={user.name} 
-                    className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg object-cover shadow-md border-2 border-white/50 dark:border-gray-700"
+                    className="w-10 h-10 xs:w-12 xs:h-12 rounded-full object-cover shadow-md border-2 border-white/50 dark:border-gray-700"
                   />
                 ) : (
-                  <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md text-base xs:text-xl font-semibold">
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md text-base xs:text-xl font-semibold">
                     {userInitial}
                   </div>
                 )}

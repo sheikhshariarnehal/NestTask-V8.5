@@ -198,7 +198,8 @@ SELECT
   u.section_id AS "sectionId",
   s.name AS "sectionName",
   u.created_at AS "createdAt",
-  u.last_active AS "lastActive"
+  u.last_active AS "lastActive",
+  u.avatar
 FROM 
   public.users u
 LEFT JOIN 
