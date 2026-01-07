@@ -88,14 +88,15 @@ export const SideNavigation = React.memo(function SideNavigation({
   // Full list of management items
   const allManagementItems = useMemo(() => [
     { id: 'announcements' as const, label: 'Announcements', icon: Megaphone },
-    { id: 'lecture-slides' as const, label: 'Lecture Slides', icon: FileText }
+    { id: 'lecture-slides' as const, label: 'Lecture Slides', icon: FileText },
+    { id: 'fcm-management' as const, label: 'Push Notifications', icon: Bell }
   ], []);
 
-  // Section admin can only manage announcements and lecture slides
+  // Section admin can manage announcements, lecture slides, and FCM tokens
   const managementNavItems = useMemo(() => {
     if (isSectionAdmin) {
       return allManagementItems.filter(item =>
-        ['announcements', 'lecture-slides'].includes(item.id)
+        ['announcements', 'lecture-slides', 'fcm-management'].includes(item.id)
       );
     }
     return allManagementItems;

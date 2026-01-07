@@ -32,9 +32,8 @@ const UserList = lazy(() => import('../components/admin/UserList').then(module =
 const TaskManager = lazy(() => import('../components/admin/TaskManager').then(module => ({ default: module.TaskManager })));
 const TaskManagerEnhanced = lazy(() => import('../components/admin/TaskManagerEnhanced').then(module => ({ default: module.TaskManagerEnhanced })));
 const AnnouncementManager = lazy(() => import('../components/admin/announcement/AnnouncementManager').then(module => ({ default: module.AnnouncementManager })));
-
-
 const LectureSlidesManager = lazy(() => import('../components/admin/lecture-slides/LectureSlidesManager').then(module => ({ default: module.LectureSlidesManager })));
+const FCMTokenManager = lazy(() => import('../components/admin/fcm/FCMTokenManager'));
 
 
 
@@ -493,7 +492,13 @@ export function AdminDashboard({
           </div>
         )}
 
-
+        {activeTab === 'fcm-management' && isSectionAdmin && sectionId && user?.id && (
+          <FCMTokenManager
+            sectionId={sectionId}
+            sectionName={sectionName || 'Unknown Section'}
+            userId={user.id}
+          />
+        )}
 
         {activeTab === 'lecture-slides' && sectionId && (
           <LectureSlidesManager
@@ -541,6 +546,7 @@ export function AdminDashboard({
                  {activeTab === 'task-management-v2' && 'Tasks'}
                  {activeTab === 'announcements' && 'Announcements'}
                  {activeTab === 'lecture-slides' && 'Slides'}
+                 {activeTab === 'fcm-management' && 'Push Notifications'}
                </span>
             </nav>
             
@@ -552,6 +558,7 @@ export function AdminDashboard({
                   {activeTab === 'task-management-v2' && 'Task Management'}
                   {activeTab === 'announcements' && 'Announcements'}
                   {activeTab === 'lecture-slides' && 'Lecture Slides'}
+                  {activeTab === 'fcm-management' && 'Push Notifications'}
                 </h1>
                 {isSectionAdmin && sectionName && (
                    <span className="px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold border border-green-200 dark:border-green-800 tracking-wide">

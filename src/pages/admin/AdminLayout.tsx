@@ -88,6 +88,7 @@ export const AdminLayout = React.memo(function AdminLayout() {
     if (path.includes('/admin/task-management')) return 'task-management-v2';
     if (path.includes('/admin/announcements')) return 'announcements';
     if (path.includes('/admin/lecture-slides')) return 'lecture-slides';
+    if (path.includes('/admin/fcm-management')) return 'fcm-management';
     if (path.includes('/admin/super-admin')) return 'super-admin';
     return 'dashboard';
   };
@@ -128,6 +129,7 @@ export const AdminLayout = React.memo(function AdminLayout() {
       'task-management-v2': '/admin/task-management',
       'announcements': '/admin/announcements',
       'lecture-slides': '/admin/lecture-slides',
+      'fcm-management': '/admin/fcm-management',
       'super-admin': '/admin/super-admin'
     };
     

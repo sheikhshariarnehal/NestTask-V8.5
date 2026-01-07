@@ -51,6 +51,7 @@ const TasksPage = lazy(() => import(/* webpackChunkName: "admin-tasks" */ './pag
 const TaskManagementPage = lazy(() => import(/* webpackChunkName: "admin-task-mgmt" */ './pages/admin/TaskManagementPage').then(module => ({ default: module.TaskManagementPage })));
 const AnnouncementsPage = lazy(() => import(/* webpackChunkName: "admin-announcements" */ './pages/admin/AnnouncementsPage').then(module => ({ default: module.AnnouncementsPage })));
 const LectureSlidesPage = lazy(() => import(/* webpackChunkName: "admin-slides" */ './pages/admin/LectureSlidesPage').then(module => ({ default: module.LectureSlidesPage })));
+const FCMManagementPage = lazy(() => import(/* webpackChunkName: "admin-fcm" */ './pages/admin/FCMManagementPage'));
 const SuperAdminPage = lazy(() => import(/* webpackChunkName: "admin-super" */ './pages/admin/SuperAdminPage').then(module => ({ default: module.SuperAdminPage })));
 
 // Ensure environment variables are properly loaded in production
@@ -187,6 +188,10 @@ const router = createBrowserRouter([
       {
         path: 'lecture-slides',
         element: <Suspense fallback={<MicroLoader />}><LectureSlidesPage /></Suspense>
+      },
+      {
+        path: 'fcm-management',
+        element: <Suspense fallback={<MicroLoader />}><FCMManagementPage /></Suspense>
       },
       {
         path: 'super-admin',

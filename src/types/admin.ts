@@ -1,4 +1,4 @@
-export type AdminTab = 'dashboard' | 'users' | 'tasks' | 'task-management-v2' | 'announcements' | 'lecture-slides' | 'super-admin';
+export type AdminTab = 'dashboard' | 'users' | 'tasks' | 'task-management-v2' | 'announcements' | 'lecture-slides' | 'fcm-management' | 'super-admin';
 
 /**
  * Admin User type definition
