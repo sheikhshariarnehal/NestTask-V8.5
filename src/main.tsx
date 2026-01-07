@@ -2,8 +2,6 @@ import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { ErrorBoundary, EnvErrorFallback } from './components/ErrorBoundary';
 // Import CSS (Vite handles this correctly)
 import './index.css';
@@ -74,9 +72,13 @@ if (import.meta.env.PROD) {
   }
 }
 
-// Conditionally import Analytics only in production
-const Analytics = import.meta.env.PROD 
+// Lazy load Analytics and SpeedInsights only in production for web
+const AnalyticsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform()
   ? lazy(() => import('@vercel/analytics/react').then(mod => ({ default: mod.Analytics })))
+  : () => null;
+
+const SpeedInsightsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform()
+  ? lazy(() => import('@vercel/speed-insights/react').then(mod => ({ default: mod.SpeedInsights })))
   : () => null;
 
 const shouldRenderAnalytics = import.meta.env.PROD && !Capacitor.isNativePlatform();
@@ -290,8 +292,8 @@ function initApp() {
             {shouldRenderAnalytics && (
               <AnalyticsErrorBoundary>
                 <Suspense fallback={null}>
-                  <Analytics />
-                  <SpeedInsights />
+                  <AnalyticsComponent />
+                  <SpeedInsightsComponent />
                 </Suspense>
               </AnalyticsErrorBoundary>
             )}
