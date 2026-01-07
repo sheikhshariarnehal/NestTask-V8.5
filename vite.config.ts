@@ -10,6 +10,10 @@ type CompressionAlgorithm = 'gzip' | 'brotliCompress' | 'deflate' | 'deflateRaw'
 // Check if building for Capacitor (disable compression for mobile)
 const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
 
+// Disable manual chunking for web to avoid TDZ errors
+// Vite's automatic chunking is safer and prevents circular dependency issues
+const useManualChunks = isCapacitorBuild ? false : false; // Disabled for all builds
+
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
@@ -60,71 +64,16 @@ export default defineConfig({
     cssMinify: true,
     target: 'es2018',
     reportCompressedSize: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // In native WebView (Capacitor), avoid custom chunking to reduce the chance
-        // of circular-init ordering issues across chunks.
-        manualChunks: isCapacitorBuild ? undefined : (id) => {
-          // Simplified chunking strategy to avoid module initialization errors
-          
-          // Core React ecosystem - MUST stay together to avoid "Cannot read properties of undefined"
-          if (id.includes('node_modules/react') || 
-              id.includes('node_modules/scheduler') ||
-              id.includes('node_modules/react-dom') ||
-              id.includes('node_modules/react-router') ||
-              id.includes('node_modules/prop-types')) {
-            return 'react-vendor';
-          }
-          
-          // Ionic - depends on React, separate chunk
-          if (id.includes('node_modules/@ionic/') ||
-              id.includes('node_modules/ionicons/')) {
-            return 'ionic-vendor';
-          }
-          
-          // Supabase - standalone
-          if (id.includes('node_modules/@supabase/')) {
-            return 'supabase-vendor';
-          }
-          
-          // Capacitor plugins
-          if (id.includes('node_modules/@capacitor/')) {
-            return 'capacitor-vendor';
-          }
-          
-          // Framer Motion - animation library
-          if (id.includes('node_modules/framer-motion/')) {
-            return 'framer-vendor';
-          }
-          
-          // Date utilities
-          if (id.includes('node_modules/date-fns/')) {
-            return 'date-utils';
-          }
-          
-          // Icons - large bundle
-          if (id.includes('node_modules/lucide-react/')) {
-            return 'icons';
-          }
-          
-          // Charts - combine all chart-related libraries
-          if (id.includes('node_modules/recharts/') || 
-              id.includes('node_modules/d3-') ||
-              id.includes('node_modules/d3/') ||
-              id.includes('node_modules/victory-')) {
-            return 'charts';
-          }
-          
-          // Vercel Analytics - small, can be separate
-          if (id.includes('node_modules/@vercel/')) {
-            return 'vercel-vendor';
-          }
-          
-          // All other node_modules go to a common vendor chunk
-          if (id.includes('node_modules/')) {
-            return 'vendor';
-          }
-        },
+        // Disable manual chunking to prevent TDZ errors and circular dependency issues
+        // Vite's automatic chunking handles dependencies correctly
+        manualChunks: useManualChunks ? (id) => {
+          // This code path is currently disabled
+          // Manual chunking can cause "Cannot access before initialization" errors
+          return undefined;
+        } : undefined,
         // Ensure proper file types and names
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name || '';
@@ -155,8 +104,6 @@ export default defineConfig({
     },
     // Enable source map optimization
     sourcemap: process.env.NODE_ENV !== 'production',
-    // Enable chunk size optimization
-    chunkSizeWarningLimit: 1000,
     // Add asset optimization
     assetsInlineLimit: 4096,
     cssCodeSplit: true,

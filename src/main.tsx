@@ -316,6 +316,12 @@ function initApp() {
 // Add global error handler
 window.addEventListener('error', (event) => {
   console.error('Global error:', event.error);
+  
+  // Check if it's a TDZ error (module initialization issue)
+  if (event.error?.message?.includes('before initialization') || 
+      event.error?.message?.includes('circular dependency')) {
+    console.error('⚠️ Module initialization error detected. This usually indicates a build configuration issue.');
+  }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
