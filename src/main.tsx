@@ -2,6 +2,8 @@ import React, { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 // Import CSS (Vite handles this correctly)
 import './index.css';
 // Import Ionic CSS for components (non-critical, loaded after)
@@ -264,7 +266,10 @@ function initApp() {
         <RouterProvider router={router} />
         {shouldRenderAnalytics && (
           <AnalyticsErrorBoundary>
-            <Suspense fallback={null}><Analytics /></Suspense>
+            <Suspense fallback={null}>
+              <Analytics />
+              <SpeedInsights />
+            </Suspense>
           </AnalyticsErrorBoundary>
         )}
       </Suspense>
