@@ -126,9 +126,24 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
         }
       }
 
+      // Emit success event for coordination with data fetching
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
+          detail: { success: true } 
+        }));
+      }
+      
       return true;
     } catch (error: any) {
       console.error('[Supabase Lifecycle] Unexpected error during session validation:', error);
+      
+      // Emit failure event
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
+          detail: { success: false, error } 
+        }));
+      }
+      
       optionsRef.current.onAuthError?.(error);
       return false;
     } finally {
@@ -142,16 +157,33 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const handleResume = useCallback(async () => {
     console.log('[Supabase Lifecycle] App resumed, validating session...');
 
-    // In WebViews (Capacitor background/foreground) timers may pause.
-    // Restart supabase-js auto-refresh loop on resume.
-    try {
-      await supabase.auth.startAutoRefresh();
-      isAutoRefreshEnabledRef.current = true;
-    } catch (e) {
-      // startAutoRefresh isn't critical on all platforms; ignore if unavailable.
+    // Restart auto-refresh with retry logic for reliability
+    let autoRefreshStarted = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await supabase.auth.startAutoRefresh();
+        isAutoRefreshEnabledRef.current = true;
+        autoRefreshStarted = true;
+        console.log('[Supabase Lifecycle] Auto-refresh restarted successfully');
+        break;
+      } catch (e: any) {
+        console.warn(`[Supabase Lifecycle] Auto-refresh restart attempt ${attempt + 1} failed:`, e?.message);
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        }
+      }
+    }
+    
+    if (!autoRefreshStarted) {
+      console.error('[Supabase Lifecycle] Failed to restart auto-refresh after 3 attempts');
     }
 
-    await validateSession(true);
+    // Validate session (this will also refresh if needed)
+    const isValid = await validateSession(true);
+    
+    if (!isValid) {
+      console.error('[Supabase Lifecycle] Session validation failed on resume');
+    }
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('supabase-resume'));
@@ -194,6 +226,20 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       validateSession(true);
     }
   }, [enabled, validateSession]);
+
+  // Listen for validation requests from data hooks
+  useEffect(() => {
+    const handleValidationRequest = () => {
+      console.log('[Supabase Lifecycle] Validation requested by data hook');
+      validateSession(true);
+    };
+    
+    window.addEventListener('request-session-validation', handleValidationRequest);
+    
+    return () => {
+      window.removeEventListener('request-session-validation', handleValidationRequest);
+    };
+  }, [validateSession]);
 
   return {
     validateSession

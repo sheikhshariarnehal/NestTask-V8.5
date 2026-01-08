@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, testConnection } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
+import { createDebouncedEventHandler } from '../utils/eventDebounce';
 
 // Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
 const TASK_FETCH_TIMEOUT = 45000;
@@ -237,28 +238,67 @@ export function useTasks(userId: string | undefined) {
   // Refresh tasks when the app resumes or network reconnects.
   // This covers cases where the WebView stays "visible" while Capacitor is backgrounded.
   useEffect(() => {
-    const handleResumeRefresh = () => {
+    const handleResumeRefresh = async () => {
       const now = Date.now();
-      if (now - lastResumeRefreshRef.current < 1500) return;
+      
+      // Increase throttle to 3 seconds to prevent rapid-fire refreshes
+      if (now - lastResumeRefreshRef.current < 3000) {
+        console.log('[useTasks] Resume refresh throttled');
+        return;
+      }
       lastResumeRefreshRef.current = now;
 
       if (!userIdRef.current) return;
-      console.log('[useTasks] Resume/reconnect detected, forcing task refresh');
-      loadTasks({ force: true });
+      
+      console.log('[useTasks] Resume detected, validating session first...');
+      
+      // CRITICAL FIX: Wait for session validation to complete BEFORE fetching data
+      // This prevents RLS failures from expired tokens
+      try {
+        // Create a promise that resolves when session validation completes
+        const sessionValidPromise = new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            console.log('[useTasks] Session validation timeout, proceeding anyway');
+            resolve();
+          }, 2000); // 2s timeout
+          
+          const handler = () => {
+            clearTimeout(timeout);
+            window.removeEventListener('supabase-session-validated', handler);
+            console.log('[useTasks] Session validation complete');
+            resolve();
+          };
+          
+          window.addEventListener('supabase-session-validated', handler, { once: true });
+        });
+        
+        // Trigger session validation
+        window.dispatchEvent(new CustomEvent('request-session-validation'));
+        
+        // Wait for validation to complete (with timeout)
+        await sessionValidPromise;
+        
+        console.log('[useTasks] Session validated, now fetching tasks');
+        
+        // Now fetch tasks with fresh session
+        loadTasks({ force: true });
+      } catch (error) {
+        console.error('[useTasks] Session validation failed:', error);
+        // Still try to load tasks - might work if session was valid
+        loadTasks({ force: true });
+      }
     };
 
-    window.addEventListener('app-resume', handleResumeRefresh);
-    window.addEventListener('supabase-resume', handleResumeRefresh);
-    window.addEventListener('supabase-session-refreshed', handleResumeRefresh);
-    window.addEventListener('supabase-network-reconnect', handleResumeRefresh);
-    window.addEventListener('supabase-visibility-refresh', handleResumeRefresh);
+    // Create debounced handler to prevent duplicate calls within 3-second window
+    const debouncedRefresh = createDebouncedEventHandler(handleResumeRefresh, 1000);
+
+    // Only listen to critical events - removed redundant ones to prevent duplicate refreshes
+    window.addEventListener('app-resume', debouncedRefresh);
+    window.addEventListener('supabase-session-refreshed', debouncedRefresh);
 
     return () => {
-      window.removeEventListener('app-resume', handleResumeRefresh);
-      window.removeEventListener('supabase-resume', handleResumeRefresh);
-      window.removeEventListener('supabase-session-refreshed', handleResumeRefresh);
-      window.removeEventListener('supabase-network-reconnect', handleResumeRefresh);
-      window.removeEventListener('supabase-visibility-refresh', handleResumeRefresh);
+      window.removeEventListener('app-resume', debouncedRefresh);
+      window.removeEventListener('supabase-session-refreshed', debouncedRefresh);
     };
   }, [loadTasks]);
 

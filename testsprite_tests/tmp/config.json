@@ -2,17 +2,7 @@
   "status": "commited",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:5174",
+  "localEndpoint": "http://localhost:5173",
   "loginUser": "guser2@diu.edu.bd",
-  "loginPassword": "098765",
-  "executionArgs": {
-    "projectName": "NestTask-V8.5",
-    "projectPath": "E:\\Poject\\NESTTASK\\NestTask-V8.5",
-    "testIds": [],
-    "additionalInstruction": "Focus on testing data fetching issues when the app is minimized/restored or left idle for extended periods. Test app lifecycle, session management, cache invalidation, and data refresh mechanisms. Include tests for tab visibility changes, network reconnection, and Supabase session expiration.",
-    "envs": {
-      "API_KEY": "sk-user-e0YVygW4OrxQfilFUgv0YPsLxYDlXUXQ4NDyInBW7WVkeJakY9PQWhCUc63y8Pz5s7gbVH1Z4qB7PztGWv13OFfX-MaBf4lts14tDNboj70p-sFjSNINQqaSr3YOfpL-1w0"
-    }
-  },
-  "proxy": "http://c200e1ff-f9ba-4097-9484-44cdaf6ca3ee:WKoeiipAF3xWFgAGpuA7bcukNk1nNijr@tun.testsprite.com:8080"
+  "loginPassword": "098765"
 }

@@ -105,9 +105,9 @@ export function SuperAdminSidebar({
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-800 h-16">
         {!isCollapsed && (
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Super Admin</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Super Admin</h2>
         )}
         <button
           onClick={onToggleCollapse}

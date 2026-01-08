@@ -158,8 +158,8 @@ export function SuperAdminDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between">
+        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 lg:px-6 py-4 h-16">
+          <div className="flex items-center justify-between h-full">
             {/* Left Section */}
             <div className="flex items-center gap-4">
               {/* Mobile Menu Button */}
@@ -175,9 +175,6 @@ export function SuperAdminDashboard() {
                 <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                   {getPageTitle()}
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                  {getPageDescription()}
-                </p>
               </div>
             </div>
 

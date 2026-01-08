@@ -19,6 +19,7 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
 import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
+import { useBackgroundStateManager } from './hooks/useBackgroundStateManager';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { getPendingOpenTaskId } from './services/pushNavigationService';
@@ -248,6 +249,32 @@ export default function App() {
   const [notificationOpenTaskId, setNotificationOpenTaskId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
   const [hasCompletedInitialTasksLoad, setHasCompletedInitialTasksLoad] = useState(false);
+  const [isResumingFromBackground, setIsResumingFromBackground] = useState(false);
+
+  // Track background/foreground state
+  useBackgroundStateManager();
+
+  // Show user-friendly message when resuming from long background
+  useEffect(() => {
+    const handleBackgroundResume = (event: Event) => {
+      const customEvent = event as CustomEvent<{ duration: number; durationSeconds: number; requiresRefresh: boolean }>;
+      const { durationSeconds, requiresRefresh } = customEvent.detail;
+      
+      if (requiresRefresh) {
+        console.log(`[App] Resuming after ${durationSeconds}s background, refreshing data...`);
+        setIsResumingFromBackground(true);
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => setIsResumingFromBackground(false), 3000);
+      }
+    };
+    
+    window.addEventListener('app-resumed-from-background', handleBackgroundResume);
+    
+    return () => {
+      window.removeEventListener('app-resumed-from-background', handleBackgroundResume);
+    };
+  }, []);
   const [hasStartedInitialTasksLoad, setHasStartedInitialTasksLoad] = useState(false);
   const [statFilter, setStatFilter] = useState<StatFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -690,6 +717,19 @@ export default function App() {
   return (
     <IonApp>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 app-container safe-area-container flex flex-col">
+        {/* Background Resume Indicator */}
+        {isResumingFromBackground && (
+          <div className="fixed top-0 left-0 right-0 bg-blue-500 dark:bg-blue-600 text-white py-2 px-4 text-center z-50 shadow-lg animate-fadeIn">
+            <div className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm font-medium">Refreshing data...</span>
+            </div>
+          </div>
+        )}
+        
         {/* Navigation Header - Fixed at top */}
         <Navigation 
           onLogout={logout}
