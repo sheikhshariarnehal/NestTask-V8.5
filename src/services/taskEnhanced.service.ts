@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { dataCache, cacheKeys } from '../lib/dataCache';
 import type {
   EnhancedTask,
   TaskAssignment,
@@ -134,6 +135,7 @@ function withAbortSignal<TQuery>(query: TQuery, abortSignal?: AbortSignal): TQue
 
 /**
  * Fetch tasks with pagination, filtering, and sorting
+ * Now with intelligent caching and request deduplication
  */
 export async function fetchTasksEnhanced(
   userId: string,
@@ -144,9 +146,47 @@ export async function fetchTasksEnhanced(
     sort?: TaskSortOptions;
     sectionId?: string;
     abortSignal?: AbortSignal;
+    bypassCache?: boolean;
   } = {}
 ): Promise<PaginatedTasksResponse> {
-  const { page = 1, pageSize = 50, filters = {}, sort, sectionId, abortSignal } = options;
+  const { page = 1, pageSize = 50, filters = {}, sort, sectionId, abortSignal, bypassCache = false } = options;
+  
+  // Generate cache key based on all parameters
+  const filterKey = JSON.stringify({ filters, sort, sectionId, page, pageSize });
+  const cacheKey = cacheKeys.tasksEnhanced(userId, filterKey);
+  
+  // Try to get from cache first (skip if bypassing or if there's an abort signal)
+  if (!bypassCache && !abortSignal) {
+    try {
+      return await dataCache.getOrFetch(
+        cacheKey,
+        () => fetchTasksFromSupabase(userId, { page, pageSize, filters, sort, sectionId, abortSignal }),
+        60000 // 1 minute cache for task lists
+      );
+    } catch (error) {
+      // If cache fails, continue with direct fetch
+      console.warn('[TaskService] Cache fetch failed, fetching directly:', error);
+    }
+  }
+  
+  return fetchTasksFromSupabase(userId, { page, pageSize, filters, sort, sectionId, abortSignal });
+}
+
+/**
+ * Internal function to fetch tasks from Supabase
+ */
+async function fetchTasksFromSupabase(
+  userId: string,
+  options: {
+    page: number;
+    pageSize: number;
+    filters: TaskFilters;
+    sort?: TaskSortOptions;
+    sectionId?: string;
+    abortSignal?: AbortSignal;
+  }
+): Promise<PaginatedTasksResponse> {
+  const { page, pageSize, filters, sort, sectionId, abortSignal } = options;
   
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;

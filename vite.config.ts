@@ -113,14 +113,23 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react-dom/client',
       'react-router-dom',
       'date-fns',
       '@ionic/react',
       '@supabase/supabase-js',
       'lucide-react',
       'framer-motion',
-      '@radix-ui/react-dialog'
+      '@radix-ui/react-dialog',
+      '@capacitor/core',
+      '@capacitor/app',
+      '@capacitor/network',
+      '@capacitor/status-bar'
     ],
+    // Force pre-bundling of these dependencies for faster cold starts
+    esbuildOptions: {
+      target: 'es2020',
+    }
     // Don't exclude Vercel Analytics as it causes 404 errors in dev mode
     // exclude: ['@vercel/analytics']
   },

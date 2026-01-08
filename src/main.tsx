@@ -12,9 +12,13 @@ import '@ionic/react/css/structure.css';
 import '@ionic/react/css/typography.css';
 import { MicroLoader } from './components/MicroLoader';
 import { initPWA } from './utils/pwa';
+import { initResourcePreloading } from './utils/resourcePreloader';
 import { supabase } from './lib/supabase';
 import type { LoginCredentials, SignupCredentials } from './types/auth';
 import { initPushNotificationListeners } from './services/pushNavigationService';
+
+// Initialize performance optimizations early
+initResourcePreloading();
 
 // Prefetch critical modules during idle time
 const prefetchModules = () => {

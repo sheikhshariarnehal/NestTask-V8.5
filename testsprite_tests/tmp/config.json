@@ -4,5 +4,15 @@
   "scope": "codebase",
   "localEndpoint": "http://localhost:5173",
   "loginUser": "guser2@diu.edu.bd",
-  "loginPassword": "098765"
+  "loginPassword": "098765",
+  "executionArgs": {
+    "projectName": "NestTask-V8.5",
+    "projectPath": "E:\\Poject\\NESTTASK\\NestTask-V8.5",
+    "testIds": [],
+    "additionalInstruction": "Focus specifically on testing task loading behavior after prolonged app idle time, app lifecycle (background/foreground transitions), memory leaks, stuck loading states, and cache expiration scenarios. Test the app's behavior when:\n1. App remains open for more than 5 minutes without interaction\n2. App goes to background and returns after extended period\n3. Multiple rapid resume/pause cycles\n4. Network disconnection and reconnection\n5. Cache expiration scenarios\n6. Stuck loading states that require force refresh",
+    "envs": {
+      "API_KEY": "sk-user-e0YVygW4OrxQfilFUgv0YPsLxYDlXUXQ4NDyInBW7WVkeJakY9PQWhCUc63y8Pz5s7gbVH1Z4qB7PztGWv13OFfX-MaBf4lts14tDNboj70p-sFjSNINQqaSr3YOfpL-1w0"
+    }
+  },
+  "proxy": "http://3cf4a16f-cd68-4817-9051-8f7992b81143:ggJesYDt53qigEoB0KW7RDKUmFQ5Kmdp@tun.testsprite.com:8080"
 }

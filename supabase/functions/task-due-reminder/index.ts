@@ -229,7 +229,7 @@ serve(async (req) => {
         .from('task_reminder_logs')
         .select('task_id')
         .in('task_id', taskIds)
-        .eq('reminder_date', todayStr)
+        .eq('reminder_date', tomorrowStr)
 
       if (logsError) {
         console.warn('⚠️ Error checking logs:', logsError.message)
@@ -372,7 +372,7 @@ serve(async (req) => {
       const status = taskFailed === 0 ? 'sent' : (taskSent > 0 ? 'partial' : 'failed')
       await supabase.from('task_reminder_logs').insert({
         task_id: task.id,
-        reminder_date: todayStr,
+        reminder_date: tomorrowStr,
         recipients_count: taskSent,
         status
       })

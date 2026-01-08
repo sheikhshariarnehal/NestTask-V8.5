@@ -109,6 +109,7 @@ const TaskManagerEnhancedComponent = ({
         sort,
         sectionId,
         abortSignal: abortController.signal,
+        bypassCache: refresh, // Bypass cache on manual refresh
       });
 
       // Only update state if component is still mounted and request wasn't cancelled

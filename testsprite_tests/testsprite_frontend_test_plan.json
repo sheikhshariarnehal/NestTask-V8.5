@@ -1,519 +1,625 @@
 [
   {
     "id": "TC001",
-    "title": "User Login with Valid Credentials",
-    "description": "Verify that a user can successfully log in using valid credentials for each role (User, Admin, Super Admin).",
+    "title": "User Login Success",
+    "description": "Verify that users can log in successfully with valid credentials and are redirected to their role-specific dashboard.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the login page."
+        "description": "Navigate to the login page"
       },
       {
         "type": "action",
-        "description": "Input valid username/email and password."
+        "description": "Enter a valid email and password"
       },
       {
         "type": "action",
-        "description": "Click the login button."
+        "description": "Click the login button"
       },
       {
         "type": "assertion",
-        "description": "Verify login is successful and the correct dashboard is displayed based on user role."
+        "description": "Ensure user is authenticated and redirected to the correct dashboard based on role (User, Admin, Super Admin)"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "User Signup and Role Assignment",
-    "description": "Test the user signup process and verify that the default role is assigned correctly.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to the signup page."
-      },
-      {
-        "type": "action",
-        "description": "Input valid new user credentials and submit the signup form."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify signup is successful and the user receives a default role with appropriate access."
-      }
-    ]
-  },
-  {
-    "id": "TC003",
-    "title": "Password Recovery Flow",
-    "description": "Verify that the password recovery process works correctly via email verification.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to the password recovery page."
-      },
-      {
-        "type": "action",
-        "description": "Enter registered email and request password recovery."
-      },
-      {
-        "type": "action",
-        "description": "Complete password reset via received email link."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify user can set a new password and successfully log in using the new password."
-      }
-    ]
-  },
-  {
-    "id": "TC004",
-    "title": "Incorrect Login Credentials Handling",
-    "description": "Verify that login fails gracefully when entering incorrect username or password.",
+    "title": "User Login Failure with Invalid Credentials",
+    "description": "Verify the system rejects login attempts with invalid credentials and displays appropriate error messages.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the login page."
+        "description": "Navigate to the login page"
       },
       {
         "type": "action",
-        "description": "Enter invalid username/email or password."
+        "description": "Enter an invalid email or password"
       },
       {
         "type": "action",
-        "description": "Click login."
+        "description": "Click the login button"
       },
       {
         "type": "assertion",
-        "description": "Verify an appropriate error message is displayed and login is not successful."
+        "description": "Verify login is denied and an error message is displayed notifying wrong credentials"
       }
     ]
   },
   {
-    "id": "TC005",
-    "title": "Task Creation, Edit, and Deletion",
-    "description": "Verify users can create, edit, and delete tasks with accurate status and deadline updates.",
+    "id": "TC003",
+    "title": "Password Recovery Process",
+    "description": "Verify the password recovery workflow sends recovery instructions to registered email and allows password reset.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Log in as a standard user."
+        "description": "Navigate to the password recovery page"
       },
       {
         "type": "action",
-        "description": "Create a new task with title, description, category, and deadline."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm task appears in task list with correct details and status set to 'In Progress'."
+        "description": "Enter a registered email address"
       },
       {
         "type": "action",
-        "description": "Edit the created task to change status to 'Completed' and update deadline."
+        "description": "Submit the recovery request"
       },
       {
         "type": "assertion",
-        "description": "Verify task reflects updated status and deadline correctly."
+        "description": "Confirm that a recovery email is sent"
       },
       {
         "type": "action",
-        "description": "Delete the created task."
+        "description": "Follow the recovery link and reset the password"
       },
       {
         "type": "assertion",
-        "description": "Confirm task is removed from the list."
+        "description": "Verify user can log in using the new password"
       }
     ]
   },
   {
-    "id": "TC006",
-    "title": "Task Status Transitions and Deadline Visual Indicators",
-    "description": "Verify tasks properly update statuses (In Progress, Completed, Overdue) and visually indicate deadlines.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Create tasks with deadlines set to a future date, past date, and the current date."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify tasks with deadlines in the past show 'Overdue' status and visual indicators (e.g., red highlight)."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify tasks with future deadlines show 'In Progress' status."
-      },
-      {
-        "type": "action",
-        "description": "Mark an 'In Progress' task as 'Completed'."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm the task status updates to 'Completed' and visual indicators correspond."
-      }
-    ]
-  },
-  {
-    "id": "TC007",
-    "title": "Task Drag-and-Drop Reordering Persistence",
-    "description": "Verify that drag-and-drop reordering of tasks persists across page reloads in Kanban and table views.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to the Kanban board or table view."
-      },
-      {
-        "type": "action",
-        "description": "Drag and reorder tasks within a category or status column."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm tasks reorder visually immediately."
-      },
-      {
-        "type": "action",
-        "description": "Reload the page."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify tasks maintain the new order after reload."
-      }
-    ]
-  },
-  {
-    "id": "TC008",
-    "title": "Academic Course and Routine Management CRUD",
-    "description": "Verify creating, reading, updating, and deleting courses and class routines including bulk imports.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Log in as Admin."
-      },
-      {
-        "type": "action",
-        "description": "Create a new course with associated details."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm the course appears correctly in the course list."
-      },
-      {
-        "type": "action",
-        "description": "Update the course details."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify updated details are reflected properly."
-      },
-      {
-        "type": "action",
-        "description": "Bulk import multiple courses and routines using valid import files."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm bulk data imported accurately with correct associations."
-      },
-      {
-        "type": "action",
-        "description": "Delete a course and routine."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm they are removed from the system."
-      }
-    ]
-  },
-  {
-    "id": "TC009",
-    "title": "Study Materials and Lecture Slides Upload and Preview",
-    "description": "Verify upload, organization, and preview functionalities for study materials and lecture slides tied to courses and sections.",
-    "category": "functional",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Log in as Educator."
-      },
-      {
-        "type": "action",
-        "description": "Upload study materials and lecture slides linked to specific courses and sections."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify uploaded files are visible in corresponding lists."
-      },
-      {
-        "type": "action",
-        "description": "Preview lecture slides."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm preview loads correctly without errors."
-      },
-      {
-        "type": "action",
-        "description": "Delete uploaded materials and slides."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm deletion is successful and files are removed from UI."
-      }
-    ]
-  },
-  {
-    "id": "TC010",
-    "title": "Announcement Creation and Section-based Filtering",
-    "description": "Verify creating announcements and accurate filtering by user sections.",
-    "category": "functional",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Log in as Admin."
-      },
-      {
-        "type": "action",
-        "description": "Create a new announcement specifying target sections."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify announcement appears in announcement list and is visible to users in target sections."
-      },
-      {
-        "type": "action",
-        "description": "Filter announcements by section."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm list updates correctly to show only announcements relevant to selected sections."
-      }
-    ]
-  },
-  {
-    "id": "TC011",
-    "title": "Admin Dashboard User Role Promotion and Demotion",
-    "description": "Verify Admin can promote and demote users between roles and the system enforces appropriate permissions.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Log in as Admin."
-      },
-      {
-        "type": "action",
-        "description": "Select a user and promote their role from User to Admin."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm updated role reflects immediately and user gains Admin privileges."
-      },
-      {
-        "type": "action",
-        "description": "Demote the same user back to User role."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the user loses admin privileges appropriately."
-      }
-    ]
-  },
-  {
-    "id": "TC012",
-    "title": "Super Admin Audit Logs and Admin Management",
-    "description": "Verify Super Admin can view system audit logs and manage admin users including creation and role editing.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Log in as Super Admin."
-      },
-      {
-        "type": "action",
-        "description": "Access audit logs and verify recent system actions are correctly recorded."
-      },
-      {
-        "type": "action",
-        "description": "Create a new Admin user."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm new Admin can log in and has correct role permissions."
-      },
-      {
-        "type": "action",
-        "description": "Edit existing Admin's role and permissions."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify changes are saved and enforced properly."
-      }
-    ]
-  },
-  {
-    "id": "TC013",
-    "title": "Push and In-App Notifications Delivery",
-    "description": "Verify that push notifications via Capacitor and Firebase, and in-app alerts for deadlines and announcements are correctly triggered and received.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Set a task deadline that triggers a notification."
-      },
-      {
-        "type": "action",
-        "description": "Create an announcement targeted to the user."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm user receives push notifications on supported devices for both task deadlines and announcements."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify in-app notifications appear correctly within the application."
-      }
-    ]
-  },
-  {
-    "id": "TC014",
-    "title": "Responsive Side Navigation Behavior",
-    "description": "Verify that side navigation menus collapse and expand correctly and respond properly on mobile, tablet, and desktop devices.",
-    "category": "ui",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Access the application on desktop, tablet, and mobile screen sizes."
-      },
-      {
-        "type": "action",
-        "description": "Toggle the side navigation menu open and closed."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm the menu collapses and expands smoothly with appropriate animations."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify navigation functions correctly on all device types and sizes."
-      }
-    ]
-  },
-  {
-    "id": "TC015",
-    "title": "Search and Filtering Across Tasks, Courses, and Materials",
-    "description": "Verify the accuracy and responsiveness of search and filtering functionalities across tasks, courses, and study materials.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Input search terms in the search bar for tasks, courses, and study materials."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm search results accurately reflect query with relevant data displayed."
-      },
-      {
-        "type": "action",
-        "description": "Apply various filtering criteria such as categories, status, sections, and date ranges."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify filtered results match the specified filters with no unexpected data."
-      }
-    ]
-  },
-  {
-    "id": "TC016",
-    "title": "Performance Under Large Data Volumes",
-    "description": "Verify that lazy loading, client-side caching, and virtualization mechanisms ensure smooth UI performance with large datasets.",
-    "category": "performance",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Populate the system with a large number of tasks, users, courses, and materials."
-      },
-      {
-        "type": "action",
-        "description": "Navigate through lists, boards, and dashboards."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify UI freezes or delays are minimal and data loads progressively without blocking."
-      },
-      {
-        "type": "assertion",
-        "description": "Ensure client-side caching reduces repeated loading time on revisits."
-      }
-    ]
-  },
-  {
-    "id": "TC017",
-    "title": "Offline Support and UI Animation Verification",
-    "description": "Verify that the application supports offline use for allowed features and UI animations run smoothly across supported devices.",
-    "category": "functional",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Simulate offline mode on device."
-      },
-      {
-        "type": "action",
-        "description": "Access cached data such as tasks and announcements."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm that the user can view and interact with cached content appropriately."
-      },
-      {
-        "type": "action",
-        "description": "Navigate through UI and trigger common animations."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify animations are smooth and without glitches on desktop and mobile."
-      }
-    ]
-  },
-  {
-    "id": "TC018",
-    "title": "Security: Data Privacy and Backend Access Controls",
-    "description": "Verify secure data handling, environment variable protection, and backend access control using Supabase Row Level Security (RLS).",
+    "id": "TC004",
+    "title": "Role-Based Access Control Enforced",
+    "description": "Verify that access to features and pages is restricted based on user roles: User, Admin, and Super Admin.",
     "category": "security",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Attempt to access data outside authenticated user scope."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm access is denied according to RLS policies."
+        "description": "Log in as a normal User"
       },
       {
         "type": "action",
-        "description": "Test environment variables are not exposed in client bundles."
+        "description": "Attempt to access Admin and Super Admin dashboard pages"
       },
       {
         "type": "assertion",
-        "description": "Validate sensitive configuration data is protected."
+        "description": "Confirm access is denied or redirected to user-appropriate pages"
+      },
+      {
+        "type": "action",
+        "description": "Log in as Admin user"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access Super Admin pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm access is denied for Super Admin functionalities"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Task Creation and Categorization",
+    "description": "Verify that users can create tasks with appropriate categorization, deadlines, and initial status.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the task creation interface"
+      },
+      {
+        "type": "action",
+        "description": "Input task details including title, description, category, deadline, and status"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new task"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the task appears in the task list with correct details and category"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Task Status Update Workflow",
+    "description": "Verify that tasks can be updated with status changes to In Progress, Completed, and Overdue, and visual indicators are updated accordingly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open an existing task"
+      },
+      {
+        "type": "action",
+        "description": "Change its status to In Progress"
+      },
+      {
+        "type": "action",
+        "description": "Save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm status change and corresponding visual indicator update"
+      },
+      {
+        "type": "action",
+        "description": "Repeat status update to Completed and Overdue"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure each status change reflects correctly with visual markers and deadline logic"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Drag-and-Drop Task Reordering",
+    "description": "Verify that users can reorder tasks using drag-and-drop with @dnd-kit and the order persists after reload.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the task list in Kanban or table view"
+      },
+      {
+        "type": "action",
+        "description": "Use drag-and-drop to reorder tasks"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm that tasks visually reorder as expected"
+      },
+      {
+        "type": "action",
+        "description": "Refresh the page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the new task order is maintained"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Academic Management CRUD Operations",
+    "description": "Verify creation, update, and deletion of academic entities including courses, routines, teachers, study materials, and lecture slides.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create a new course with associated teacher and section"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm course appears in course list"
+      },
+      {
+        "type": "action",
+        "description": "Edit the course details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are correctly saved and reflected"
+      },
+      {
+        "type": "action",
+        "description": "Upload study materials and lecture slides linked to the course"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm uploaded materials are accessible and properly organized"
+      },
+      {
+        "type": "action",
+        "description": "Delete the created course and materials"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify deletion removes all associated records cleanly"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Bulk Import for Courses and Teachers",
+    "description": "Verify that bulk import of courses and teachers works correctly, with error handling for invalid or duplicate entries.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to bulk import interface for courses"
+      },
+      {
+        "type": "action",
+        "description": "Upload a valid bulk file with multiple courses"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm all valid records are imported successfully"
+      },
+      {
+        "type": "action",
+        "description": "Upload a bulk file with invalid and duplicate entries"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify proper error messages shown and invalid entries rejected"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Announcement Creation and Filtering",
+    "description": "Verify announcements can be created, edited, and filtered by user sections accurately.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create an announcement with text and assign to one or multiple sections"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm announcement appears in announcement list"
+      },
+      {
+        "type": "action",
+        "description": "Edit the announcement content and section assignments"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are visible"
+      },
+      {
+        "type": "action",
+        "description": "Apply section filters on the announcement list"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm only announcements for selected sections are displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Admin Dashboard Analytics and User Management",
+    "description": "Verify that the admin dashboard displays real-time user statistics, visual analytics, and allows role changes and user deletion.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access admin dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify statistical data and graphs loaded correctly with Chart.js visualizations"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to user management section"
+      },
+      {
+        "type": "action",
+        "description": "Promote a user to Admin role and demote back"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm changes are persisted and reflected in role-based access"
+      },
+      {
+        "type": "action",
+        "description": "Delete a user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is removed and dashboard reflects updated user count"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Super Admin Full System Control and Audit Logs",
+    "description": "Verify that Super Admin can access full system analytics, manage admin users, view audit logs, and configure system settings.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as Super Admin"
+      },
+      {
+        "type": "action",
+        "description": "Access system-wide analytics and review metrics"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify analytics data is comprehensive and accurately displayed"
+      },
+      {
+        "type": "action",
+        "description": "Create a new Admin user"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm new Admin user appears in admin management list"
+      },
+      {
+        "type": "action",
+        "description": "Access audit logs and verify recent system activities are logged"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm audit logs are detailed and accessible"
+      },
+      {
+        "type": "action",
+        "description": "Modify system-wide settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify changes are applied and system behavior reflects settings"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Notification System Delivery and Display",
+    "description": "Verify push notifications via Capacitor and Firebase, as well as in-app alerts for deadlines and announcements are triggered and received correctly across platforms.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger a deadline notification for a task"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm user receives push notification on supported devices"
+      },
+      {
+        "type": "action",
+        "description": "Trigger an announcement notification"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify in-app alert is displayed immediately"
+      },
+      {
+        "type": "action",
+        "description": "Test notification reception in offline and online states"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm notifications are received when device reconnects"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Side Navigation Responsiveness and Functionality",
+    "description": "Verify side navigation menus collapse/expand properly and are responsive on desktop, tablet, and mobile devices.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the app on desktop screen size"
+      },
+      {
+        "type": "action",
+        "description": "Interact with side navigation to collapse and expand menus"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify menus collapse and expand smoothly with correct items shown"
+      },
+      {
+        "type": "action",
+        "description": "Resize viewport to tablet and mobile sizes"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm side navigation adapts responsiveness and toggles mobile menu visibility appropriately"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Search and Filtering Functionality Across Modules",
+    "description": "Verify search and filtering capabilities work correctly on tasks, courses, and study materials with accurate results.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Input search keywords in task search"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify task list updates to display matching results"
+      },
+      {
+        "type": "action",
+        "description": "Filter courses by teacher and section"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm course list reflects the selected filter options"
+      },
+      {
+        "type": "action",
+        "description": "Search study materials by title or course"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify materials list shows only relevant items"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Performance Test: Lazy Loading and Virtualized Lists",
+    "description": "Verify that large data sets load efficiently using lazy loading, client-side caching, and virtualization to maintain UI responsiveness.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load task lists, academic content, and admin dashboards with large datasets"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI loads incrementally (lazy loading) and remains responsive without freezes"
+      },
+      {
+        "type": "action",
+        "description": "Scroll through lists with many items"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm virtualization techniques render visible items only to optimize performance"
+      },
+      {
+        "type": "action",
+        "description": "Reload content to verify client-side caching is effective"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure cached data displays promptly without unnecessary network calls"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Offline Support and Data Synchronization",
+    "description": "Verify that the application supports offline usage and syncs data properly when connection is restored.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate offline mode and perform task creation and editing"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm new or updated tasks are saved locally without errors"
+      },
+      {
+        "type": "action",
+        "description": "Restore internet connectivity"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that offline changes synchronize with the backend and appear to other users"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Security Validation: Data Privacy and Environment Protection",
+    "description": "Verify that sensitive data is protected, environment variables are secure, and backend access is regulated through Supabase RLS policies.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to access data outside authorized user permissions"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm access is denied per Role-Level Security policies"
+      },
+      {
+        "type": "action",
+        "description": "Inspect environment config files for hardcoded sensitive information"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure environment variables are stored securely and not exposed in client bundles"
+      },
+      {
+        "type": "action",
+        "description": "Simulate common security attacks (e.g. SQL injection, XSS) on input forms"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify protection mechanisms successfully prevent security breaches"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "UI Smooth Animations and Accessibility",
+    "description": "Verify UI animations are smooth using Framer Motion and the interface meets accessibility standards across devices.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate through different UI components to trigger animations"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm animations are smooth and free from lag or jitter"
+      },
+      {
+        "type": "action",
+        "description": "Test UI elements with keyboard navigation and screen readers"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure all interactive elements are reachable and readable, meeting WCAG guidelines"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Validation of Deadline Visual Indicators",
+    "description": "Verify that deadlines in tasks show correct visual indicators for upcoming, overdue, and completed statuses.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create tasks with future, today’s, and past deadlines"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm each deadline is visually distinct according to status: upcoming, due today, or overdue"
+      },
+      {
+        "type": "action",
+        "description": "Mark tasks as completed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify completed tasks show appropriate visual indicators, overriding deadline status if necessary"
       }
     ]
   }

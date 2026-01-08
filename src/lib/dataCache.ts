@@ -44,6 +44,7 @@ class DataCache {
   /**
    * Get or set with a factory function
    * This helps prevent duplicate API calls for the same data
+   * Enhanced with aggressive deduplication
    */
   async getOrFetch<T>(
     key: string,
@@ -59,13 +60,14 @@ class DataCache {
     // Check if there's an in-flight request for this key
     const item = this.cache.get(key);
     if (item?.promise) {
+      // Return the existing promise to deduplicate requests
       return item.promise;
     }
 
     // Create new request and store the promise
     const promise = fetchFn();
     
-    // Store the promise temporarily
+    // Store the promise with data placeholder
     this.cache.set(key, {
       data: null,
       timestamp: Date.now(),
@@ -74,8 +76,11 @@ class DataCache {
 
     try {
       const data = await promise;
-      // Store the resolved data
-      this.set(key, data);
+      // Store the resolved data and clear the promise
+      this.cache.set(key, {
+        data,
+        timestamp: Date.now()
+      });
       return data;
     } catch (error) {
       // Remove failed request from cache
@@ -176,6 +181,9 @@ export const cacheKeys = {
   section: (sectionId: string) => `section:${sectionId}`,
   sections: (batchId?: string) => batchId ? `sections:batch:${batchId}` : 'sections:all',
   tasks: (userId: string) => `tasks:${userId}`,
+  tasksEnhanced: (userId: string, filters?: string) => filters ? `tasks_enhanced:${userId}:${filters}` : `tasks_enhanced:${userId}`,
+  taskById: (taskId: string) => `task:${taskId}`,
   announcements: () => 'announcements:all',
   sectionUsers: (sectionId: string) => `section_users:${sectionId}`,
+  userRole: (userId: string) => `user_role:${userId}`,
 };
