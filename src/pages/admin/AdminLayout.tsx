@@ -190,20 +190,7 @@ export const AdminLayout = React.memo(function AdminLayout() {
             </div>
   
             <div className="flex items-center gap-4">
-              <div className="hidden lg:block h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2" />
-              
-              <div className="flex items-center gap-4">
-                <div className="hidden lg:flex flex-col items-end mr-1">
-                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                     <Calendar className="w-3 h-3" />
-                     <span>Today</span>
-                   </div>
-                   <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-                     {formattedDate}
-                   </span>
-                </div>
-    
-                <div className="relative" ref={profileMenuRef}>
+              <div className="relative" ref={profileMenuRef}>
                     <button
                         onClick={() => setShowProfileMenu(!showProfileMenu)}
                         className="flex items-center gap-3 pl-3 pr-1 py-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700 group"
@@ -268,7 +255,6 @@ export const AdminLayout = React.memo(function AdminLayout() {
                         </div>
                     )}
                 </div>
-              </div>
             </div>
           </header>
 

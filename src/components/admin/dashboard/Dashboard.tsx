@@ -154,72 +154,72 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
   }, []);
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-4 pb-6">
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-3.5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</h3>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{users.length}</div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Total Users</h3>
+              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{users.length}</div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/10 flex items-center justify-center shadow-sm">
-              <Users className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/10 flex items-center justify-center shadow-sm">
+              <Users className="w-4 h-4 text-blue-500 dark:text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-3.5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Today</h3>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{activeUsers}</div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Active Today</h3>
+              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{activeUsers}</div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-green-50 dark:bg-green-900/10 flex items-center justify-center shadow-sm">
-              <Users className="w-5 h-5 text-green-500 dark:text-green-400" />
+            <div className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/10 flex items-center justify-center shadow-sm">
+              <Users className="w-4 h-4 text-green-500 dark:text-green-400" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-3.5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">New This Week</h3>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{newUsersThisWeek}</div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">New This Week</h3>
+              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{newUsersThisWeek}</div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/10 flex items-center justify-center shadow-sm">
-              <Clock className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+            <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/10 flex items-center justify-center shadow-sm">
+              <Clock className="w-4 h-4 text-purple-500 dark:text-purple-400" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-3.5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tasks</h3>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{tasks.length}</div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Total Tasks</h3>
+              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{tasks.length}</div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/10 flex items-center justify-center shadow-sm">
-              <Briefcase className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+            <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/10 flex items-center justify-center shadow-sm">
+              <Briefcase className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* User Analytics Section - 2/3 width on desktop */}
         <div className="lg:col-span-2">
           {/* Analytics Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">User Analytics</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Track user growth and activities</p>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">User Analytics</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Track user growth and activities</p>
             </div>
             
-            <div className="flex justify-end items-center gap-2 mt-2 sm:mt-0">
+            <div className="flex justify-end items-center gap-1.5 mt-1.5 sm:mt-0">
               <button 
-                className={`p-2 rounded-lg ${
+                className={`p-1.5 rounded-lg ${
                   chartType === 'bar' 
                     ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' 
                     : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -227,10 +227,10 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
                 onClick={() => setChartType('bar')}
                 title="Bar Chart"
               >
-                <BarChart2 className="w-4 h-4" />
+                <BarChart2 className="w-3.5 h-3.5" />
               </button>
               <button 
-                className={`p-2 rounded-lg ${
+                className={`p-1.5 rounded-lg ${
                   chartType === 'line' 
                     ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' 
                     : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -238,10 +238,10 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
                 onClick={() => setChartType('line')}
                 title="Line Chart"
               >
-                <TrendingUp className="w-4 h-4" />
+                <TrendingUp className="w-3.5 h-3.5" />
               </button>
               <select
-                className="ml-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg text-gray-600 dark:text-gray-300 p-2 focus:ring-blue-500 focus:border-blue-500"
+                className="ml-1 text-xs bg-gray-100 dark:bg-gray-800 border-none rounded-lg text-gray-600 dark:text-gray-300 p-1.5 focus:ring-blue-500 focus:border-blue-500"
                 value={analyticsTimeRange}
                 onChange={(e) => setAnalyticsTimeRange(e.target.value as 'year' | '6months' | '30days')}
               >
@@ -263,24 +263,26 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
         {/* Tasks Overview Section - 1/3 width on desktop */}
         <div className="lg:col-span-1 animate-slide-up" style={{animationDelay: '0.3s'}}>
           {isLoadingTasks ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm p-5 sm:p-6 h-[560px] flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm p-3 sm:p-4 h-80 md:h-[560px] lg:h-[610px] flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
           ) : (
-            <TaskOverview 
-              tasks={tasks} 
-              onTaskUpdated={handleTaskUpdated} 
-            />
+            <div className="h-80 md:h-[560px] lg:h-[610px]">
+              <TaskOverview 
+                tasks={tasks} 
+                onTaskUpdated={handleTaskUpdated} 
+              />
+            </div>
           )}
         </div>
       </div>
 
       {/* Task Category Analytics */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 sm:p-6 animate-fade-in" style={{animationDelay: '0.5s'}}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 sm:p-5 animate-fade-in" style={{animationDelay: '0.5s'}}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Task Categories</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Task Categories</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Distribution of tasks by category 
               {selectedTimeRange === 'week' 
                 ? ' (Last 7 days)' 
@@ -290,10 +292,10 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
             </p>
           </div>
           
-          <div className="mt-2 sm:mt-0 flex items-center gap-2">
-            <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+          <div className="mt-1.5 sm:mt-0 flex items-center gap-1.5">
+            <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
               <button 
-                className={`text-xs px-3 py-1.5 rounded-md transition-all ${
+                className={`text-xs px-2.5 py-1 rounded-md transition-all ${
                   selectedTimeRange === 'week' 
                     ? 'bg-blue-500 text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -303,7 +305,7 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
                 Week
               </button>
               <button 
-                className={`text-xs px-3 py-1.5 rounded-md transition-all ${
+                className={`text-xs px-2.5 py-1 rounded-md transition-all ${
                   selectedTimeRange === 'month' 
                     ? 'bg-blue-500 text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -313,7 +315,7 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
                 Month
               </button>
               <button 
-                className={`text-xs px-3 py-1.5 rounded-md transition-all ${
+                className={`text-xs px-2.5 py-1 rounded-md transition-all ${
                   selectedTimeRange === 'all' 
                     ? 'bg-blue-500 text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -326,7 +328,7 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4">
             <div className="h-52 flex items-center justify-center relative">
               {/* Interactive SVG Pie Chart implementation */}

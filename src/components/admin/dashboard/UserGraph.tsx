@@ -471,25 +471,25 @@ export const UserGraph = memo(function UserGraph({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+      <div className="px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
           <div className="relative">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white flex items-center">
-              <TrendingUp className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5 sm:mr-2 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center">
+              <TrendingUp className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1 sm:mr-1.5 text-blue-600 dark:text-blue-400" />
               User Growth Trends
               <button 
                 ref={infoButtonRef}
-                className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                className="ml-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                 onClick={() => setShowInfoTooltip(!showInfoTooltip)}
                 aria-label="Information about user growth"
               >
-                <Info className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                <Info className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
               </button>
             </h3>
             {showInfoTooltip && (
-              <div className="absolute z-10 mt-2 w-60 sm:w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-300 animate-slide-in-right left-0 sm:left-auto">
+              <div className="absolute z-10 mt-1.5 w-56 sm:w-60 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-300 animate-slide-in-right left-0 sm:left-auto">
                 <p>This chart shows the total number of registered users over time, with the green line indicating new registrations within each period.</p>
-                <p className="mt-2">Highlighted points show periods of significant growth.</p>
+                <p className="mt-1">Highlighted points show periods of significant growth.</p>
               </div>
             )}
           </div>
@@ -497,9 +497,9 @@ export const UserGraph = memo(function UserGraph({
         </div>
       </div>
 
-      <div className="px-3 sm:px-6 py-3 sm:py-5">
-        <div className="bg-gray-50 dark:bg-gray-850 rounded-xl p-3 sm:p-5">
-          <div className="h-60 sm:h-80 md:h-96 w-full">
+      <div className="px-2 sm:px-4 py-2 sm:py-3">
+        <div className="bg-gray-50 dark:bg-gray-850 rounded-xl p-2 sm:p-3">
+          <div className="h-64 sm:h-80 md:h-96 lg:h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               {chartType === 'bar' ? (
                 <ComposedChart

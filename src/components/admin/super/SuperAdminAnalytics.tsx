@@ -562,7 +562,7 @@ export function SuperAdminAnalytics() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
           <Card className="p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
@@ -595,31 +595,6 @@ export function SuperAdminAnalytics() {
 
           <Card className="p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              User Growth (Last 7 Days)
-            </h3>
-            <div className="space-y-3">
-              {data.userGrowth.slice(0, 7).map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-muted rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${(item.count / Math.max(...data.userGrowth.map(u => u.count))) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium w-8 text-right">{item.count}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Growth Summary
             </h3>
@@ -635,6 +610,32 @@ export function SuperAdminAnalytics() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Engagement Rate</p>
                 <p className="text-2xl font-bold text-purple-600">{activeUserRate}%</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Active Users
+            </h3>
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">Active Today</p>
+                <p className="text-4xl font-bold text-blue-600">{data.activeToday}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {((data.activeToday / data.totalUsers) * 100).toFixed(1)}% of total
+                </p>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">This Week</span>
+                  <span className="text-lg font-bold text-purple-600">{data.activeWeek}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Engagement</span>
+                  <span className="text-lg font-bold text-green-600">{activeUserRate}%</span>
+                </div>
               </div>
             </div>
           </Card>

@@ -341,31 +341,31 @@ const TaskManagerEnhancedComponent = ({
   return (
     <>
       {/* Toolbar */}
-      <div className="mb-6">
-        <div className="pt-6">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+      <div className="mb-2">
+        <div className="pt-2">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2">
             {/* Left Section - Search & Filters */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-3xl">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 lg:max-w-3xl">
               {/* Search */}
               <div className="flex-1 sm:max-w-md">
                 <div className="relative group">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                   <input
                     type="text"
                     placeholder="Search tasks..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:focus:border-blue-500 dark:focus:ring-blue-900/30 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all outline-none shadow-sm"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:focus:border-blue-500 dark:focus:ring-blue-900/30 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all outline-none shadow-sm"
                     aria-label="Search tasks"
                   />
                 </div>
               </div>
 
               {/* Filter Actions */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar sm:flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar sm:flex-wrap">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg font-medium transition-all duration-200 whitespace-nowrap shadow-sm ${
+                  className={`flex items-center gap-1.5 px-3 py-2 border rounded-md font-medium transition-all duration-200 whitespace-nowrap shadow-sm text-sm ${
                     showFilters
                       ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-500 shadow-blue-100 dark:shadow-blue-900/20'
                       : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
@@ -373,8 +373,8 @@ const TaskManagerEnhancedComponent = ({
                   aria-label={showFilters ? 'Hide filters' : 'Show filters'}
                   aria-expanded={showFilters}
                 >
-                  <Filter className="w-4 h-4" />
-                  <span className="text-sm font-medium">Filters</span>
+                  <Filter className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">Filters</span>
                 </button>
 
                 {selectedTaskIds.length > 0 && (
@@ -382,31 +382,31 @@ const TaskManagerEnhancedComponent = ({
                     <button
                       onClick={() => handleBulkStatusUpdate('completed')}
                       disabled={isBulkOperationLoading}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap shadow-sm text-sm"
                       aria-label={`Mark ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''} as completed`}
                     >
-                      <CheckSquare className="w-4 h-4" />
-                      <span className="text-sm">{isBulkOperationLoading ? 'Processing...' : 'Complete'}</span>
+                      <CheckSquare className="w-3.5 h-3.5" />
+                      <span className="text-xs">{isBulkOperationLoading ? 'Processing...' : 'Complete'}</span>
                     </button>
                     <button
                       onClick={handleBulkDelete}
                       disabled={isBulkOperationLoading}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-colors duration-200 whitespace-nowrap shadow-sm text-sm"
                       aria-label={`Delete ${selectedTaskIds.length} selected task${selectedTaskIds.length > 1 ? 's' : ''}`}
                     >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="text-sm">{isBulkOperationLoading ? 'Deleting...' : 'Delete'}</span>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span className="text-xs">{isBulkOperationLoading ? 'Deleting...' : 'Delete'}</span>
                     </button>
                   </>
                 )}
 
                 <button
                   onClick={handleExportCSV}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium transition-all duration-200 whitespace-nowrap shadow-sm"
+                  className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 font-medium transition-all duration-200 whitespace-nowrap shadow-sm text-sm"
                   aria-label="Export tasks to CSV"
                 >
-                  <Download className="w-4 h-4" />
-                  <span className="text-sm font-medium">Export</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">Export</span>
                 </button>
               </div>
             </div>
@@ -418,11 +418,11 @@ const TaskManagerEnhancedComponent = ({
                   setFormKey(prev => prev + 1);
                   setShowCreateForm(true);
                 }}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg font-semibold transition-all duration-200 whitespace-nowrap shadow-md hover:shadow-lg"
+                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md font-semibold transition-all duration-200 whitespace-nowrap shadow-md hover:shadow-lg text-sm"
                 aria-label="Create new task"
               >
-                <Plus className="w-5 h-5" />
-                <span className="text-sm">Create Task</span>
+                <Plus className="w-4 h-4" />
+                <span className="text-xs">Create Task</span>
               </button>
             </div>
           </div>
@@ -430,17 +430,17 @@ const TaskManagerEnhancedComponent = ({
 
           {/* Advanced Filters Panel */}
           {showFilters && (
-            <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div>
-                  <label htmlFor="category-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="category-filter" className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Category
                   </label>
                   <select
                     id="category-filter"
                     value={filters.category}
                     onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none text-sm"
                     aria-label="Filter by category"
                   >
                     <option value="all">All Categories</option>
@@ -457,14 +457,14 @@ const TaskManagerEnhancedComponent = ({
                 </div>
 
                 <div>
-                  <label htmlFor="status-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="status-filter" className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Status
                   </label>
                   <select
                     id="status-filter"
                     value={filters.status}
                     onChange={(e) => handleFilterChange('status', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none text-sm"
                     aria-label="Filter by status"
                   >
                     <option value="all">All Status</option>
@@ -475,14 +475,14 @@ const TaskManagerEnhancedComponent = ({
                 </div>
 
                 <div>
-                  <label htmlFor="priority-filter" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="priority-filter" className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Priority
                   </label>
                   <select
                     id="priority-filter"
                     value={filters.priority}
                     onChange={(e) => handleFilterChange('priority', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-500 transition-colors outline-none text-sm"
                     aria-label="Filter by priority"
                   >
                     <option value="all">All Priorities</option>
@@ -504,10 +504,10 @@ const TaskManagerEnhancedComponent = ({
                         priority: 'all',
                       });
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200"
+                    className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200 text-sm"
                     aria-label="Reset all filters"
                   >
-                    Reset Filters
+                    Reset
                   </button>
                 </div>
               </div>
@@ -517,20 +517,20 @@ const TaskManagerEnhancedComponent = ({
 
       {/* Content Area */}
       {error ? (
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4 p-8">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30">
-            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+        <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 p-4">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30">
+            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
           </div>
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Failed to Load Tasks</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">{error}</p>
+          <div className="text-center space-y-1">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">Failed to Load Tasks</h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400 max-w-md">{error}</p>
           </div>
           <button
             onClick={() => loadTasks(false)}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors duration-200 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md font-medium transition-colors duration-200 disabled:cursor-not-allowed text-sm"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Retry</span>
           </button>
         </div>
