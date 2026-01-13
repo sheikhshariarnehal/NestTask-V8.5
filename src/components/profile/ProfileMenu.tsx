@@ -54,13 +54,36 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
         setShowSettingsModal(true);
       }
     },
-    ...(user?.role === 'admin' ? [{
+    ...(['admin', 'super-admin', 'section_admin'].includes(user?.role || '') ? [{
       id: 'admin',
       label: 'Admin Panel',
       icon: Shield,
       description: 'System Management',
-      onClick: () => console.log('Admin clicked')
-    }] : [])
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/admin/dashboard');
+      }
+    }] : []),
+    {
+      id: 'lecture-slides',
+      label: 'Lecture Slides',
+      icon: BookOpen,
+      description: 'Course Materials',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/lecture-slides');
+      }
+    },
+    {
+      id: 'routine',
+      label: 'Academic Routine',
+      icon: Layers,
+      description: 'Class Schedule',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/routine');
+      }
+    }
   ];
 
   const userInitial = user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?';
