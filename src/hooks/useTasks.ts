@@ -5,8 +5,8 @@ import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
 import { requestSessionValidation } from '../utils/sessionValidation';
 
-// Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
-const TASK_FETCH_TIMEOUT = 45000;
+// Task fetch timeout in milliseconds (reduced to 10s for snappier failure)
+const TASK_FETCH_TIMEOUT = 10000;
 
 // Cache for tasks to avoid refetching
 interface TasksCacheEntry {
@@ -19,7 +19,7 @@ const tasksCache = new Map<string, TasksCacheEntry>();
 const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 
 // Maximum number of retries for task fetching
-const MAX_RETRIES_TIMEOUT = 5;
+const MAX_RETRIES_TIMEOUT = 2;
 const MAX_RETRIES_OTHER = 3;
 
 export function useTasks(userId: string | undefined) {
@@ -149,13 +149,22 @@ export function useTasks(userId: string | undefined) {
           throw new Error('Unable to connect to database');
         }
 
+        // Helper for safe session retrieval with timeout
+        const safeGetSession = async () => {
+          const sessionPromise = supabase.auth.getSession();
+          const timeoutPromise = new Promise<{ data: { session: any } }>((resolve) => 
+            setTimeout(() => resolve({ data: { session: null } }), 4000)
+          );
+          return await Promise.race([sessionPromise, timeoutPromise]);
+        };
+
         // Check session - if no session, just return without reloading
         // The auth flow will handle redirecting to login if needed
-        let { data: session } = await supabase.auth.getSession();
+        let { data: session } = await safeGetSession();
         if (!session.session) {
           console.log('[useTasks] No session on initial fetch; requesting validation and retrying once...');
           await requestSessionValidation(2500);
-          ({ data: session } = await supabase.auth.getSession());
+          ({ data: session } = await safeGetSession());
         }
 
         if (!session.session) {

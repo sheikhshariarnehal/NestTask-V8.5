@@ -121,10 +121,78 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
           console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'}, refreshing...`);
           
           // Session is expired, try to refresh
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          // Add retry logic for refresh specifically
+          let refreshData = null;
+          let refreshError = null;
+          let attempts = 0;
+          
+          for (let i = 0; i < 3; i++) {
+            attempts++;
+             // Check network status before attempting refresh
+            if (!navigator.onLine) {
+                 console.log(`[Supabase Lifecycle] Offline, waiting 1s (attempt ${i+1})...`);
+                 await new Promise(r => setTimeout(r, 1000));
+                 continue;
+            }
+
+            try {
+                // Add explicit timeout to refreshSession to prevent hanging indefinitely
+                const refreshPromise = supabase.auth.refreshSession();
+                const timeoutPromise = new Promise<{ data: { session: any }, error: any }>((resolve) => 
+                    setTimeout(() => resolve({ 
+                        data: { session: null }, 
+                        error: new Error('Refresh request timed out') 
+                    }), 10000) // 10s timeout
+                );
+                
+                const res = await Promise.race([refreshPromise, timeoutPromise]);
+
+                if (res.error) throw res.error;
+                refreshData = res.data;
+                refreshError = null;
+                break;
+            } catch (err: any) {
+                console.warn(`[Supabase Lifecycle] Refresh attempt ${i + 1} failed:`, err.message);
+                refreshError = err;
+                
+                // If it's a clear auth error (not network), stop retrying immediately
+                // invalid_grant usually means refresh token is revoked/expired
+                if (err?.code === 'invalid_grant' || err?.message?.includes('Invalid Refresh Token')) {
+                   break;
+                }
+                
+                await new Promise(r => setTimeout(r, 1500 * (i + 1))); // Linear backoff
+            }
+          }
 
           if (refreshError) {
-            console.error('[Supabase Lifecycle] Failed to refresh expired session:', refreshError.message);
+             const errorMessage = refreshError.message?.toLowerCase() || '';
+             const isRefInvalid = refreshError.code === 'invalid_grant' || errorMessage.includes('invalid refresh token');
+             const isNetError = errorMessage.includes('network') || 
+                                errorMessage.includes('fetch') ||
+                                errorMessage.includes('timeout') ||
+                                errorMessage.includes('timed out') ||
+                                errorMessage.includes('connection') ||
+                                errorMessage.includes('load failed');
+
+             if (isRefInvalid) {
+                console.error('[Supabase Lifecycle] Refresh token invalid, session expired:', refreshError.message);
+                optionsRef.current.onSessionExpired?.();
+                optionsRef.current.onAuthError?.(refreshError);
+                emitSessionValidated({ success: false, error: refreshError });
+                return false;
+             } 
+             
+             if (isNetError || !navigator.onLine) {
+                console.warn('[Supabase Lifecycle] Network error during refresh, keeping local session:', refreshError.message);
+                // Don't kill the session, just warn. The app might work offline.
+                // We emit success=true so the app doesn't hang, but we also fire onAuthError just in case
+                // Actually, for "zombie" state, we want to allow the app to try to render
+                emitSessionValidated({ success: true });
+                return true; 
+             }
+             
+            console.error('[Supabase Lifecycle] Failed to refresh expired session after retries:', refreshError.message);
             optionsRef.current.onSessionExpired?.();
             optionsRef.current.onAuthError?.(refreshError);
             emitSessionValidated({ success: false, error: refreshError });

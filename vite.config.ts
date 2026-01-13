@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import compression from 'vite-plugin-compression';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 // Define algorithm type to avoid type errors
@@ -26,6 +27,82 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    // PWA: enabled for web builds only (avoid SW caching issues in Capacitor WebView).
+    ...(!isCapacitorBuild ? [
+      VitePWA({
+        // We'll register from app code (src/utils/pwa.ts) to keep dev clean.
+        injectRegister: null,
+        registerType: 'autoUpdate',
+        // Keep existing public URL to avoid breaking any deploy assumptions.
+        manifestFilename: 'manifest.json',
+        filename: 'sw.js',
+        includeAssets: [
+          'icons/favicon.svg',
+          'icons/icon-192x192.png',
+          'icons/icon-512x512.png',
+          'icons/badge.png'
+        ],
+        manifest: {
+          name: 'NestTask',
+          short_name: 'NestTask',
+          description: 'Smart task management for teams and individuals',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          background_color: '#ffffff',
+          theme_color: '#0284c7',
+          icons: [
+            {
+              src: '/icons/icon-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any'
+            },
+            {
+              src: '/icons/icon-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any'
+            }
+          ]
+        },
+        workbox: {
+          // Cache Vite build outputs + common static assets.
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,eot,json}'],
+          navigateFallback: '/index.html',
+          runtimeCaching: [
+            // Supabase REST calls (best-effort offline: cache recent reads).
+            {
+              urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/(rest|auth)\/v1\//i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'supabase-api',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60
+                }
+              }
+            },
+            // Google Fonts.
+            {
+              urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'google-fonts',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 365
+                }
+              }
+            }
+          ]
+        },
+        // Do not enable SW in dev by default; test PWA using `npm run build` + `npm run preview`.
+        devOptions: {
+          enabled: false
+        }
+      })
+    ] : []),
     // Disable compression for Capacitor builds to avoid duplicate resources
     ...(!isCapacitorBuild ? [
       compression({

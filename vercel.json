@@ -4,6 +4,11 @@
   "outputDirectory": "dist",
   "routes": [
     {
+      "src": "/sw\\.js$",
+      "headers": { "cache-control": "public, max-age=0, must-revalidate" },
+      "continue": true
+    },
+    {
       "src": "/assets/(.*)",
       "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "continue": true
@@ -25,7 +30,10 @@
     },
     {
       "src": "/manifest.json",
-      "headers": { "content-type": "application/json" },
+      "headers": {
+        "content-type": "application/json",
+        "cache-control": "public, max-age=0, must-revalidate"
+      },
       "continue": true
     },
     { "handle": "filesystem" },

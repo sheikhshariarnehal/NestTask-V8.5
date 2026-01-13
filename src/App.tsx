@@ -107,7 +107,17 @@ export default function App() {
   const { user, loading: authLoading, error: authError, login, signup, logout, forgotPassword } = useAuth();
 
   // Critical: keep Supabase session healthy across tab/app backgrounding.
-  useSupabaseLifecycle({ enabled: true });
+  // Handle session expiry by logging out to prevent "zombie" state with invalid tokens
+  useSupabaseLifecycle({ 
+    enabled: true,
+    onSessionExpired: () => {
+      console.log('[App] Session expired, forcing logout');
+      logout();
+    },
+    onAuthError: (err) => {
+      console.warn('[App] Auth error:', err);
+    }
+  });
   
   const { users, loading: usersLoading, deleteUser, refreshUsers } = useUsers();
   

@@ -346,13 +346,9 @@ if (typeof window !== 'undefined') {
     connectionPromise = null;
     isInitialized = false;
     
-    // Reconnect realtime channels
-    const channels = supabase.getChannels();
-    for (const channel of channels) {
-      console.log(`[Supabase] Reconnecting channel: ${channel.topic}`);
-      await channel.unsubscribe();
-      await channel.subscribe();
-    }
+    // Note: We used to manually reconnect channels here, but that conflicts with
+    // specific hooks (like useNotifications) that manage their own subscription lifecycles.
+    // Supabase client also handles WebSocket reconnection automatically.
     
     // Test connection
     await testConnection();

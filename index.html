@@ -45,8 +45,8 @@
     <!-- Note: don't modulepreload JSON; browsers enforce JS module MIME types -->
     
     <!-- PWA assets -->
-    <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.png" />
-    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     
     <!-- Critical CSS inline for faster paint -->
@@ -210,24 +210,8 @@
         }
       });
     
-      // Register service worker (PWA only).
-      // IMPORTANT: never register inside Capacitor/native WebViews.
-      // A previously-installed SW can intercept requests and return 503, causing the app to stall.
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          const isNativeCapacitor = typeof window !== 'undefined'
-            && !!window.Capacitor
-            && typeof window.Capacitor.isNativePlatform === 'function'
-            && window.Capacitor.isNativePlatform();
-          const isCapacitorUA = /\bCapacitor\b/i.test(navigator.userAgent);
-          if (isNativeCapacitor || isCapacitorUA) return;
-
-          navigator.serviceWorker.register('/service-worker.js')
-            .catch(err => {
-              console.error('ServiceWorker registration failed: ', err);
-            });
-        });
-      }
+      // Service worker registration is handled by the app code (src/utils/pwa.ts)
+      // so we can enable it only for production web builds.
       
       // Improved loading screen removal with MutationObserver and timeout fallback
       document.addEventListener('DOMContentLoaded', () => {

@@ -67,7 +67,13 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     const timeoutId = setTimeout(() => controller.abort(), QUERY_TIMEOUT);
     
     // Get session to determine role (use getSession for speed/offline support instead of getUser)
-    const { data: { session } } = await supabase.auth.getSession();
+    // Protected with timeout to prevent hanging
+    const { data: { session } } = await Promise.race([
+      supabase.auth.getSession(),
+      new Promise<{ data: { session: any } }>(resolve => 
+        setTimeout(() => resolve({ data: { session: null } }), 3000)
+      )
+    ]);
     
     const userRole = session?.user?.user_metadata?.role;
     const userSectionId = sectionId || session?.user?.user_metadata?.section_id;

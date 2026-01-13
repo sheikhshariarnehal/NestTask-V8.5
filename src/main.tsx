@@ -332,15 +332,10 @@ function initApp() {
     </StrictMode>
   );
   
-  // Initialize PWA features (service worker registered in index.html)
+  // Initialize PWA features (service worker registration handled in initPWA)
   // Never run PWA utilities in native Capacitor WebView.
-  if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
-    // Wait for existing registration before initializing PWA utilities
-    navigator.serviceWorker.ready.then(() => {
-      setTimeout(() => initPWA(), 500);
-    }).catch(() => {
-      // SW not registered yet, that's fine - index.html handles it
-    });
+  if (!Capacitor.isNativePlatform()) {
+    setTimeout(() => initPWA(), 500);
   }
 }
 
