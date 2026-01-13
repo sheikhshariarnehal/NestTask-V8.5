@@ -116,6 +116,23 @@ export function useTasks(userId: string | undefined) {
     // Implement throttling - don't reload if last load was less than 3 seconds ago
     // but reduce to 1 second if we're in tab switch recovery mode
     const now = Date.now();
+
+    // Check cache first (network-first strategy optimization)
+    if (!options.force && userId && tasksCache.has(userId)) {
+      const cached = tasksCache.get(userId)!;
+      // Use cache if it's less than 2 seconds old (prevent double-fetch flickering)
+      // or if we are actively retrying/recovering
+      if (now - cached.timestamp < 2000) {
+        console.log('[useTasks] Using immediate cache (debounce)');
+        if (isMountedRef.current) {
+          setTasks(cached.tasks);
+          setLoading(false);
+          loadingRef.current = false;
+        }
+        return;
+      }
+    }
+
     const throttleTime = tabSwitchRecoveryRef.current ? 1000 : 3000;
     if (!options.force && now - lastLoadTimeRef.current < throttleTime) {
       console.log('Task loading throttled - too soon since last load');
@@ -128,9 +145,14 @@ export function useTasks(userId: string | undefined) {
       const hasExistingTasks = tasks.length > 0;
       const shouldShowLoading = !wasHiddenRef.current || !hasExistingTasks;
       
-      if (isMountedRef.current && shouldShowLoading) {
+      // If we have cached data, don't show full loading state, just background refresh
+      // unless force is true
+      if (userId && tasksCache.has(userId) && !options.force && hasExistingTasks) {
+         // Maybe show a small indicator or nothing
+      } else if (isMountedRef.current && shouldShowLoading) {
         setLoading(true);
       }
+      
       loadingRef.current = true;
       if (isMountedRef.current) {
         setError(null);
@@ -141,19 +163,30 @@ export function useTasks(userId: string | undefined) {
       if (!import.meta.env.DEV) {
         // On Android WebView / installed PWA, the first few seconds after launch can race
         // with storage/session hydration. Validate first to avoid transient “no session”.
-        await requestSessionValidation(2500);
+        // Increased timeout significantly to allow for slow Android cold starts
+        await requestSessionValidation(4000);
 
         // Test connection before fetching
+        // If connection test fails, try to use cache
         isConnected = await testConnection();
         if (!isConnected) {
-          throw new Error('Unable to connect to database');
+           if (userId && tasksCache.has(userId)) {
+             console.warn('[useTasks] Connection failed, using cache');
+             if (isMountedRef.current) {
+               setTasks(tasksCache.get(userId)!.tasks);
+               setError('Device offline - showing cached tasks');
+             }
+             return; // Stop here, use cache
+           }
+           throw new Error('Unable to connect to database');
         }
 
         // Helper for safe session retrieval with timeout
         const safeGetSession = async () => {
           const sessionPromise = supabase.auth.getSession();
+          // Increased to 8s for slow Android devices
           const timeoutPromise = new Promise<{ data: { session: any } }>((resolve) => 
-            setTimeout(() => resolve({ data: { session: null } }), 4000)
+            setTimeout(() => resolve({ data: { session: null } }), 8000)
           );
           return await Promise.race([sessionPromise, timeoutPromise]);
         };
@@ -163,12 +196,24 @@ export function useTasks(userId: string | undefined) {
         let { data: session } = await safeGetSession();
         if (!session.session) {
           console.log('[useTasks] No session on initial fetch; requesting validation and retrying once...');
-          await requestSessionValidation(2500);
+          await requestSessionValidation(4000);
           ({ data: session } = await safeGetSession());
         }
 
         if (!session.session) {
-          console.log('[useTasks] Still no session; skipping task fetch');
+          console.log('[useTasks] Still no session; checks failed');
+          
+          // Fallback to cache if session fails (Offline Mode support)
+          if (userId && tasksCache.has(userId)) {
+             console.log('[useTasks] Session failed, falling back to cache');
+             if (isMountedRef.current) {
+                setTasks(tasksCache.get(userId)!.tasks);
+                // Use a different error message that doesn't sound scary
+                setError('Offline mode: Using cached tasks'); 
+             }
+             return; 
+           }
+
           throw new Error('Session not ready - please try again');
         }
       }
