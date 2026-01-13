@@ -124,14 +124,14 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
             onClick={() => setIsOpen(false)}
           />
           <div className="
-            absolute right-0 sm:-right-2 md:right-0 
+            absolute right-0 top-full
             mt-2 
-            w-[calc(100vw-2rem)] xs:w-[280px] sm:w-[300px] md:w-[320px] 
+            w-[calc(100vw-32px)] max-w-[320px] sm:w-80
             max-h-[calc(100vh-80px)] overflow-y-auto
             bg-white dark:bg-gray-800 
             rounded-xl shadow-xl 
             ring-1 ring-black/5 dark:ring-white/5 
-            z-20 
+            z-50 
             animate-scale-in origin-top-right 
             divide-y divide-gray-100 dark:divide-gray-700
           ">
