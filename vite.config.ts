@@ -123,21 +123,8 @@ export default defineConfig({
   build: {
     // For Capacitor, prefer maximum runtime compatibility over aggressive minification.
     // (Prevents rare TDZ/circular-init crashes like "Cannot access 'E' before initialization" in WebView.)
-    minify: isCapacitorBuild ? 'esbuild' : 'terser',
-    terserOptions: isCapacitorBuild ? undefined : {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info'],
-        passes: 2
-      },
-      mangle: {
-        safari10: true
-      },
-      format: {
-        comments: false
-      }
-    },
+    minify: isCapacitorBuild ? 'esbuild' : 'esbuild', // Changed from terser to esbuild for web to prevent console dropping
+    terserOptions: isCapacitorBuild ? undefined : undefined, // Disabled terser options entirely to keep logs
     cssMinify: true,
     target: 'es2018',
     reportCompressedSize: true,
