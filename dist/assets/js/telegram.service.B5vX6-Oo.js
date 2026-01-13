@@ -1,0 +1,2 @@
+import{f as i}from"./dateUtils.CaLFIf6y.js";const n="https://nesttask.vercel.app";async function a(e,t){return!1}async function c(e){const t=s=>s.replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2">$1</a>').replace(/\n/g,`
+`);return`${e.name}${t(e.description)}${e.category}${i(new Date(e.dueDate),"MMMM d, yyyy")}${n}`,a()}async function p(e){var t;return(t=e.content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i))==null||t[0],`${e.title}${e.content}${n}`,a()}export{p as a,c as s};

@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAppLifecycle } from './useAppLifecycle';
 import type { Task } from '../types';
 import type { Announcement } from '../types/announcement';
 
@@ -155,28 +154,32 @@ export function useNotifications(userId: string | undefined) {
   /**
    * Cleanup subscriptions
    */
-  const cleanupSubscriptions = useCallback(() => {
+  const cleanupSubscriptions = useCallback(async () => {
     console.log('[Notifications] Cleaning up subscriptions...');
     isSubscribedRef.current = false;
 
+    // Use supabase.removeChannel ensures the channel is fully removed from the client registry
+    // allowing subsequent calls to .channel() to create a fresh instance.
     if (subscriptionsRef.current.tasks) {
-      subscriptionsRef.current.tasks.unsubscribe();
+      const channel = subscriptionsRef.current.tasks;
       subscriptionsRef.current.tasks = undefined;
+      await supabase.removeChannel(channel);
     }
     if (subscriptionsRef.current.announcements) {
-      subscriptionsRef.current.announcements.unsubscribe();
+      const channel = subscriptionsRef.current.announcements;
       subscriptionsRef.current.announcements = undefined;
+      await supabase.removeChannel(channel);
     }
   }, []);
 
   /**
    * Handle app resume - reload data and reconnect subscriptions
    */
-  const handleResume = useCallback(() => {
+  const handleResume = useCallback(async () => {
     console.log('[Notifications] App resumed, reloading data and reconnecting...');
 
     // Cleanup old subscriptions
-    cleanupSubscriptions();
+    await cleanupSubscriptions();
 
     // Reload data
     loadExistingItems();
@@ -185,10 +188,12 @@ export function useNotifications(userId: string | undefined) {
     setupSubscriptions();
   }, [cleanupSubscriptions, loadExistingItems, setupSubscriptions]);
 
-  // Use app lifecycle hook to handle resume
-  useAppLifecycle({
-    onResume: handleResume
-  });
+  // Use centralized resume event (emitted by useAppLifecycle) to avoid attaching
+  // multiple native listeners across hooks.
+  useEffect(() => {
+    window.addEventListener('app-resume', handleResume);
+    return () => window.removeEventListener('app-resume', handleResume);
+  }, [handleResume]);
 
   // Initial load and subscription setup
   useEffect(() => {
@@ -206,6 +211,8 @@ export function useNotifications(userId: string | undefined) {
 
     // Cleanup on unmount
     return () => {
+      // We cannot await in cleanup, but cleanupSubscriptions calls removeChannel
+      // which is fire-and-forget if not awaited, but safer than just unsubscribe().
       cleanupSubscriptions();
     };
   }, [userId, loadExistingItems, setupSubscriptions, cleanupSubscriptions]);

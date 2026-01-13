@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUsers, deleteUser, promoteUser as promoteUserService, demoteUser as demoteUserService } from '../services/user.service';
 import type { User } from '../types/auth';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
+import { requestSessionValidation } from '../utils/sessionValidation';
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,6 +22,13 @@ export function useUsers() {
     try {
       loadingRef.current = true;
       setLoading(true);
+      setError(null);
+
+      // Avoid transient RLS/auth failures on first launch (Android WebView / PWA shortcut)
+      if (!import.meta.env.DEV) {
+        await requestSessionValidation(2500);
+      }
+
       const data = await fetchUsers();
       setUsers(data);
       lastLoadTimeRef.current = Date.now();

@@ -1,10 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
+import { useRef, useCallback } from 'react';
+import { useAppLifecycle } from './useAppLifecycle';
 
 interface BackgroundState {
   enteredBackgroundAt: number | null;
   backgroundDuration: number;
   wasInBackground: boolean;
+  isActive: boolean;
 }
 
 /**
@@ -15,10 +16,14 @@ export function useBackgroundStateManager() {
   const stateRef = useRef<BackgroundState>({
     enteredBackgroundAt: null,
     backgroundDuration: 0,
-    wasInBackground: false
+    wasInBackground: false,
+    isActive: true
   });
 
   const handleAppStateChange = useCallback((isActive: boolean) => {
+    if (stateRef.current.isActive === isActive) return;
+    stateRef.current.isActive = isActive;
+
     if (!isActive) {
       // App going to background
       stateRef.current.enteredBackgroundAt = Date.now();
@@ -47,30 +52,12 @@ export function useBackgroundStateManager() {
     }
   }, []);
 
-  useEffect(() => {
-    // Listen to visibility changes (web/browser tabs)
-    const handleVisibilityChange = () => {
-      handleAppStateChange(!document.hidden);
-    };
-
-    // Listen to Capacitor app state changes (native apps)
-    const setupCapacitor = async () => {
-      if (Capacitor.isNativePlatform()) {
-        const { App } = await import('@capacitor/app');
-        App.addListener('appStateChange', ({ isActive }) => {
-          handleAppStateChange(isActive);
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    setupCapacitor();
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      // Note: Capacitor listeners cleanup is handled automatically on unmount
-    };
-  }, [handleAppStateChange]);
+  // Consume the centralized lifecycle hook instead of registering our own listeners.
+  // This avoids multiple native plugin listeners and keeps resume semantics consistent.
+  useAppLifecycle({
+    onAppStateChange: handleAppStateChange,
+    onVisibilityChange: (isVisible) => handleAppStateChange(isVisible)
+  });
 
   return {
     getBackgroundDuration: () => stateRef.current.backgroundDuration,

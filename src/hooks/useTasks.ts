@@ -3,6 +3,7 @@ import { supabase, testConnection } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
+import { requestSessionValidation } from '../utils/sessionValidation';
 
 // Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
 const TASK_FETCH_TIMEOUT = 45000;
@@ -62,15 +63,8 @@ export function useTasks(userId: string | undefined) {
         const hiddenDuration = Date.now() - lastVisibilityChangeRef.current;
         lastVisibilityChangeRef.current = Date.now();
         
-        // CRITICAL: Reset stuck loading state when app becomes visible
-        // This prevents the app from being stuck on loading after minimize/restore
-        if (loadingRef.current) {
-          console.log('[useTasks] Resetting stuck loading state after visibility change');
-          loadingRef.current = false;
-          if (isMountedRef.current) {
-            setLoading(false);
-          }
-        }
+        // Removed aggressive loading state reset that was causing race conditions
+        // during app resume. loadTasks() handles its own timeouts and cleanup.
         
         // Only mark as recent tab switch if hidden for less than 30 seconds
         // This prevents showing loading state immediately after tab switch
@@ -144,9 +138,10 @@ export function useTasks(userId: string | undefined) {
 
       // Skip database connection test in development mode
       let isConnected = true;
-      if (process.env.NODE_ENV !== 'development') {
-        // Get user data to check role and section
-        const { data: { user } } = await supabase.auth.getUser();
+      if (!import.meta.env.DEV) {
+        // On Android WebView / installed PWA, the first few seconds after launch can race
+        // with storage/session hydration. Validate first to avoid transient “no session”.
+        await requestSessionValidation(2500);
 
         // Test connection before fetching
         isConnected = await testConnection();
@@ -156,10 +151,16 @@ export function useTasks(userId: string | undefined) {
 
         // Check session - if no session, just return without reloading
         // The auth flow will handle redirecting to login if needed
-        const { data: session } = await supabase.auth.getSession();
+        let { data: session } = await supabase.auth.getSession();
         if (!session.session) {
-          console.log('No session found during task fetch, skipping reload');
-          throw new Error('Session expired - please refresh the page');
+          console.log('[useTasks] No session on initial fetch; requesting validation and retrying once...');
+          await requestSessionValidation(2500);
+          ({ data: session } = await supabase.auth.getSession());
+        }
+
+        if (!session.session) {
+          console.log('[useTasks] Still no session; skipping task fetch');
+          throw new Error('Session not ready - please try again');
         }
       }
 
@@ -257,10 +258,11 @@ export function useTasks(userId: string | undefined) {
       try {
         // Create a promise that resolves when session validation completes
         const sessionValidPromise = new Promise<void>((resolve) => {
+          // Increased timeout to 10s to account for mobile network wake-up latency
           const timeout = setTimeout(() => {
-            console.log('[useTasks] Session validation timeout, proceeding anyway');
+            console.log('[useTasks] Session validation timeout (10s), proceeding anyway');
             resolve();
-          }, 2000); // 2s timeout
+          }, 10000); // 10s timeout
           
           const handler = () => {
             clearTimeout(timeout);

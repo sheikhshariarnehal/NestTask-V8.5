@@ -23,6 +23,11 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const optionsRef = useRef(options);
   const isAutoRefreshEnabledRef = useRef<boolean>(false);
 
+  const emitSessionValidated = useCallback((detail: { success: boolean; error?: unknown }) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail }));
+  }, []);
+
   // Update options ref when they change
   useEffect(() => {
     optionsRef.current = options;
@@ -35,8 +40,15 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     if (!enabled) return true;
 
     // Prevent concurrent validations
-    if (isValidatingRef.current && !force) {
-      console.log('[Supabase Lifecycle] Validation already in progress');
+    // If validation is already in progress, just wait for it to finish (emitSessionValidated will be called by the original request)
+    // This allows force=true requests to piggyback on existing in-flight validations rather than creating race conditions
+    if (isValidatingRef.current) {
+      console.log(`[Supabase Lifecycle] Validation already in progress${force ? ' (joining)' : ''}`);
+      // return true to signal "request accepted", but the actual readiness will be signaled via event
+      // If we are simulating an immediate return for "await validateSession()", we might be returning early,
+      // but callers who care about correctness should be listening to the event or relying on the state change.
+      // For tasks/UI waiting on "validateSession()", returning true here assumes "it will be valid soon".
+      // A better approach for the caller is to wait for the event if they really need strictness.
       return true;
     }
 
@@ -45,6 +57,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     const timeSinceLastValidation = now - lastValidationRef.current;
     if (!force && timeSinceLastValidation < 5000) {
       console.log('[Supabase Lifecycle] Validation throttled');
+      emitSessionValidated({ success: true });
       return true;
     }
 
@@ -54,17 +67,40 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     try {
       console.log('[Supabase Lifecycle] Validating session...');
 
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Get current session with a timeout to prevent hanging
+      // Supabase getSession can hang indefinitely on some Android environments/WebViews
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise<{
+        data: { session: any };
+        error: any;
+      }>((resolve) => setTimeout(() => resolve({ 
+        data: { session: null }, 
+        error: { message: 'Session retrieval timed out' } 
+      }), 4000));
+
+      const { data: { session }, error: sessionError } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]);
 
       if (sessionError) {
-        console.error('[Supabase Lifecycle] Error getting session:', sessionError.message);
+        if (sessionError.message === 'Session retrieval timed out') {
+           console.warn('[Supabase Lifecycle] Session check timed out - assuming offline or storage locked');
+           // If we time out, we shouldn't necessarily fail validation if we think we might be logged in.
+           // But returning false is safer than pretending we are verified.
+           // However, blocking the app is bad.
+           // Emitting success: false allows the app to redirect to login or show error.
+        } else {
+           console.error('[Supabase Lifecycle] Error getting session:', sessionError.message);
+        }
         optionsRef.current.onAuthError?.(sessionError);
+        emitSessionValidated({ success: false, error: sessionError });
         return false;
       }
 
       if (!session) {
         console.log('[Supabase Lifecycle] No active session found');
+        emitSessionValidated({ success: true });
         return true; // No session is not an error state
       }
 
@@ -74,9 +110,15 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
         const expiryTime = expiresAt * 1000; // Convert to milliseconds
         const timeUntilExpiry = expiryTime - now;
         const fiveMinutes = 5 * 60 * 1000;
+        
+        // On resume (force=true), we are more aggressive with refreshing to ensure fresh token
+        // If less than 45 minutes remaining (token > 15 mins old), force refresh
+        // This fixes the "zombie" state after long inactivity
+        const aggressiveRefreshThreshold = 45 * 60 * 1000;
+        const shouldForceRefresh = force && timeUntilExpiry < aggressiveRefreshThreshold;
 
-        if (timeUntilExpiry <= 0) {
-          console.log('[Supabase Lifecycle] Session expired, refreshing...');
+        if (timeUntilExpiry <= 0 || shouldForceRefresh) {
+          console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'}, refreshing...`);
           
           // Session is expired, try to refresh
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
@@ -85,6 +127,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
             console.error('[Supabase Lifecycle] Failed to refresh expired session:', refreshError.message);
             optionsRef.current.onSessionExpired?.();
             optionsRef.current.onAuthError?.(refreshError);
+            emitSessionValidated({ success: false, error: refreshError });
             return false;
           }
 
@@ -94,10 +137,12 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
             }
+            emitSessionValidated({ success: true });
             return true;
           } else {
             console.warn('[Supabase Lifecycle] Session refresh returned no session');
             optionsRef.current.onSessionExpired?.();
+            emitSessionValidated({ success: false, error: new Error('Session refresh returned no session') });
             return false;
           }
         } else if (timeUntilExpiry < fiveMinutes) {
@@ -109,6 +154,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
           if (refreshError) {
             console.warn('[Supabase Lifecycle] Proactive refresh failed:', refreshError.message);
             // Not critical since session hasn't expired yet
+            emitSessionValidated({ success: true });
             return true;
           }
 
@@ -118,38 +164,31 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
             }
+            emitSessionValidated({ success: true });
             return true;
           }
         } else {
           console.log(`[Supabase Lifecycle] Session valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+          emitSessionValidated({ success: true });
           return true;
         }
       }
 
-      // Emit success event for coordination with data fetching
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
-          detail: { success: true } 
-        }));
-      }
+      // No expires_at available (rare) - treat as validated.
+      emitSessionValidated({ success: true });
       
       return true;
     } catch (error: any) {
       console.error('[Supabase Lifecycle] Unexpected error during session validation:', error);
-      
-      // Emit failure event
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
-          detail: { success: false, error } 
-        }));
-      }
+
+      emitSessionValidated({ success: false, error });
       
       optionsRef.current.onAuthError?.(error);
       return false;
     } finally {
       isValidatingRef.current = false;
     }
-  }, [enabled]);
+  }, [enabled, emitSessionValidated]);
 
   /**
    * Handle app resume - validate and refresh session

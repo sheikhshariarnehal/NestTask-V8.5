@@ -1,6 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
+const DEFAULT_SUPABASE_REQUEST_TIMEOUT_MS = 20000;
+
+function createTimeoutFetch(timeoutMs: number) {
+  return async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    const controller = new AbortController();
+
+    // If caller supplied a signal, propagate aborts into our controller.
+    if (init.signal) {
+      if (init.signal.aborted) {
+        controller.abort();
+      } else {
+        init.signal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+
+    try {
+      return await fetch(input, {
+        ...init,
+        signal: controller.signal
+      });
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  };
+}
+
 // Export initialization error if any
 export const getSupabaseInitError = () => {
   if (typeof window !== 'undefined') {
@@ -56,6 +86,7 @@ export const supabase = createClient<Database>(
     // We refresh proactively (5 minutes before expiry) to prevent RLS failures
   },
   global: {
+    fetch: createTimeoutFetch(DEFAULT_SUPABASE_REQUEST_TIMEOUT_MS),
     headers: {
       'X-Client-Info': 'nesttask@1.0.0',
       'Cache-Control': 'no-cache',
@@ -229,7 +260,11 @@ export async function testConnection(forceCheck = false) {
   const timeSinceLastCheck = Date.now() - lastConnectionTime;
   if (timeSinceLastCheck > 5 * 60 * 1000) { // 5 minutes
     forceCheck = true;
-    console.log(`Force connection check after ${Math.round(timeSinceLastCheck/1000)}s`);
+    if (lastConnectionTime === 0) {
+      console.log('Force connection check: no previous check recorded');
+    } else {
+      console.log(`Force connection check after ${Math.round(timeSinceLastCheck / 1000)}s`);
+    }
   }
   
   if (isInitialized && !forceCheck) return true;
@@ -305,6 +340,11 @@ setTimeout(() => {
 if (typeof window !== 'undefined') {
   window.addEventListener('app-resume', async () => {
     console.log('[Supabase] App resumed, reconnecting...');
+
+    // Defensive: clear any cached/possibly-stuck connection promise.
+    // On Android WebView, pending fetches can become permanently stalled across background/foreground.
+    connectionPromise = null;
+    isInitialized = false;
     
     // Reconnect realtime channels
     const channels = supabase.getChannels();
@@ -329,6 +369,10 @@ if (typeof window !== 'undefined') {
   // Handle online event
   window.addEventListener('online', async () => {
     console.log('[Supabase] Network online, reconnecting...');
+
+    // If the device just came back online, ensure we don't reuse a stale connection check.
+    connectionPromise = null;
+    isInitialized = false;
     await testConnection();
   });
 }

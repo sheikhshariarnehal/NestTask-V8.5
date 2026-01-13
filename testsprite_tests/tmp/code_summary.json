@@ -1,156 +1,68 @@
 {
   "tech_stack": [
     "TypeScript",
-    "React 18",
+    "React",
     "Vite",
     "Supabase",
     "TailwindCSS",
     "Capacitor",
-    "Chart.js",
-    "Lucide React",
-    "Framer Motion",
-    "React Router DOM"
+    "PostgreSQL"
   ],
   "features": [
     {
-      "name": "Admin Dashboard Overview",
-      "description": "Main dashboard with user statistics, task analytics, user graphs, and real-time metrics display. Includes greeting time, date filters, and visual charts for data representation.",
+      "name": "Authentication",
+      "description": "User login, signup, password reset, and session management using Supabase Auth.",
       "files": [
-        "src/components/admin/dashboard/Dashboard.tsx",
-        "src/pages/AdminDashboard.tsx",
-        "src/components/admin/dashboard/TaskOverview.tsx",
-        "src/components/admin/dashboard/UserGraph.tsx",
-        "src/components/admin/dashboard/UserActiveGraph.tsx"
+        "src/pages/AuthPage.tsx",
+        "src/pages/ResetPasswordPage.tsx",
+        "src/hooks/useAuth.ts",
+        "src/utils/auth.ts"
       ]
     },
     {
-      "name": "User Management System",
-      "description": "Complete user management with list view, user stats, user activity tracking, role promotion/demotion, and user deletion capabilities. Includes section-based filtering for section admins.",
+      "name": "Task Management",
+      "description": "Create, read, update, delete tasks. Filter by status, date, category. Task lists and details.",
       "files": [
-        "src/components/admin/UserList.tsx",
-        "src/components/admin/UserStats.tsx",
-        "src/components/admin/UserActivity.tsx",
-        "src/hooks/useUsers.ts"
+        "src/pages/TasksPage.tsx",
+        "src/pages/UpcomingPage.tsx",
+        "src/hooks/useTasks.ts",
+        "src/services/task.service.ts",
+        "src/components/TaskList.tsx"
       ]
     },
     {
-      "name": "Task Management (Legacy)",
-      "description": "Legacy task management with task creation, editing, deletion, filtering, sorting, bulk operations, and multiple view modes (table/grid). Includes search and date range filtering.",
+      "name": "User Management",
+      "description": "Admin capability to view, manage, promote/demote users.",
       "files": [
-        "src/components/admin/TaskManager.tsx",
-        "src/components/admin/task/TaskForm.tsx",
-        "src/components/admin/task/TaskTable.tsx",
-        "src/components/admin/task/TaskStats.tsx"
+        "src/pages/UsersPage.tsx",
+        "src/hooks/useUsers.ts",
+        "src/components/UserList.tsx"
       ]
     },
     {
-      "name": "Enhanced Task Management V2",
-      "description": "Enhanced task management with Kanban board view, advanced filtering, task templates, task analytics, comments threading, and improved performance with virtualization.",
+      "name": "Notifications",
+      "description": "In-app and push notifications for task reminders and announcements.",
       "files": [
-        "src/components/admin/TaskManagerEnhanced.tsx",
-        "src/components/admin/TaskEnhancedForm.tsx",
-        "src/components/admin/TaskEnhancedTable.tsx",
-        "src/components/admin/TaskKanbanBoard.tsx",
-        "src/components/admin/TaskTemplateManager.tsx",
-        "src/components/admin/TaskAnalytics.tsx",
-        "src/components/admin/TaskCommentThread.tsx",
-        "src/components/admin/TaskDetailsModal.tsx"
+        "src/hooks/useNotifications.ts",
+        "src/hooks/usePushNotifications.ts",
+        "src/services/telegram.service.ts"
       ]
     },
     {
-      "name": "Announcement Management",
-      "description": "System for creating, editing, and managing announcements with section-based filtering. Includes announcement forms and list views.",
+      "name": "Announcements",
+      "description": "Post and view announcements for sections.",
       "files": [
-        "src/components/admin/announcement/AnnouncementManager.tsx",
-        "src/components/admin/announcement/AnnouncementForm.tsx",
-        "src/components/admin/announcement/AnnouncementList.tsx",
-        "src/hooks/useAnnouncements.ts"
+        "src/pages/AnnouncementsPage.tsx",
+        "src/components/AnnouncementManager.tsx"
       ]
     },
     {
-      "name": "Course Management",
-      "description": "Comprehensive course management with CRUD operations, bulk import functionality, course-teacher associations, and section-based filtering.",
+      "name": "Routine & Academic",
+      "description": "View class routines and upload/view lecture slides.",
       "files": [
-        "src/components/admin/course/CourseManager.tsx",
-        "src/components/admin/course/CourseForm.tsx",
-        "src/components/admin/course/CourseList.tsx",
-        "src/components/admin/course/CourseEditModal.tsx",
-        "src/components/admin/course/BulkCourseImport.tsx",
-        "src/hooks/useCourses.ts"
-      ]
-    },
-    {
-      "name": "Teacher Management",
-      "description": "Teacher management system with create, update, delete operations, bulk import, and course associations. Supports section-based filtering.",
-      "files": [
-        "src/components/admin/teacher/TeacherManager.tsx",
-        "src/components/admin/teacher/TeacherForm.tsx",
-        "src/components/admin/teacher/TeacherList.tsx",
-        "src/components/admin/teacher/TeacherEditModal.tsx",
-        "src/components/admin/teacher/BulkTeacherImport.tsx",
-        "src/hooks/useTeachers.ts"
-      ]
-    },
-    {
-      "name": "Study Materials Management",
-      "description": "System for managing study materials linked to courses, with upload, delete, and organization capabilities.",
-      "files": [
-        "src/components/admin/study-materials/StudyMaterialManager.tsx",
-        "src/components/admin/study-materials/StudyMaterialForm.tsx",
-        "src/components/admin/study-materials/StudyMaterialList.tsx"
-      ]
-    },
-    {
-      "name": "Lecture Slides Management",
-      "description": "Lecture slides management with upload, preview, and organization features tied to specific sections.",
-      "files": [
-        "src/components/admin/lecture-slides/LectureSlidesManager.tsx",
-        "src/components/admin/lecture-slides/LectureSlidesForm.tsx",
-        "src/components/admin/lecture-slides/LectureSlidesList.tsx",
-        "src/components/admin/lecture-slides/LectureSlidesPreview.tsx"
-      ]
-    },
-    {
-      "name": "Routine Management",
-      "description": "Class routine/schedule management with slot creation, bulk import, activation/deactivation, and time slot management.",
-      "files": [
-        "src/components/admin/routine/RoutineManager.tsx",
-        "src/components/admin/routine/RoutineForm.tsx",
-        "src/components/admin/routine/RoutineList.tsx",
-        "src/components/admin/routine/RoutineSlotModal.tsx",
-        "src/components/admin/routine/BulkSlotImport.tsx",
-        "src/hooks/useRoutines.ts"
-      ]
-    },
-    {
-      "name": "Super Admin Features",
-      "description": "Super admin dashboard with system-wide analytics, admin management, admin creation, audit logs, and system statistics.",
-      "files": [
-        "src/components/admin/super/SuperAdminDashboard.tsx",
-        "src/components/admin/super/AdminManagement.tsx",
-        "src/components/admin/super/AdminCreate.tsx",
-        "src/components/admin/super/AdminEditModal.tsx",
-        "src/components/admin/super/AdminAnalytics.tsx",
-        "src/components/admin/super/AdminLogs.tsx"
-      ]
-    },
-    {
-      "name": "Side Navigation & UI",
-      "description": "Collapsible side navigation with tab management, mobile support, and responsive design for admin interface.",
-      "files": [
-        "src/components/admin/navigation/SideNavigation.tsx",
-        "src/components/admin/navigation/SideNavLink.tsx",
-        "src/components/admin/navigation/MobileMenuButton.tsx",
-        "src/components/admin/AdminNavigation.tsx"
-      ]
-    },
-    {
-      "name": "Statistics & Analytics Components",
-      "description": "Reusable stat cards and analytics components for displaying user, task, and system metrics.",
-      "files": [
-        "src/components/admin/stats/StatCard.tsx",
-        "src/components/admin/stats/UserStatsCard.tsx",
-        "src/components/admin/stats/ActiveUsersModal.tsx"
+        "src/pages/RoutinePage.tsx",
+        "src/pages/LectureSlidesPage.tsx",
+        "src/components/routine/RoutineSkeleton.tsx"
       ]
     }
   ]

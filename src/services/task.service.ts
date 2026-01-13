@@ -60,22 +60,23 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     }
     
     // Performance optimization: Use a timeout for the query
-    const QUERY_TIMEOUT = 8000; // 8 seconds
+    const QUERY_TIMEOUT = 14000; // 14 seconds
     
     // Create abort controller for the timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), QUERY_TIMEOUT);
     
-    // Get user metadata to determine role
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get session to determine role (use getSession for speed/offline support instead of getUser)
+    const { data: { session } } = await supabase.auth.getSession();
     
-    const userRole = user?.user_metadata?.role;
-    const userSectionId = sectionId || user?.user_metadata?.section_id;
+    const userRole = session?.user?.user_metadata?.role;
+    const userSectionId = sectionId || session?.user?.user_metadata?.section_id;
 
     // Start query builder with optimized field selection - no filters needed as RLS handles permissions
     let query = supabase
       .from('tasks')
-      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at');
+      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at')
+      .abortSignal(controller.signal);
 
     // We only need to order the results, the Row Level Security policy 
     // will handle filtering based on user_id, is_admin_task, and section_id

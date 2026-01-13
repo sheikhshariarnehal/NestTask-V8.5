@@ -80,15 +80,18 @@ if (import.meta.env.PROD) {
 }
 
 // Lazy load Analytics and SpeedInsights only in production for web
-const AnalyticsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform()
+const isLocalhost = typeof window !== 'undefined'
+  && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const AnalyticsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform() && !isLocalhost
   ? lazy(() => import('@vercel/analytics/react').then(mod => ({ default: mod.Analytics })))
   : () => null;
 
-const SpeedInsightsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform()
+const SpeedInsightsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform() && !isLocalhost
   ? lazy(() => import('@vercel/speed-insights/react').then(mod => ({ default: mod.SpeedInsights })))
   : () => null;
 
-const shouldRenderAnalytics = import.meta.env.PROD && !Capacitor.isNativePlatform();
+const shouldRenderAnalytics = import.meta.env.PROD && !Capacitor.isNativePlatform() && !isLocalhost;
 
 // Simple error boundary for analytics
 const AnalyticsErrorBoundary = ({ children }: { children: React.ReactNode }) => {
@@ -255,6 +258,25 @@ function initApp() {
     import.meta.env.VITE_SUPABASE_URL && 
     import.meta.env.VITE_SUPABASE_ANON_KEY
   );
+
+  // In native Capacitor builds, proactively disable any previously-installed service worker.
+  // Android WebView can keep SW state across app updates; if it intercepts critical chunks,
+  // it can produce 503/blocked loads and look like an infinite loading screen.
+  if (Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((r) => r.unregister())))
+      .catch(() => {
+        // Best effort
+      });
+
+    if ('caches' in window) {
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {
+          // Best effort
+        });
+    }
+  }
   
   if (!hasEnvVars) {
     console.error('❌ Missing environment variables!');

@@ -485,11 +485,16 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     "department_id" "uuid",
     "batch_id" "uuid",
     "section_id" "uuid",
+    "avatar" "text",
     CONSTRAINT "users_role_check" CHECK (("role" = ANY (ARRAY['user'::"text", 'admin'::"text", 'section_admin'::"text", 'super-admin'::"text"])))
 );
 
 
 ALTER TABLE "public"."users" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."users"."avatar" IS 'URL to user profile photo stored in Supabase Storage';
+
 
 
 CREATE OR REPLACE VIEW "public"."users_with_sections" WITH ("security_invoker"='on') AS
@@ -1478,38 +1483,6 @@ CREATE TABLE IF NOT EXISTS "public"."lecture_slides" (
 ALTER TABLE "public"."lecture_slides" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."routine_slots" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "routine_id" "uuid",
-    "course_id" "uuid",
-    "day_of_week" "text" NOT NULL,
-    "start_time" time without time zone NOT NULL,
-    "end_time" time without time zone NOT NULL,
-    "room_number" "text",
-    "section" "text",
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "teacher_id" "uuid",
-    CONSTRAINT "valid_day_of_week" CHECK (("day_of_week" = ANY (ARRAY['Sunday'::"text", 'Monday'::"text", 'Tuesday'::"text", 'Wednesday'::"text", 'Thursday'::"text", 'Friday'::"text", 'Saturday'::"text"])))
-);
-
-
-ALTER TABLE "public"."routine_slots" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."routines" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "description" "text",
-    "semester" "text" NOT NULL,
-    "is_active" boolean DEFAULT false,
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "created_by" "uuid"
-);
-
-
-ALTER TABLE "public"."routines" OWNER TO "postgres";
-
-
 CREATE TABLE IF NOT EXISTS "public"."section_admins" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
@@ -1832,7 +1805,8 @@ CREATE OR REPLACE VIEW "public"."users_with_full_info" AS
     "u"."section_id" AS "sectionId",
     "s"."name" AS "sectionName",
     "u"."created_at" AS "createdAt",
-    "u"."last_active" AS "lastActive"
+    "u"."last_active" AS "lastActive",
+    "u"."avatar"
    FROM ((("public"."users" "u"
      LEFT JOIN "public"."departments" "d" ON (("u"."department_id" = "d"."id")))
      LEFT JOIN "public"."batches" "b" ON (("u"."batch_id" = "b"."id")))
@@ -1887,18 +1861,13 @@ ALTER TABLE ONLY "public"."fcm_tokens"
 
 
 
+ALTER TABLE ONLY "public"."fcm_tokens"
+    ADD CONSTRAINT "fcm_tokens_user_id_token_key" UNIQUE ("user_id", "token");
+
+
+
 ALTER TABLE ONLY "public"."lecture_slides"
     ADD CONSTRAINT "lecture_slides_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."routine_slots"
-    ADD CONSTRAINT "routine_slots_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."routines"
-    ADD CONSTRAINT "routines_pkey" PRIMARY KEY ("id");
 
 
 
@@ -2022,22 +1991,6 @@ CREATE INDEX "idx_lecture_slides_created_by" ON "public"."lecture_slides" USING 
 
 
 CREATE INDEX "idx_lecture_slides_section_id" ON "public"."lecture_slides" USING "btree" ("section_id");
-
-
-
-CREATE INDEX "idx_routine_slots_course" ON "public"."routine_slots" USING "btree" ("course_id");
-
-
-
-CREATE INDEX "idx_routine_slots_day" ON "public"."routine_slots" USING "btree" ("day_of_week");
-
-
-
-CREATE INDEX "idx_routine_slots_routine" ON "public"."routine_slots" USING "btree" ("routine_id");
-
-
-
-CREATE INDEX "idx_routine_slots_teacher" ON "public"."routine_slots" USING "btree" ("teacher_id");
 
 
 
@@ -2255,26 +2208,6 @@ ALTER TABLE ONLY "public"."lecture_slides"
 
 ALTER TABLE ONLY "public"."lecture_slides"
     ADD CONSTRAINT "lecture_slides_section_id_fkey" FOREIGN KEY ("section_id") REFERENCES "public"."sections"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."routine_slots"
-    ADD CONSTRAINT "routine_slots_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."routine_slots"
-    ADD CONSTRAINT "routine_slots_routine_id_fkey" FOREIGN KEY ("routine_id") REFERENCES "public"."routines"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."routine_slots"
-    ADD CONSTRAINT "routine_slots_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "public"."teachers"("id") ON DELETE SET NULL;
-
-
-
-ALTER TABLE ONLY "public"."routines"
-    ADD CONSTRAINT "routines_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -2513,14 +2446,6 @@ CREATE POLICY "Enable delete for admin users on courses" ON "public"."courses" F
 
 
 
-CREATE POLICY "Enable delete for admin users on routine_slots" ON "public"."routine_slots" FOR DELETE TO "authenticated" USING ("public"."is_admin"());
-
-
-
-CREATE POLICY "Enable delete for admin users on routines" ON "public"."routines" FOR DELETE TO "authenticated" USING ("public"."is_admin"());
-
-
-
 CREATE POLICY "Enable delete for admin users on study_materials" ON "public"."study_materials" FOR DELETE TO "authenticated" USING ("public"."is_admin"());
 
 
@@ -2547,14 +2472,6 @@ CREATE POLICY "Enable insert for admin users on courses" ON "public"."courses" F
 
 
 
-CREATE POLICY "Enable insert for admin users on routine_slots" ON "public"."routine_slots" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Enable insert for admin users on routines" ON "public"."routines" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
-
-
-
 CREATE POLICY "Enable insert for admin users on study_materials" ON "public"."study_materials" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
 
 
@@ -2572,14 +2489,6 @@ CREATE POLICY "Enable read access for all authenticated users" ON "public"."stud
 
 
 CREATE POLICY "Enable read access for all authenticated users on courses" ON "public"."courses" FOR SELECT TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "Enable read access for all authenticated users on routine_slots" ON "public"."routine_slots" FOR SELECT TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "Enable read access for all authenticated users on routines" ON "public"."routines" FOR SELECT TO "authenticated" USING (true);
 
 
 
@@ -2604,14 +2513,6 @@ CREATE POLICY "Enable update for admin users" ON "public"."study_materials" FOR 
 
 
 CREATE POLICY "Enable update for admin users on courses" ON "public"."courses" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Enable update for admin users on routine_slots" ON "public"."routine_slots" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Enable update for admin users on routines" ON "public"."routines" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
 
@@ -2771,12 +2672,6 @@ ALTER TABLE "public"."fcm_tokens" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."lecture_slides" ENABLE ROW LEVEL SECURITY;
 
 
-ALTER TABLE "public"."routine_slots" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."routines" ENABLE ROW LEVEL SECURITY;
-
-
 ALTER TABLE "public"."section_admins" ENABLE ROW LEVEL SECURITY;
 
 
@@ -2913,6 +2808,18 @@ ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
 
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."activities";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."departments";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."fcm_tokens";
 
 
 
@@ -3444,18 +3351,6 @@ GRANT ALL ON TABLE "public"."fcm_tokens" TO "service_role";
 GRANT ALL ON TABLE "public"."lecture_slides" TO "anon";
 GRANT ALL ON TABLE "public"."lecture_slides" TO "authenticated";
 GRANT ALL ON TABLE "public"."lecture_slides" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."routine_slots" TO "anon";
-GRANT ALL ON TABLE "public"."routine_slots" TO "authenticated";
-GRANT ALL ON TABLE "public"."routine_slots" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."routines" TO "anon";
-GRANT ALL ON TABLE "public"."routines" TO "authenticated";
-GRANT ALL ON TABLE "public"."routines" TO "service_role";
 
 
 

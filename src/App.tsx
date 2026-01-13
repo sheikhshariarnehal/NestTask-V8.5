@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useAuth } from './hooks/useAuth';
 import { useTasks } from './hooks/useTasks';
 import { useUsers } from './hooks/useUsers';
@@ -769,10 +767,6 @@ export default function App() {
           todayTaskCount={todayTaskCount}
         />
       </div>
-      
-      {/* Vercel Analytics & Speed Insights */}
-      <Analytics />
-      <SpeedInsights />
     </IonApp>
   );
 }
