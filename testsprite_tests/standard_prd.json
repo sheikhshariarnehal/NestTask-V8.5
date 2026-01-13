@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "project": "NestTask",
+    "date": "2026-01-13",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "NestTask is an integrated task and academic management system designed for students and educators to efficiently organize daily routines, track assignments, and access study materials on both web and Android platforms.",
+  "core_goals": [
+    "Provide secure and role-based user authentication and profile management.",
+    "Enable comprehensive task management with categorization, status tracking, and deadline notifications.",
+    "Offer academic management including daily routines, course info, and study material repository.",
+    "Implement an efficient global search with filtering capabilities across tasks, courses, and materials.",
+    "Facilitate real-time notifications for tasks and system updates.",
+    "Equip administrators with dashboard tools for user, content, and analytics management.",
+    "Ensure high performance with lazy loading, caching, and offline functionality.",
+    "Deliver a responsive, user-friendly, and secure application experience."
+  ],
+  "key_features": [
+    "User Authentication & Profile Management with role-based access (User, Admin, Super Admin).",
+    "Task Management supporting CRUD, categories, statuses, drag-and-drop reordering, and deadline tracking.",
+    "Academic Management including routine schedules, course data, study material upload/download, and lecture slides access.",
+    "Advanced Search and Filtering to find tasks, routines, and academic content.",
+    "Push and In-App Notifications for deadlines and announcements using Capacitor and Firebase.",
+    "Admin Dashboard with user management, analytics visualizations, and academic content control.",
+    "Responsive UI using React, Tailwind CSS, with offline support and smooth animations.",
+    "Data security ensured through Supabase Row Level Security and environment safeguards."
+  ],
+  "user_flow_summary": [
+    "Users can sign up, log in, recover passwords, and manage profiles with different access roles.",
+    "Users create, categorize, update, and reorder tasks, marking their progress and scheduling deadlines.",
+    "Users view and manage academic routines, courses, and study materials including lecture slides.",
+    "Users search across all content types with filter options for status, categories, and dates.",
+    "Users receive timely notifications about task deadlines and system events.",
+    "Admins access dashboards to manage users, tasks, courses, and perform analytics monitoring.",
+    "The system supports offline access with cached data and optimized loading for seamless user experience across devices."
+  ],
+  "validation_criteria": [
+    "Successful role-based authentication and secure password reset flows.",
+    "Full task CRUD functionality with correct categorization and status updates.",
+    "Accurate academic content management with seamless uploading and accessing study materials and slides.",
+    "Effective global search with multi-criteria filtering and relevant results.",
+    "Timely delivery of push and in-app notifications targeting correct user events.",
+    "Admin dashboard functionalities work accurately including user management and content analytics.",
+    "Application responsiveness and functionality across supported devices, including offline features.",
+    "Security compliance with Supabase RLS, protecting sensitive data and environment variables."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "TypeScript",
+      "React",
+      "Vite",
+      "Supabase",
+      "Tailwind CSS",
+      "Capacitor",
+      "PostgreSQL"
+    ],
+    "features": [
+      {
+        "name": "Authentication",
+        "description": "User authentication functionality including login, signup, and password reset.",
+        "files": [
+          "src/pages/AuthPage.tsx",
+          "src/pages/ResetPasswordPage.tsx",
+          "src/components/auth/AuthLayout.tsx",
+          "src/components/auth/LoginForm.tsx",
+          "src/components/auth/SignupForm.tsx",
+          "src/hooks/useAuth.ts"
+        ]
+      },
+      {
+        "name": "Admin Dashboard",
+        "description": "Dashboard for administrators to manage the application.",
+        "files": [
+          "src/pages/AdminDashboard.tsx",
+          "src/pages/admin/TaskManagementPage.tsx",
+          "src/pages/admin/UsersPage.tsx",
+          "src/pages/admin/DashboardPage.tsx"
+        ]
+      },
+      {
+        "name": "Task Management",
+        "description": "Core functionality for creating, viewing, and managing tasks.",
+        "files": [
+          "src/pages/HomePage.tsx",
+          "src/pages/TaskViewPage.tsx",
+          "src/pages/UpcomingPage.tsx",
+          "src/components/task/TaskList.tsx",
+          "src/components/task/TaskItem.tsx",
+          "src/components/TaskCategories.tsx"
+        ]
+      },
+      {
+        "name": "Routine Management",
+        "description": "Feature for managing daily routines and schedules.",
+        "files": [
+          "src/pages/RoutinePage.tsx",
+          "src/components/routine/RoutineList.tsx",
+          "src/components/routine/RoutineItem.tsx"
+        ]
+      },
+      {
+        "name": "Lecture Slides",
+        "description": "Functionality to view and manage lecture slides.",
+        "files": [
+          "src/pages/LectureSlidesPage.tsx",
+          "src/pages/admin/LectureSlidesPage.tsx",
+          "src/components/lecture-slides/SlideViewer.tsx"
+        ]
+      },
+      {
+        "name": "Profile Management",
+        "description": "User profile settings and information.",
+        "files": [
+          "src/pages/ProfilePage.tsx",
+          "src/components/profile/ProfileEditor.tsx"
+        ]
+      },
+      {
+        "name": "Search",
+        "description": "Search functionality to find tasks, routines, or other content.",
+        "files": [
+          "src/pages/SearchPage.tsx",
+          "src/components/search/SearchBar.tsx",
+          "src/components/search/SearchResults.tsx"
+        ]
+      },
+      {
+        "name": "Shared UI Components",
+        "description": "Reusable UI components used throughout the application.",
+        "files": [
+          "src/components/Navigation.tsx",
+          "src/components/BottomNavigation.tsx",
+          "src/components/ui"
+        ]
+      }
+    ]
+  }
+}

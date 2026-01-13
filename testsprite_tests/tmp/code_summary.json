@@ -4,65 +4,87 @@
     "React",
     "Vite",
     "Supabase",
-    "TailwindCSS",
+    "Tailwind CSS",
     "Capacitor",
     "PostgreSQL"
   ],
   "features": [
     {
       "name": "Authentication",
-      "description": "User login, signup, password reset, and session management using Supabase Auth.",
+      "description": "User authentication functionality including login, signup, and password reset.",
       "files": [
         "src/pages/AuthPage.tsx",
         "src/pages/ResetPasswordPage.tsx",
-        "src/hooks/useAuth.ts",
-        "src/utils/auth.ts"
+        "src/components/auth/AuthLayout.tsx",
+        "src/components/auth/LoginForm.tsx",
+        "src/components/auth/SignupForm.tsx",
+        "src/hooks/useAuth.ts"
+      ]
+    },
+    {
+      "name": "Admin Dashboard",
+      "description": "Dashboard for administrators to manage the application.",
+      "files": [
+        "src/pages/AdminDashboard.tsx",
+        "src/pages/admin/TaskManagementPage.tsx",
+        "src/pages/admin/UsersPage.tsx",
+        "src/pages/admin/DashboardPage.tsx"
       ]
     },
     {
       "name": "Task Management",
-      "description": "Create, read, update, delete tasks. Filter by status, date, category. Task lists and details.",
+      "description": "Core functionality for creating, viewing, and managing tasks.",
       "files": [
-        "src/pages/TasksPage.tsx",
+        "src/pages/HomePage.tsx",
+        "src/pages/TaskViewPage.tsx",
         "src/pages/UpcomingPage.tsx",
-        "src/hooks/useTasks.ts",
-        "src/services/task.service.ts",
-        "src/components/TaskList.tsx"
+        "src/components/task/TaskList.tsx",
+        "src/components/task/TaskItem.tsx",
+        "src/components/TaskCategories.tsx"
       ]
     },
     {
-      "name": "User Management",
-      "description": "Admin capability to view, manage, promote/demote users.",
-      "files": [
-        "src/pages/UsersPage.tsx",
-        "src/hooks/useUsers.ts",
-        "src/components/UserList.tsx"
-      ]
-    },
-    {
-      "name": "Notifications",
-      "description": "In-app and push notifications for task reminders and announcements.",
-      "files": [
-        "src/hooks/useNotifications.ts",
-        "src/hooks/usePushNotifications.ts",
-        "src/services/telegram.service.ts"
-      ]
-    },
-    {
-      "name": "Announcements",
-      "description": "Post and view announcements for sections.",
-      "files": [
-        "src/pages/AnnouncementsPage.tsx",
-        "src/components/AnnouncementManager.tsx"
-      ]
-    },
-    {
-      "name": "Routine & Academic",
-      "description": "View class routines and upload/view lecture slides.",
+      "name": "Routine Management",
+      "description": "Feature for managing daily routines and schedules.",
       "files": [
         "src/pages/RoutinePage.tsx",
+        "src/components/routine/RoutineList.tsx",
+        "src/components/routine/RoutineItem.tsx"
+      ]
+    },
+    {
+      "name": "Lecture Slides",
+      "description": "Functionality to view and manage lecture slides.",
+      "files": [
         "src/pages/LectureSlidesPage.tsx",
-        "src/components/routine/RoutineSkeleton.tsx"
+        "src/pages/admin/LectureSlidesPage.tsx",
+        "src/components/lecture-slides/SlideViewer.tsx"
+      ]
+    },
+    {
+      "name": "Profile Management",
+      "description": "User profile settings and information.",
+      "files": [
+        "src/pages/ProfilePage.tsx",
+        "src/components/profile/ProfileEditor.tsx"
+      ]
+    },
+    {
+      "name": "Search",
+      "description": "Search functionality to find tasks, routines, or other content.",
+      "files": [
+        "src/pages/SearchPage.tsx",
+        "src/components/search/SearchBar.tsx",
+        "src/components/search/SearchResults.tsx"
+      ]
+    },
+    {
+      "name": "Shared UI Components",
+      "description": "Reusable UI components used throughout the application.",
+      "files": [
+        "src/components/Navigation.tsx",
+        "src/components/BottomNavigation.tsx",
+        "src/components/ui"
       ]
     }
   ]

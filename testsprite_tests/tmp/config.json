@@ -1,14 +1,18 @@
 {
-  "status": "init",
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "loginUser": "bxbbd8@diu.edu.bd",
+  "loginPassword": "vbxbx bx",
   "executionArgs": {
     "projectName": "NestTask-V8.5",
-    "projectPath": "e:\\Poject\\NESTTASK\\NestTask-V8.5",
-    "testIds": [
-      "TC_Resume_Network_Recovery"
-    ],
-    "additionalInstruction": "Generate a new Playwright test in JavaScript/TypeScript (not Python) because Python is not available. \nContext: The app has a `useTasks` hook that should refresh data on 'app-resume' or network reconnect.\nTest Steps:\n1. Navigate to http://localhost:5173\n2. Log in with student@example.com / password123 (or valid credentials).\n3. Wait for \"Upcoming Tasks\" to appear.\n4. Set offline mode (browser context).\n5. Wait 5 seconds.\n6. Set online mode.\n7. Verify \"Upcoming Tasks\" is still visible and no error toast appears.",
+    "projectPath": "e:/Poject/NESTTASK/NestTask-V8.5",
+    "testIds": [],
+    "additionalInstruction": "",
     "envs": {
       "API_KEY": "sk-user-FEwPnzYiSLsoMQFGm-lCEJJisgt_rAUEDpcrxNxb0JTmQ3DelIUP9AFti5qeYCY5CqcES9JDREkDAzi258Ucc4epafeDz6Z2RWttB4KvwfhAfMORobWr6iK6R6YJ-8UmS8Y"
     }
-  }
+  },
+  "proxy": "http://34b378d6-5de9-4278-878e-5ee121030746:zVeTgNACDHtBcxztghPAq0jUASMmhHZ1@tun.testsprite.com:8080"
 }

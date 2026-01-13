@@ -1,0 +1,534 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Login with Valid Credentials",
+    "description": "Verify that a user can successfully log in with valid username and password according to their role.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter valid username/email and password for a User role"
+      },
+      {
+        "type": "action",
+        "description": "Click login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that login is successful and user dashboard is displayed appropriate to role"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Login Failure with Invalid Credentials",
+    "description": "Verify that login fails with an incorrect username or password and displays an appropriate error message.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter invalid username/email or wrong password"
+      },
+      {
+        "type": "action",
+        "description": "Click login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that login fails and an error message is shown"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Password Reset Flow",
+    "description": "Verify that a user can reset their password successfully through the password recovery process.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to password reset page"
+      },
+      {
+        "type": "action",
+        "description": "Enter registered email address"
+      },
+      {
+        "type": "action",
+        "description": "Submit password reset request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify receipt of password reset email or link"
+      },
+      {
+        "type": "action",
+        "description": "Follow reset link and enter a new valid password"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify password is updated and user can log in with new password"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Role-Based Access Control Enforcement",
+    "description": "Validate that users with different roles (User, Admin, Super Admin) have access only to their allowed features and pages.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as User role"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to user task management and profile but no admin dashboard access"
+      },
+      {
+        "type": "action",
+        "description": "Logout and login as Admin role"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to admin dashboard and user management but no Super Admin-only features"
+      },
+      {
+        "type": "action",
+        "description": "Logout and login as Super Admin role"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to all administrative features including management and analytics"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Create New Task Successfully",
+    "description": "Verify that a user can create a new task with required fields including category and deadline.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to task creation interface"
+      },
+      {
+        "type": "action",
+        "description": "Fill in task title, description, select category, status, and set a deadline"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new task form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the new task appears in the task list with correct information"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Edit Existing Task",
+    "description": "Verify that a user can update details of an existing task and changes are saved correctly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Locate an existing task in the task list"
+      },
+      {
+        "type": "action",
+        "description": "Open task details and modify title, category, status, or deadline"
+      },
+      {
+        "type": "action",
+        "description": "Save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that task details are updated accordingly in the list"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Delete Task",
+    "description": "Verify that a user can delete a task and it is removed from the task list.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select a task to delete"
+      },
+      {
+        "type": "action",
+        "description": "Perform delete action and confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the task no longer appears in the task list"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Drag and Drop Task Reordering",
+    "description": "Verify that tasks can be reordered via drag-and-drop in the task list and order is persisted.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to task list"
+      },
+      {
+        "type": "action",
+        "description": "Drag a task from one position to another"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the task order updates in UI and persists after page reload"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Task Deadline Notification Trigger",
+    "description": "Validate that users receive timely notifications for tasks nearing their deadlines.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create or identify a task with a deadline approaching soon"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify receipt of push or in-app notification about the upcoming deadline"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Create and Manage Academic Routine",
+    "description": "Verify users can create, view, update, and delete daily routine schedules.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to routine management page"
+      },
+      {
+        "type": "action",
+        "description": "Create a new routine with title, time, and description"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new routine is listed"
+      },
+      {
+        "type": "action",
+        "description": "Edit the routine details"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that updates are saved and displayed correctly"
+      },
+      {
+        "type": "action",
+        "description": "Delete the routine"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the routine is removed from the list"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "View Course Information",
+    "description": "Verify that users can access detailed course information and related academic content.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to courses section"
+      },
+      {
+        "type": "action",
+        "description": "Select a specific course"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that course details such as schedule, instructor, and description are displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Access Lecture Slides",
+    "description": "Verify that users can access and view lecture slides for enrolled courses.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to lecture slides section"
+      },
+      {
+        "type": "action",
+        "description": "Select lecture slides for a given course or date"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that slides display correctly in the viewer component"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Global Search Functionality with Filters",
+    "description": "Validate that the search supports querying tasks, routines, and academic content with various filters and returns accurate results.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to global search page"
+      },
+      {
+        "type": "action",
+        "description": "Enter a keyword relevant to existing task or academic material"
+      },
+      {
+        "type": "action",
+        "description": "Apply filters such as category, status, and date range"
+      },
+      {
+        "type": "action",
+        "description": "Execute search"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that search results correctly match keyword and filters"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Admin User Management Operations",
+    "description": "Verify admins can add, edit, and disable user accounts via the admin dashboard.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Admin"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to user management section"
+      },
+      {
+        "type": "action",
+        "description": "Add a new user with role and profile details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new user appears in the user list"
+      },
+      {
+        "type": "action",
+        "description": "Edit an existing user’s information or role"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are reflected"
+      },
+      {
+        "type": "action",
+        "description": "Disable a user account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is disabled and cannot log in"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Admin Analytics Dashboard Data Accuracy",
+    "description": "Verify that analytics visualizations accurately reflect system data such as user activity and task completion statistics.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Admin"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to analytics dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that charts and reports accurately display user and task metrics based on system data"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Offline Mode Data Accessibility",
+    "description": "Ensure that users can access cached tasks, routines, and academic information while offline.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load application and cache some tasks, routines, and academic content"
+      },
+      {
+        "type": "action",
+        "description": "Simulate offline mode by disabling network connection"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to previously cached data with full functionality"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Responsive UI Behavior on Different Devices",
+    "description": "Validate that the UI components render and behave correctly on various screen sizes including desktop and Android phone.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open application on desktop browser with various window sizes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify layout adapts correctly with no content overlap or loss"
+      },
+      {
+        "type": "action",
+        "description": "Open application on Android device"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI elements are responsive and usable with touch input"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Data Security Enforcement via Row Level Security",
+    "description": "Verify that Row Level Security policies correctly prevent unauthorized data access according to user roles.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as regular User"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access another user’s tasks, routines, or profile data via APIs or UI"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that access is denied or data is not visible"
+      },
+      {
+        "type": "action",
+        "description": "Login as Admin and perform similar access tests"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that admins cannot access Super Admin only data or functions"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Profile Update and Persistence",
+    "description": "Verify that users can update their profile information and changes persist after logout and login.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a user and navigate to profile page"
+      },
+      {
+        "type": "action",
+        "description": "Update profile fields like display name, email (if allowed), or preferences"
+      },
+      {
+        "type": "action",
+        "description": "Save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are reflected immediately"
+      },
+      {
+        "type": "action",
+        "description": "Logout and login again"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify profile changes persist"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Filtering Task List by Category and Status",
+    "description": "Verify users can filter tasks based on categories and status and the filtered results are accurate.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to task list page"
+      },
+      {
+        "type": "action",
+        "description": "Apply category filter (e.g., Homework)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify task list shows only tasks in selected category"
+      },
+      {
+        "type": "action",
+        "description": "Apply status filter (e.g., Completed)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify task list updates accordingly to show only tasks matching both filters"
+      }
+    ]
+  }
+]
