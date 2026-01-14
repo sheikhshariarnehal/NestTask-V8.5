@@ -443,15 +443,22 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         if (loading) {
           console.warn('Loading state stuck for too long, forcing refresh');
           refreshTasks();
+          // Force clear initial load after timeout to show content (even if empty)
+          setIsInitialLoad(false);
         }
       }, 10000); // 10 seconds timeout
+    } else {
+      // If loading is false, successfully loaded
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     }
     return () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [loading, refreshTasks]);
+  }, [loading, refreshTasks, isInitialLoad]);
 
   // Enhanced retry mechanism
   const retryLoadTasks = useCallback(() => {

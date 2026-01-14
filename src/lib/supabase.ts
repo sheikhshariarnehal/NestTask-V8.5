@@ -276,50 +276,68 @@ export async function testConnection(forceCheck = false) {
       
       if (connectionAttempts >= 3) {
         console.warn('Max connection attempts reached, using fallback mode');
-        // Return true anyway to prevent app from being stuck in retry loop
         return true;
       }
       
       connectionAttempts++;
       
-      // First verify authentication status
-      const { data: session, error: authError } = await supabase.auth.getSession();
+      // Strict timeout for the entire connection test (5 seconds)
+      const timeoutPromise = new Promise<void>((_, reject) => 
+        setTimeout(() => reject(new Error('Connection test timed out')), 5000)
+      );
       
-      if (authError) {
-        console.error('Auth error when checking session:', authError.message);
-        return false;
-      }
-      
-      if (!session.session) {
-        console.warn('No active session found - this is expected for first-time visitors');
-        // Return true anyway so the user can see the login page
-        return true;
-      }
-      
-      // Test database connection with a simpler query
-      const { error } = await supabase.from('tasks').select('count', { count: 'exact', head: true });
-      
-      if (error) {
-        console.error('Database connection error:', error.message, error.code);
+      const checkLogic = async () => {
+        // First verify authentication status
+        const { data: session, error: authError } = await supabase.auth.getSession();
         
-        if (error.code === 'PGRST301' || error.message.includes('JWT')) {
-          console.warn('JWT token invalid, signing out');
-          await supabase.auth.signOut();
+        if (authError) {
+          console.error('Auth error when checking session:', authError.message);
           return false;
         }
         
-        // Allow continuing anyway after logging the error
-        console.warn('Continuing despite database error');
+        if (!session.session) {
+          console.warn('No active session found - this is expected for first-time visitors');
+          return true;
+        }
+        
+        // Test database connection with a simpler query
+        const { error } = await supabase.from('tasks').select('count', { count: 'exact', head: true });
+        
+        if (error) {
+          console.error('Database connection error:', error.message, error.code);
+          
+          if (error.code === 'PGRST301' || error.message.includes('JWT')) {
+            console.warn('JWT token invalid, signing out');
+            await supabase.auth.signOut();
+            return false;
+          }
+          
+          console.warn('Continuing despite database error');
+          return true;
+        }
+        
         return true;
+      };
+
+      try {
+        const result = await Promise.race([checkLogic(), timeoutPromise]);
+        
+        if (result === true) {
+          console.log('Database connection successful');
+          isInitialized = true;
+          lastConnectionTime = Date.now();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (timeoutErr) {
+        console.warn('Connection test timed out - assuming offline or slow connection');
+        // Return true to avoid blocking the app
+        return true; 
       }
-      
-      console.log('Database connection successful');
-      isInitialized = true;
-      lastConnectionTime = Date.now();
-      return true;
+
     } catch (error: any) {
       console.error('Unexpected error during connection test:', error.message);
-      // Return true anyway to prevent blocking the app
       return true;
     } finally {
       setTimeout(() => {

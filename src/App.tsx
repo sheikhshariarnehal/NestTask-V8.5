@@ -269,7 +269,19 @@ export default function App() {
       const { durationSeconds, requiresRefresh } = customEvent.detail;
       
       if (requiresRefresh) {
-        console.log(`[App] Resuming after ${durationSeconds}s background, refreshing data...`);
+        console.log(`[App] Resuming after ${durationSeconds}s background...`);
+        
+        // Anti-Zombie Measure:
+        // If the app was in background for more than 5 minutes (300s) on mobile,
+        // force a hard reload. WebView networks often fail to reconnect WebSocket/Fetch
+        // sockets properly after deep sleep.
+        if (Capacitor.isNativePlatform() && durationSeconds > 300) {
+           console.log('[App] Long background duration detected (>5m). Reloading to fix zombie sockets.');
+           window.location.reload();
+           return;
+        }
+
+        console.log('[App] Refreshing data...');
         setIsResumingFromBackground(true);
         
         // Auto-hide after 3 seconds

@@ -4,6 +4,7 @@ import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
 import { requestSessionValidation } from '../utils/sessionValidation';
+import { Capacitor } from '@capacitor/core';
 
 // Task fetch timeout in milliseconds (reduced to 10s for snappier failure)
 const TASK_FETCH_TIMEOUT = 10000;
@@ -136,6 +137,11 @@ export function useTasks(userId: string | undefined) {
     const throttleTime = tabSwitchRecoveryRef.current ? 1000 : 3000;
     if (!options.force && now - lastLoadTimeRef.current < throttleTime) {
       console.log('Task loading throttled - too soon since last load');
+      // Ensure we don't get stuck in loading state if we're throttled
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+      loadingRef.current = false;
       return;
     }
 
@@ -214,7 +220,9 @@ export function useTasks(userId: string | undefined) {
              return; 
            }
 
-          throw new Error('Session not ready - please try again');
+          // If we have a userId but no session, we might be in a "zombie" state or offline without cache.
+          // Instead of throwing, let's TRY to fetch anyway. The fetch itself might fail or work if the session is just sticking.
+          console.warn('[useTasks] Proceeding to fetch despite missing session check (optimistic)');
         }
       }
 
@@ -277,8 +285,16 @@ export function useTasks(userId: string | undefined) {
         } else if (retryCount >= maxRetries) {
           // After max retries, we should try to reset and make a forced refresh
           // next time the user interacts or becomes active
-          tabSwitchRecoveryRef.current = true;
-          console.warn(`Maximum retries (${maxRetries}) reached for task fetching. Will force refresh next time.`);
+          console.warn(`Maximum retries (${maxRetries}) reached for task fetching.`);
+          
+          if (Capacitor.isNativePlatform()) {
+             // If we are on native and can't fetch tasks after multiple attempts,
+             // the network socket is likely dead. Force a hard reload to recover.
+             console.error('[useTasks] Fatal network/session error on native. Forcing app reload.');
+             window.location.reload();
+          } else {
+             tabSwitchRecoveryRef.current = true;
+          }
         }
       }
     } finally {

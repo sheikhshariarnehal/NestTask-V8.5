@@ -104,11 +104,30 @@ export function useAuth() {
         }
       }
 
-      // Try to get the session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Try to get the session with a timeout
+      // Supabase getSession can hang indefinitely on some Android environments/WebViews
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise<{
+        data: { session: any };
+        error: any;
+      }>((resolve) => setTimeout(() => resolve({ 
+        data: { session: null }, 
+        error: { message: 'Session retrieval timed out' } 
+      }), 8000));
+
+      const { data: { session }, error: sessionError } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]);
       
       if (sessionError) {
-        console.error('Error getting auth session:', sessionError.message);
+        if (sessionError.message === 'Session retrieval timed out') {
+           console.warn('[useAuth] Session check timed out - assuming offline');
+           // Fall through to cached user check below
+        } else {
+           console.error('Error getting auth session:', sessionError.message);
+        }
+        
         // Try cached user as fallback
         const cachedUser = localStorage.getItem('nesttask_cached_user');
         if (cachedUser) {

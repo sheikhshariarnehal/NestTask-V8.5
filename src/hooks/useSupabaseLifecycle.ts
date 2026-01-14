@@ -76,7 +76,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       }>((resolve) => setTimeout(() => resolve({ 
         data: { session: null }, 
         error: { message: 'Session retrieval timed out' } 
-      }), 4000));
+      }), 10000));
 
       const { data: { session }, error: sessionError } = await Promise.race([
         sessionPromise,
@@ -86,10 +86,10 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       if (sessionError) {
         if (sessionError.message === 'Session retrieval timed out') {
            console.warn('[Supabase Lifecycle] Session check timed out - assuming offline or storage locked');
-           // If we time out, we shouldn't necessarily fail validation if we think we might be logged in.
-           // But returning false is safer than pretending we are verified.
-           // However, blocking the app is bad.
-           // Emitting success: false allows the app to redirect to login or show error.
+           // Allow the app to proceed in offline mode
+           // This lets useTasks try to fetch and fall back to cache if needed
+           emitSessionValidated({ success: true });
+           return true;
         } else {
            console.error('[Supabase Lifecycle] Error getting session:', sessionError.message);
         }
