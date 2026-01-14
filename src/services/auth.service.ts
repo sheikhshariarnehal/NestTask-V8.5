@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { getSessionSafe, supabase } from '../lib/supabase';
 import { getAuthErrorMessage } from '../utils/authErrors';
 import type { LoginCredentials, SignupCredentials, User } from '../types/auth';
 import type { Database } from '../types/supabase';
@@ -536,7 +536,7 @@ export async function logoutUser(): Promise<void> {
 // Helper function to handle focus refresh
 async function handleFocusRefresh() {
   try {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
     if (data?.session) {
       await supabase.auth.refreshSession({
         refresh_token: data.session.refresh_token,
@@ -556,7 +556,7 @@ function setupTokenRefresh(refreshToken: string) {
   const intervalId = setInterval(async () => {
     try {
       // Get the current session
-      const { data } = await supabase.auth.getSession();
+      const { data } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
       
       if (data?.session) {
         // Refresh the session

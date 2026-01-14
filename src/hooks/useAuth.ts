@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, testConnection } from '../lib/supabase';
+import { supabase, testConnection, getSessionSafe } from '../lib/supabase';
 import { dataCache, cacheKeys } from '../lib/dataCache';
 import { loginUser, signupUser, logoutUser, resetPassword } from '../services/auth.service';
 import { forceCleanReload, updateAuthStatus } from '../utils/auth';
@@ -104,21 +104,7 @@ export function useAuth() {
         }
       }
 
-      // Try to get the session with a timeout
-      // Supabase getSession can hang indefinitely on some Android environments/WebViews
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<{
-        data: { session: any };
-        error: any;
-      }>((resolve) => setTimeout(() => resolve({ 
-        data: { session: null }, 
-        error: { message: 'Session retrieval timed out' } 
-      }), 8000));
-
-      const { data: { session }, error: sessionError } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]);
+      const { data: { session }, error: sessionError } = await getSessionSafe({ timeoutMs: 8000 });
       
       if (sessionError) {
         if (sessionError.message === 'Session retrieval timed out') {
@@ -631,7 +617,7 @@ export function useAuth() {
 
   const refreshUser = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
       if (session?.user) {
         // Clear cache before fetching fresh data
         const cacheKey = cacheKeys.userWithFullInfo(session.user.id);

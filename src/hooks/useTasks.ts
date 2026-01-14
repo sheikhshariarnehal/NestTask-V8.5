@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase, testConnection } from '../lib/supabase';
+import { supabase, testConnection, getSessionSafe } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
 import { requestSessionValidation } from '../utils/sessionValidation';
 import { Capacitor } from '@capacitor/core';
 
-// Task fetch timeout in milliseconds (reduced to 10s for snappier failure)
-const TASK_FETCH_TIMEOUT = 10000;
+// Task fetch timeout in milliseconds.
+// On Android WebView / mobile networks, 10s was too aggressive after resume and caused false timeouts.
+const TASK_FETCH_TIMEOUT = 20000;
 
 // Cache for tasks to avoid refetching
 interface TasksCacheEntry {
@@ -47,6 +48,10 @@ export function useTasks(userId: string | undefined) {
   const lastVisibilityChangeRef = useRef(Date.now());
   // Throttle resume-triggered refreshes
   const lastResumeRefreshRef = useRef<number>(0);
+  // Zombie state detection - track when loading started
+  const loadingStartedAtRef = useRef<number>(0);
+  // Zombie recovery timer
+  const zombieRecoveryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update ref when userId changes
   useEffect(() => {
@@ -89,15 +94,24 @@ export function useTasks(userId: string | undefined) {
 
   const loadTasks = useCallback(async (options: { force?: boolean } = {}) => {
     if (!userId) return;
-    
-    // Cancel any ongoing request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+
+    // Don't start a new load if one is already running, unless forced.
+    // IMPORTANT: Do not abort first and then skip — that pattern can cancel the in-flight load
+    // and leave the UI in a no-progress state.
+    if (loadingRef.current && !options.force) {
+      console.log('[useTasks] Loading already in progress, skipping');
+      return;
     }
-    
-    // Create a new abort controller
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
+
+    // Cancel any ongoing request only when we are explicitly forcing a refresh.
+    if (options.force && abortControllerRef.current) {
+      abortControllerRef.current.abort('superseded');
+    }
+
+    // Create a new abort controller for this request
+    const requestController = new AbortController();
+    abortControllerRef.current = requestController;
+    const signal = requestController.signal;
     
     // If force is true, reset recovery mode, retry count, and any stuck states
     if (options.force) {
@@ -106,12 +120,6 @@ export function useTasks(userId: string | undefined) {
       if (isMountedRef.current) {
         setRetryCount(0);
       }
-    }
-    
-    // Don't reload if a request is already in progress, unless forced
-    if (loadingRef.current && !options.force) {
-      console.log('[useTasks] Loading already in progress, skipping');
-      return;
     }
     
     // Implement throttling - don't reload if last load was less than 3 seconds ago
@@ -160,6 +168,28 @@ export function useTasks(userId: string | undefined) {
       }
       
       loadingRef.current = true;
+      loadingStartedAtRef.current = Date.now();
+      
+      // Zombie state detection: if loading takes too long, force recovery
+      if (zombieRecoveryTimerRef.current) {
+        clearTimeout(zombieRecoveryTimerRef.current);
+      }
+      zombieRecoveryTimerRef.current = setTimeout(() => {
+        if (loadingRef.current && isMountedRef.current) {
+          const loadingDuration = Date.now() - loadingStartedAtRef.current;
+          console.error(`[useTasks] ZOMBIE STATE DETECTED: Loading for ${Math.round(loadingDuration / 1000)}s`);
+          
+          // Force recovery: reset loading state and trigger forced refresh
+          loadingRef.current = false;
+          if (isMountedRef.current) {
+            setLoading(false);
+            setError('Loading timed out. Pull down to refresh.');
+          }
+          
+          // Dispatch event to trigger session re-validation
+          window.dispatchEvent(new CustomEvent('request-session-validation'));
+        }
+      }, 20000); // 20 second zombie detection
       if (isMountedRef.current) {
         setError(null);
       }
@@ -169,8 +199,11 @@ export function useTasks(userId: string | undefined) {
       if (!import.meta.env.DEV) {
         // On Android WebView / installed PWA, the first few seconds after launch can race
         // with storage/session hydration. Validate first to avoid transient “no session”.
-        // Increased timeout significantly to allow for slow Android cold starts
-        await requestSessionValidation(4000);
+        // Use much longer timeout for native platforms on cold start (15s vs 4s)
+        const isNative = Capacitor.isNativePlatform();
+        const validationTimeout = isNative ? 15000 : 6000;
+        console.log(`[useTasks] Requesting session validation (timeout: ${validationTimeout}ms, native: ${isNative})`);
+        await requestSessionValidation(validationTimeout);
 
         // Test connection before fetching
         // If connection test fails, try to use cache
@@ -187,14 +220,8 @@ export function useTasks(userId: string | undefined) {
            throw new Error('Unable to connect to database');
         }
 
-        // Helper for safe session retrieval with timeout
         const safeGetSession = async () => {
-          const sessionPromise = supabase.auth.getSession();
-          // Increased to 8s for slow Android devices
-          const timeoutPromise = new Promise<{ data: { session: any } }>((resolve) => 
-            setTimeout(() => resolve({ data: { session: null } }), 8000)
-          );
-          return await Promise.race([sessionPromise, timeoutPromise]);
+          return await getSessionSafe({ timeoutMs: 8000 });
         };
 
         // Check session - if no session, just return without reloading
@@ -232,19 +259,23 @@ export function useTasks(userId: string | undefined) {
         return;
       }
 
-      // Batch process tasks in chunks for better performance
-      const processTasks = async () => {
+      // Enforce a hard timeout that ALSO aborts the underlying Supabase request.
+      // This prevents hung fetches from piling up across resume/network flaps.
+      const taskTimeoutId = window.setTimeout(() => {
+        try {
+          requestController.abort('timeout');
+        } catch {
+          // ignore
+        }
+      }, TASK_FETCH_TIMEOUT);
+
+      let data: Task[];
+      try {
         // Pass undefined for sectionId as we don't need to filter manually
-        const data = await fetchTasks(userId, undefined);
-        return data;
-      };
-      
-      // Use Promise.race to implement timeout with increased timeout value
-      const timeoutPromise = new Promise<Task[]>((_, reject) => {
-        setTimeout(() => reject(new Error('Task fetch timeout')), TASK_FETCH_TIMEOUT);
-      });
-      
-      const data = await Promise.race([processTasks(), timeoutPromise]);
+        data = await fetchTasks(userId, undefined, signal);
+      } finally {
+        window.clearTimeout(taskTimeoutId);
+      }
       
       // Only update state if component is mounted and request not aborted
       if (isMountedRef.current && !signal.aborted) {
@@ -256,19 +287,38 @@ export function useTasks(userId: string | undefined) {
         tabSwitchRecoveryRef.current = false; // We've recovered if we were in recovery mode
       }
     } catch (err: any) {
-      // Only update error state if component is mounted and not aborted
-      if (isMountedRef.current && (!abortControllerRef.current || !abortControllerRef.current.signal.aborted)) {
+      // If the request was intentionally aborted (e.g. superseded by a forced refresh),
+      // don't surface an error.
+      if (signal.aborted && (signal as any).reason === 'superseded') {
+        console.log('Task loading aborted');
+        return;
+      }
+
+      // Only update error state if component is mounted.
+      // If the signal was aborted due to our own timeout, we still want to surface the error.
+      const abortedDueToTimeout = signal.aborted && (signal as any).reason === 'timeout';
+      if (isMountedRef.current && (!signal.aborted || abortedDueToTimeout)) {
         console.error('Error fetching tasks:', err);
         
         // Provide a more informative error message for timeouts
-        if (err.message === 'Task fetch timeout') {
-          setError(`Failed to refresh: Task fetch timeout after ${TASK_FETCH_TIMEOUT/1000}s. Network may be slow or server overloaded.`);
+        const isTimeout =
+          err?.message === 'Task fetch timeout' ||
+          err?.message?.includes('timed out') ||
+          (signal.aborted && (signal as any).reason === 'timeout');
+
+        if (isTimeout) {
+          setError(`Failed to refresh: Task fetch timeout after ${TASK_FETCH_TIMEOUT / 1000}s. Network may be slow or server overloaded.`);
+        } else if (err?.message === 'Task fetch aborted') {
+          // Benign abort (e.g. navigation/unmount)
+          return;
         } else {
           setError(err.message || 'Failed to load tasks');
         }
         
         // Increase retry limit for timeouts
-        const maxRetries = err.message === 'Task fetch timeout' ? MAX_RETRIES_TIMEOUT : MAX_RETRIES_OTHER;
+        const maxRetries = (err?.message === 'Task fetch timeout' || err?.message?.includes('timed out') || (signal.aborted && (signal as any).reason === 'timeout'))
+          ? MAX_RETRIES_TIMEOUT
+          : MAX_RETRIES_OTHER;
         
         if (retryCount < maxRetries) {
           // Use exponential backoff with some randomness
@@ -298,8 +348,15 @@ export function useTasks(userId: string | undefined) {
         }
       }
     } finally {
+      // Clear zombie detection timer
+      if (zombieRecoveryTimerRef.current) {
+        clearTimeout(zombieRecoveryTimerRef.current);
+        zombieRecoveryTimerRef.current = null;
+      }
+      
       // Immediately reset loading state - no delay needed
       loadingRef.current = false;
+      loadingStartedAtRef.current = 0;
       if (isMountedRef.current) {
         setLoading(false);
       }
@@ -328,11 +385,13 @@ export function useTasks(userId: string | undefined) {
       try {
         // Create a promise that resolves when session validation completes
         const sessionValidPromise = new Promise<void>((resolve) => {
-          // Increased timeout to 10s to account for mobile network wake-up latency
+          // Use 15s timeout for native platforms to account for mobile network wake-up latency
+          const isNative = Capacitor.isNativePlatform();
+          const timeoutDuration = isNative ? 15000 : 10000;
           const timeout = setTimeout(() => {
-            console.log('[useTasks] Session validation timeout (10s), proceeding anyway');
+            console.log(`[useTasks] Session validation timeout (${timeoutDuration / 1000}s), proceeding anyway`);
             resolve();
-          }, 10000); // 10s timeout
+          }, timeoutDuration);
           
           const handler = () => {
             clearTimeout(timeout);
@@ -400,6 +459,12 @@ export function useTasks(userId: string | undefined) {
     return () => {
       // Mark component as unmounted
       isMountedRef.current = false;
+
+      // Clear zombie detection timer
+      if (zombieRecoveryTimerRef.current) {
+        clearTimeout(zombieRecoveryTimerRef.current);
+        zombieRecoveryTimerRef.current = null;
+      }
 
       // Abort any in-progress request
       if (abortControllerRef.current) {

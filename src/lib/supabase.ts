@@ -110,6 +110,60 @@ export const supabase = createClient<Database>(
   }
 });
 
+type SessionResult = {
+  data: { session: any };
+  error: any;
+};
+
+let getSessionInFlight: Promise<SessionResult> | null = null;
+let lastSessionResult: SessionResult | null = null;
+let lastSessionResultAt = 0;
+
+/**
+ * Android WebView can deadlock/stall on concurrent access to auth storage.
+ * This helper enforces a single in-flight getSession() call and applies a hard timeout.
+ */
+export async function getSessionSafe(options: { timeoutMs?: number; maxAgeMs?: number } = {}): Promise<SessionResult> {
+  const timeoutMs = options.timeoutMs ?? 8000;
+  const maxAgeMs = options.maxAgeMs ?? 1000;
+
+  const now = Date.now();
+  if (lastSessionResult && now - lastSessionResultAt <= maxAgeMs) {
+    return lastSessionResult;
+  }
+
+  if (getSessionInFlight) return getSessionInFlight;
+
+  getSessionInFlight = (async () => {
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise<SessionResult>((resolve) =>
+      setTimeout(
+        () => resolve({ data: { session: null }, error: new Error('Session retrieval timed out') }),
+        timeoutMs
+      )
+    );
+
+    try {
+      const res = await Promise.race([sessionPromise, timeoutPromise]);
+      lastSessionResult = res;
+      lastSessionResultAt = Date.now();
+      return res;
+    } catch (err: any) {
+      const res: SessionResult = { data: { session: null }, error: err };
+      lastSessionResult = res;
+      lastSessionResultAt = Date.now();
+      return res;
+    } finally {
+      // Allow a new attempt shortly after this one completes
+      setTimeout(() => {
+        getSessionInFlight = null;
+      }, 250);
+    }
+  })();
+
+  return getSessionInFlight;
+}
+
 // Implement retry mechanism with exponential backoff
 async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 3, backoff = 300) {
   try {
@@ -148,6 +202,137 @@ let lastActiveTime = Date.now();
 let visibilityChangeCount = 0;
 let isRefreshingSession = false;
 
+// Cold start detection - track when app was last active
+const LAST_ACTIVE_KEY = 'nesttask_last_active_time';
+const EXTENDED_INACTIVITY_THRESHOLD = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Store current time as last active time
+ * Called periodically and on app background
+ */
+export function updateLastActiveTime() {
+  try {
+    localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+  } catch {
+    // localStorage may be unavailable
+  }
+}
+
+/**
+ * Check if app was inactive for extended period (cold start detection)
+ * Returns true if session should be force-refreshed
+ */
+export function wasInactiveForExtendedPeriod(): boolean {
+  try {
+    const lastActive = localStorage.getItem(LAST_ACTIVE_KEY);
+    if (!lastActive) return true; // First launch or cleared storage
+    
+    const inactiveDuration = Date.now() - parseInt(lastActive, 10);
+    return inactiveDuration > EXTENDED_INACTIVITY_THRESHOLD;
+  } catch {
+    return true; // Assume extended inactivity if storage fails
+  }
+}
+
+/**
+ * Critical cold start session validation
+ * Called BEFORE any data fetching on app initialization
+ * Returns true if session is valid, false if user should re-login
+ */
+export async function validateSessionOnColdStart(timeoutMs = 15000): Promise<{ valid: boolean; session: any | null; error?: Error }> {
+  console.log('[Supabase] Cold start session validation...');
+  
+  const wasExtendedInactive = wasInactiveForExtendedPeriod();
+  console.log(`[Supabase] Extended inactivity: ${wasExtendedInactive}`);
+  
+  try {
+    // Get current session with generous timeout for cold start
+    const { data: { session }, error } = await getSessionSafe({ timeoutMs, maxAgeMs: 0 });
+    
+    if (error) {
+      console.error('[Supabase] Cold start session error:', error.message);
+      return { valid: false, session: null, error };
+    }
+    
+    if (!session) {
+      console.log('[Supabase] No session on cold start - user needs to login');
+      return { valid: true, session: null }; // No session is valid state (not logged in)
+    }
+    
+    // Check if session is expired
+    const expiresAt = session.expires_at;
+    const now = Date.now();
+    
+    if (expiresAt) {
+      const expiryTime = expiresAt * 1000;
+      const timeUntilExpiry = expiryTime - now;
+      
+      // Force refresh if: expired, expiring soon, or extended inactivity
+      const shouldRefresh = timeUntilExpiry <= 0 || 
+                           timeUntilExpiry < 5 * 60 * 1000 || // Less than 5 min
+                           wasExtendedInactive;
+      
+      if (shouldRefresh) {
+        console.log(`[Supabase] Cold start: forcing session refresh (expired: ${timeUntilExpiry <= 0}, soon: ${timeUntilExpiry < 5 * 60 * 1000}, inactive: ${wasExtendedInactive})`);
+        
+        // Attempt refresh with retry
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const { data, error: refreshError } = await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              // Check for invalid refresh token (user must re-login)
+              if (refreshError.message?.includes('Invalid Refresh Token') || 
+                  refreshError.message?.includes('invalid_grant')) {
+                console.error('[Supabase] Refresh token invalid, user must re-login');
+                return { valid: false, session: null, error: refreshError };
+              }
+              
+              console.warn(`[Supabase] Refresh attempt ${attempt + 1} failed:`, refreshError.message);
+              if (attempt < 2) {
+                await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                continue;
+              }
+            }
+            
+            if (data.session) {
+              console.log('[Supabase] Cold start session refreshed successfully');
+              updateLastActiveTime();
+              
+              // Notify listeners
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+                window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail: { success: true } }));
+              }
+              
+              return { valid: true, session: data.session };
+            }
+          } catch (e: any) {
+            console.warn(`[Supabase] Refresh attempt ${attempt + 1} exception:`, e?.message);
+            if (attempt < 2) {
+              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            }
+          }
+        }
+        
+        // All refresh attempts failed
+        console.error('[Supabase] Cold start session refresh failed after 3 attempts');
+        // Return current session as "valid" to allow app to try - might work for offline
+        return { valid: true, session };
+      }
+    }
+    
+    // Session is valid
+    console.log('[Supabase] Cold start session valid');
+    updateLastActiveTime();
+    return { valid: true, session };
+    
+  } catch (e: any) {
+    console.error('[Supabase] Cold start validation exception:', e?.message);
+    return { valid: false, session: null, error: e };
+  }
+}
+
 /**
  * Session refresh handler - called when app becomes visible
  * Ensures session is valid and refreshes if needed
@@ -161,7 +346,7 @@ async function refreshSessionOnResume() {
   isRefreshingSession = true;
   
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await getSessionSafe({ timeoutMs: 8000 });
     
     if (error) {
       console.warn('[Supabase] Failed to get session:', error.message);
@@ -284,6 +469,11 @@ export async function testConnection(forceCheck = false) {
       
       if (connectionAttempts >= 3) {
         console.warn('Max connection attempts reached, using fallback mode');
+        // Treat as "good enough" for now to avoid hammering the network.
+        // Reset attempts so a future forced check can try again.
+        connectionAttempts = 0;
+        isInitialized = true;
+        lastConnectionTime = Date.now();
         return true;
       }
       
@@ -296,7 +486,7 @@ export async function testConnection(forceCheck = false) {
       
       const checkLogic = async () => {
         // First verify authentication status
-        const { data: session, error: authError } = await supabase.auth.getSession();
+        const { data: session, error: authError } = await getSessionSafe({ timeoutMs: 8000 });
         
         if (authError) {
           console.error('Auth error when checking session:', authError.message);
@@ -346,6 +536,7 @@ export async function testConnection(forceCheck = false) {
         if (result === true) {
           console.log('Database connection successful');
           isInitialized = true;
+          connectionAttempts = 0;
           lastConnectionTime = Date.now();
           return true;
         } else {
@@ -353,8 +544,10 @@ export async function testConnection(forceCheck = false) {
         }
       } catch (timeoutErr) {
         console.warn('Connection test timed out - assuming offline or slow connection');
-        // Return true to avoid blocking the app
-        return true; 
+        // Return true to avoid blocking the app, but also avoid immediate re-testing loops.
+        isInitialized = true;
+        lastConnectionTime = Date.now();
+        return true;
       }
 
     } catch (error: any) {
@@ -377,6 +570,25 @@ setTimeout(() => {
 
 // Handle app resume to reconnect realtime and refresh session
 if (typeof window !== 'undefined') {
+  // Track last active time when app goes to background
+  window.addEventListener('app-background', () => {
+    updateLastActiveTime();
+  });
+  
+  // Also track on visibility hidden
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      updateLastActiveTime();
+    }
+  });
+  
+  // Periodic heartbeat to track activity (every 5 minutes)
+  setInterval(() => {
+    if (!document.hidden) {
+      updateLastActiveTime();
+    }
+  }, 5 * 60 * 1000);
+  
   window.addEventListener('app-resume', async () => {
     console.log('[Supabase] App resumed, reconnecting...');
 

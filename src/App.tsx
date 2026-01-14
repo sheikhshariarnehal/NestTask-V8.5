@@ -14,7 +14,7 @@ import type { NavPage } from './types/navigation';
 import type { TaskCategory } from './types/task';
 import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { supabase } from './lib/supabase';
+import { supabase, validateSessionOnColdStart, updateLastActiveTime } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
 import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
 import { useBackgroundStateManager } from './hooks/useBackgroundStateManager';
@@ -105,6 +105,36 @@ export default function App() {
 
   // Always call all hooks first, regardless of any conditions
   const { user, loading: authLoading, error: authError, login, signup, logout, forgotPassword } = useAuth();
+
+  // Cold start session validation - runs once on mount
+  // This ensures session is valid BEFORE any data fetching begins
+  useEffect(() => {
+    const runColdStartValidation = async () => {
+      if (Capacitor.isNativePlatform()) {
+        console.log('[App] Running cold start session validation for native platform');
+        const result = await validateSessionOnColdStart(15000); // 15s timeout for native
+        
+        if (!result.valid && result.error) {
+          console.error('[App] Cold start validation failed:', result.error.message);
+          // If refresh token is invalid, force logout
+          if (result.error.message?.includes('Invalid Refresh Token') ||
+              result.error.message?.includes('invalid_grant')) {
+            console.log('[App] Invalid refresh token detected, forcing logout');
+            logout();
+          }
+        } else {
+          console.log('[App] Cold start validation completed successfully');
+        }
+      }
+    };
+    
+    runColdStartValidation();
+    
+    // Track last active time on unmount/background
+    return () => {
+      updateLastActiveTime();
+    };
+  }, []); // Run only once on mount
 
   // Critical: keep Supabase session healthy across tab/app backgrounding.
   // Handle session expiry by logging out to prevent "zombie" state with invalid tokens

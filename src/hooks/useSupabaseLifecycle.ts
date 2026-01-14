@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, getSessionSafe, wasInactiveForExtendedPeriod } from '../lib/supabase';
 import { useAppLifecycle } from './useAppLifecycle';
 
 export interface SupabaseLifecycleOptions {
@@ -67,21 +67,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     try {
       console.log('[Supabase Lifecycle] Validating session...');
 
-      // Get current session with a timeout to prevent hanging
-      // Supabase getSession can hang indefinitely on some Android environments/WebViews
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<{
-        data: { session: any };
-        error: any;
-      }>((resolve) => setTimeout(() => resolve({ 
-        data: { session: null }, 
-        error: { message: 'Session retrieval timed out' } 
-      }), 10000));
-
-      const { data: { session }, error: sessionError } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]);
+      const { data: { session }, error: sessionError } = await getSessionSafe({ timeoutMs: 10000 });
 
       if (sessionError) {
         if (sessionError.message === 'Session retrieval timed out') {
@@ -115,10 +101,11 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
         // If less than 45 minutes remaining (token > 15 mins old), force refresh
         // This fixes the "zombie" state after long inactivity
         const aggressiveRefreshThreshold = 45 * 60 * 1000;
-        const shouldForceRefresh = force && timeUntilExpiry < aggressiveRefreshThreshold;
+        const wasExtendedInactive = wasInactiveForExtendedPeriod();
+        const shouldForceRefresh = force && (timeUntilExpiry < aggressiveRefreshThreshold || wasExtendedInactive);
 
         if (timeUntilExpiry <= 0 || shouldForceRefresh) {
-          console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'}, refreshing...`);
+          console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'} (inactive: ${wasExtendedInactive}), refreshing...`);
           
           // Session is expired, try to refresh
           // Add retry logic for refresh specifically

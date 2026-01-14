@@ -13,7 +13,7 @@ import '@ionic/react/css/typography.css';
 import { MicroLoader } from './components/MicroLoader';
 import { initPWA } from './utils/pwa';
 import { initResourcePreloading } from './utils/resourcePreloader';
-import { supabase } from './lib/supabase';
+import { getSessionSafe, supabase } from './lib/supabase';
 import type { LoginCredentials, SignupCredentials } from './types/auth';
 import { initPushNotificationListeners } from './services/pushNavigationService';
 
@@ -112,7 +112,7 @@ const router = createBrowserRouter([
     path: '/auth',
     loader: async () => {
       // Redirect to appropriate page if already logged in
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
       if (session?.user) {
         const { data: userData } = await supabase
           .from('users')

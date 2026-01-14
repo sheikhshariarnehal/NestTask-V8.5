@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { getSessionSafe, supabase } from '../lib/supabase';
 import { sendTaskNotification } from './telegram.service';
 import type { Task, NewTask } from '../types/task';
 import { mapTaskFromDB } from '../utils/taskMapper';
@@ -45,7 +45,9 @@ export const fetchTasksForDateRange = async (
  * @param userId - The user ID to fetch tasks for
  * @param sectionId - The user's section ID (if applicable)
  */
-export const fetchTasks = async (userId: string, sectionId?: string | null): Promise<Task[]> => {
+export const fetchTasks = async (userId: string, sectionId?: string | null, abortSignal?: AbortSignal): Promise<Task[]> => {
+  let controller: AbortController | null = null;
+
   try {
     // For development environment, return faster with reduced logging
     if (process.env.NODE_ENV === 'development') {
@@ -61,19 +63,24 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     
     // Performance optimization: Use a timeout for the query
     const QUERY_TIMEOUT = 14000; // 14 seconds
-    
-    // Create abort controller for the timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), QUERY_TIMEOUT);
+
+    // Create abort controller for the timeout and to support caller cancellation
+    controller = new AbortController();
+
+    // Propagate caller aborts into our controller
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        controller.abort((abortSignal as any).reason ?? 'aborted');
+      } else {
+        abortSignal.addEventListener('abort', () => controller?.abort((abortSignal as any).reason ?? 'aborted'), { once: true });
+      }
+    }
+
+    const timeoutId = setTimeout(() => controller?.abort('timeout'), QUERY_TIMEOUT);
     
     // Get session to determine role (use getSession for speed/offline support instead of getUser)
-    // Protected with timeout to prevent hanging
-    const { data: { session } } = await Promise.race([
-      supabase.auth.getSession(),
-      new Promise<{ data: { session: any } }>(resolve => 
-        setTimeout(() => resolve({ data: { session: null } }), 3000)
-      )
-    ]);
+    // Serialized + timeout-protected to avoid Android WebView storage stalls.
+    const { data: { session } } = await getSessionSafe({ timeoutMs: 3000, maxAgeMs: 0 });
     
     const userRole = session?.user?.user_metadata?.role;
     const userSectionId = sectionId || session?.user?.user_metadata?.section_id;
@@ -130,8 +137,15 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
   } catch (error: any) {
     // Check if this is an AbortError (timeout)
     if (error.name === 'AbortError') {
-      console.error('Task fetch timed out');
-      throw new Error('Task fetch timed out. Please try again.');
+      const finalReason = controller ? (controller.signal as any).reason : undefined;
+
+      if (finalReason === 'timeout') {
+        console.error('Task fetch timed out');
+        throw new Error('Task fetch timed out. Please try again.');
+      }
+
+      // Benign cancel (superseded / navigation)
+      throw new Error('Task fetch aborted');
     }
     
     console.error('Error in fetchTasks:', error);
