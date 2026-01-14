@@ -294,6 +294,26 @@ export function useTasks(userId: string | undefined) {
         return;
       }
 
+      // CRITICAL FIX: If browser aborted due to offline→online transition, retry immediately
+      const isAbortError = err?.name === 'AbortError' || err?.message?.includes('AbortError');
+      const wasOfflineNowOnline = isAbortError && navigator.onLine && signal.aborted && !(signal as any).reason;
+      
+      if (wasOfflineNowOnline) {
+        console.log('[useTasks] Browser aborted fetch during offline→online transition, retrying immediately...');
+        // Clear loading state to prevent stuck UI
+        if (isMountedRef.current) {
+          setLoading(false);
+          loadingRef.current = false;
+        }
+        // Retry immediately with force flag to bypass throttling
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            loadTasks({ force: true });
+          }
+        }, 100);
+        return;
+      }
+
       // Only update error state if component is mounted.
       // If the signal was aborted due to our own timeout, we still want to surface the error.
       const abortedDueToTimeout = signal.aborted && (signal as any).reason === 'timeout';
