@@ -120,8 +120,89 @@ let lastSessionResult: SessionResult | null = null;
 let lastSessionResultAt = 0;
 
 /**
+ * Storage key for Supabase auth (must match the storageKey in client config)
+ */
+const SUPABASE_AUTH_STORAGE_KEY = 'nesttask_supabase_auth';
+
+/**
+ * Attempt to read session directly from localStorage when getSession() hangs.
+ * This is a workaround for Android WebView storage lock issues.
+ */
+function getSessionFromStorage(): { access_token?: string; refresh_token?: string; expires_at?: number; user?: any } | null {
+  try {
+    const stored = localStorage.getItem(SUPABASE_AUTH_STORAGE_KEY);
+    if (!stored) return null;
+    
+    const parsed = JSON.parse(stored);
+    // Supabase stores session in various formats depending on version
+    // Check for direct session or nested structure
+    if (parsed.access_token && parsed.refresh_token) {
+      return parsed;
+    }
+    if (parsed.currentSession?.access_token && parsed.currentSession?.refresh_token) {
+      return parsed.currentSession;
+    }
+    if (parsed.session?.access_token && parsed.session?.refresh_token) {
+      return parsed.session;
+    }
+    return null;
+  } catch (e) {
+    console.warn('[Supabase] Failed to read session from storage:', e);
+    return null;
+  }
+}
+
+/**
+ * Force refresh session using refresh_token from localStorage.
+ * This bypasses the hung getSession() call on Android.
+ */
+async function forceRefreshFromStorage(): Promise<SessionResult> {
+  console.log('[Supabase] Attempting force refresh from stored token...');
+  
+  const storedSession = getSessionFromStorage();
+  if (!storedSession?.refresh_token) {
+    console.log('[Supabase] No stored refresh token found');
+    return { data: { session: null }, error: new Error('No stored refresh token') };
+  }
+  
+  console.log('[Supabase] Found stored refresh token, forcing refresh...');
+  
+  try {
+    // Use a timeout for the refresh call too
+    const refreshPromise = supabase.auth.refreshSession({
+      refresh_token: storedSession.refresh_token
+    });
+    
+    const timeoutPromise = new Promise<{ data: { session: any }; error: any }>((resolve) =>
+      setTimeout(() => resolve({ 
+        data: { session: null }, 
+        error: new Error('Refresh from storage timed out') 
+      }), 10000) // 10s timeout for refresh
+    );
+    
+    const result = await Promise.race([refreshPromise, timeoutPromise]);
+    
+    if (result.error) {
+      console.error('[Supabase] Force refresh failed:', result.error.message);
+      return { data: { session: null }, error: result.error };
+    }
+    
+    if (result.data.session) {
+      console.log('[Supabase] Force refresh successful!');
+      return { data: { session: result.data.session }, error: null };
+    }
+    
+    return { data: { session: null }, error: new Error('Refresh returned no session') };
+  } catch (e: any) {
+    console.error('[Supabase] Force refresh exception:', e?.message);
+    return { data: { session: null }, error: e };
+  }
+}
+
+/**
  * Android WebView can deadlock/stall on concurrent access to auth storage.
  * This helper enforces a single in-flight getSession() call and applies a hard timeout.
+ * If getSession() times out, it attempts to recover by refreshing from stored token.
  */
 export async function getSessionSafe(options: { timeoutMs?: number; maxAgeMs?: number } = {}): Promise<SessionResult> {
   const timeoutMs = options.timeoutMs ?? 8000;
@@ -145,6 +226,30 @@ export async function getSessionSafe(options: { timeoutMs?: number; maxAgeMs?: n
 
     try {
       const res = await Promise.race([sessionPromise, timeoutPromise]);
+      
+      // CRITICAL FIX: If getSession timed out, try to recover from localStorage
+      if (res.error?.message === 'Session retrieval timed out') {
+        console.log('[Supabase] getSession() timed out, attempting recovery from storage...');
+        
+        const recoveryResult = await forceRefreshFromStorage();
+        if (recoveryResult.data.session) {
+          // Recovery successful!
+          lastSessionResult = recoveryResult;
+          lastSessionResultAt = Date.now();
+          
+          // Dispatch events to notify app
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+            window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail: { success: true } }));
+          }
+          
+          return recoveryResult;
+        }
+        
+        // Recovery failed - return the original timeout error
+        console.warn('[Supabase] Storage recovery failed, returning timeout error');
+      }
+      
       lastSessionResult = res;
       lastSessionResultAt = Date.now();
       return res;
@@ -250,11 +355,61 @@ export async function validateSessionOnColdStart(timeoutMs = 15000): Promise<{ v
     const { data: { session }, error } = await getSessionSafe({ timeoutMs, maxAgeMs: 0 });
     
     if (error) {
+      // If getSession timed out and recovery from storage also failed,
+      // try one more direct attempt to refresh from storage
+      if (error.message?.includes('timed out') || error.message?.includes('No stored refresh token')) {
+        console.log('[Supabase] Cold start: getSession failed, trying direct storage refresh...');
+        
+        const directRecovery = await forceRefreshFromStorage();
+        if (directRecovery.data.session) {
+          console.log('[Supabase] Cold start: Direct storage refresh successful!');
+          updateLastActiveTime();
+          
+          // Notify listeners
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+            window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail: { success: true } }));
+          }
+          
+          return { valid: true, session: directRecovery.data.session };
+        }
+        
+        // Check if there's a stored session we can try to use anyway
+        const storedSession = getSessionFromStorage();
+        if (storedSession?.access_token) {
+          console.log('[Supabase] Cold start: Using stored session (may be stale)');
+          // Allow app to proceed with potentially stale session
+          // The actual API calls will fail if it's truly expired, triggering re-login
+          return { valid: true, session: storedSession };
+        }
+        
+        console.error('[Supabase] Cold start: No recoverable session found');
+        return { valid: false, session: null, error };
+      }
+      
       console.error('[Supabase] Cold start session error:', error.message);
       return { valid: false, session: null, error };
     }
     
     if (!session) {
+      // No session but no error - check storage directly as fallback
+      const storedSession = getSessionFromStorage();
+      if (storedSession?.refresh_token) {
+        console.log('[Supabase] Cold start: No session from API but found stored token, attempting refresh...');
+        const directRecovery = await forceRefreshFromStorage();
+        if (directRecovery.data.session) {
+          console.log('[Supabase] Cold start: Recovered session from storage!');
+          updateLastActiveTime();
+          
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+            window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail: { success: true } }));
+          }
+          
+          return { valid: true, session: directRecovery.data.session };
+        }
+      }
+      
       console.log('[Supabase] No session on cold start - user needs to login');
       return { valid: true, session: null }; // No session is valid state (not logged in)
     }
