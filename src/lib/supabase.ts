@@ -120,41 +120,54 @@ let lastSessionResult: SessionResult | null = null;
 let lastSessionResultAt = 0;
 
 /**
- * Storage key for Supabase auth (must match the storageKey in client config)
+ * Storage keys for Supabase auth - check both custom and default keys
+ * The custom key is set in our client config, but the default key may exist
+ * from previous sessions or if the custom key wasn't applied
  */
-const SUPABASE_AUTH_STORAGE_KEY = 'nesttask_supabase_auth';
+const SUPABASE_AUTH_STORAGE_KEYS = [
+  'nesttask_supabase_auth',  // Our custom key
+  'supabase.auth.token',      // Default Supabase key
+  `sb-${new URL(supabaseUrl || 'https://placeholder.supabase.co').hostname.split('.')[0]}-auth-token` // Project-specific key
+];
 
 /**
  * Attempt to read session directly from localStorage when getSession() hangs.
  * This is a workaround for Android WebView storage lock issues.
+ * Checks multiple possible storage keys for compatibility.
  */
 function getSessionFromStorage(): { access_token?: string; refresh_token?: string; expires_at?: number; user?: any } | null {
-  try {
-    const stored = localStorage.getItem(SUPABASE_AUTH_STORAGE_KEY);
-    if (!stored) return null;
-    
-    const parsed = JSON.parse(stored);
-    // Supabase stores session in various formats depending on version
-    // Check for direct session or nested structure
-    if (parsed.access_token && parsed.refresh_token) {
-      return parsed;
+  for (const key of SUPABASE_AUTH_STORAGE_KEYS) {
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored) continue;
+      
+      const parsed = JSON.parse(stored);
+      // Supabase stores session in various formats depending on version
+      // Check for direct session or nested structure
+      if (parsed.access_token && parsed.refresh_token) {
+        console.log(`[Supabase] Found session in storage key: ${key}`);
+        return parsed;
+      }
+      if (parsed.currentSession?.access_token && parsed.currentSession?.refresh_token) {
+        console.log(`[Supabase] Found session in storage key: ${key} (currentSession)`);
+        return parsed.currentSession;
+      }
+      if (parsed.session?.access_token && parsed.session?.refresh_token) {
+        console.log(`[Supabase] Found session in storage key: ${key} (session)`);
+        return parsed.session;
+      }
+    } catch (e) {
+      // Continue to next key
     }
-    if (parsed.currentSession?.access_token && parsed.currentSession?.refresh_token) {
-      return parsed.currentSession;
-    }
-    if (parsed.session?.access_token && parsed.session?.refresh_token) {
-      return parsed.session;
-    }
-    return null;
-  } catch (e) {
-    console.warn('[Supabase] Failed to read session from storage:', e);
-    return null;
   }
+  console.warn('[Supabase] No session found in any storage key');
+  return null;
 }
 
 /**
  * Force refresh session using refresh_token from localStorage.
- * This bypasses the hung getSession() call on Android.
+ * This bypasses the hung SDK methods by making a DIRECT HTTP call to Supabase Auth API.
+ * This is the ultimate fallback when both getSession() and refreshSession() hang.
  */
 async function forceRefreshFromStorage(): Promise<SessionResult> {
   console.log('[Supabase] Attempting force refresh from stored token...');
@@ -165,36 +178,85 @@ async function forceRefreshFromStorage(): Promise<SessionResult> {
     return { data: { session: null }, error: new Error('No stored refresh token') };
   }
   
-  console.log('[Supabase] Found stored refresh token, forcing refresh...');
+  console.log('[Supabase] Found stored refresh token, forcing refresh via direct HTTP call...');
   
   try {
-    // Use a timeout for the refresh call too
-    const refreshPromise = supabase.auth.refreshSession({
-      refresh_token: storedSession.refresh_token
+    // CRITICAL: Bypass SDK entirely and make direct HTTP call to Supabase Auth API
+    // This avoids the SDK's internal state machine which can deadlock
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    
+    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey || '',
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({
+        refresh_token: storedSession.refresh_token
+      }),
+      signal: controller.signal
     });
     
-    const timeoutPromise = new Promise<{ data: { session: any }; error: any }>((resolve) =>
-      setTimeout(() => resolve({ 
-        data: { session: null }, 
-        error: new Error('Refresh from storage timed out') 
-      }), 10000) // 10s timeout for refresh
-    );
+    clearTimeout(timeoutId);
     
-    const result = await Promise.race([refreshPromise, timeoutPromise]);
-    
-    if (result.error) {
-      console.error('[Supabase] Force refresh failed:', result.error.message);
-      return { data: { session: null }, error: result.error };
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Supabase] Direct refresh HTTP error:', response.status, errorText);
+      return { data: { session: null }, error: new Error(`HTTP ${response.status}: ${errorText}`) };
     }
     
-    if (result.data.session) {
-      console.log('[Supabase] Force refresh successful!');
-      return { data: { session: result.data.session }, error: null };
+    const data = await response.json();
+    
+    if (data.access_token && data.refresh_token) {
+      console.log('[Supabase] Direct HTTP refresh successful!');
+      
+      // Build session object matching Supabase format
+      const session = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at,
+        expires_in: data.expires_in,
+        token_type: data.token_type || 'bearer',
+        user: data.user
+      };
+      
+      // Store the refreshed session in localStorage so SDK can pick it up
+      // Store in all possible keys to maximize compatibility
+      const sessionJson = JSON.stringify(session);
+      for (const key of SUPABASE_AUTH_STORAGE_KEYS.slice(0, 2)) {
+        try {
+          localStorage.setItem(key, sessionJson);
+        } catch (e) {
+          console.warn(`[Supabase] Failed to store session in ${key}:`, e);
+        }
+      }
+      
+      // Notify SDK that session was updated (it may pick up from storage)
+      try {
+        // Use setSession to properly hydrate the SDK's internal state
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        });
+        console.log('[Supabase] SDK session hydrated via setSession');
+      } catch (e) {
+        console.warn('[Supabase] setSession failed, but HTTP refresh succeeded:', e);
+        // Continue anyway - we have a valid session in storage
+      }
+      
+      return { data: { session }, error: null };
     }
     
-    return { data: { session: null }, error: new Error('Refresh returned no session') };
+    console.error('[Supabase] Direct refresh returned no tokens');
+    return { data: { session: null }, error: new Error('Refresh returned no tokens') };
   } catch (e: any) {
-    console.error('[Supabase] Force refresh exception:', e?.message);
+    if (e.name === 'AbortError') {
+      console.error('[Supabase] Direct HTTP refresh timed out');
+      return { data: { session: null }, error: new Error('Direct HTTP refresh timed out') };
+    }
+    console.error('[Supabase] Direct HTTP refresh exception:', e?.message);
     return { data: { session: null }, error: e };
   }
 }
