@@ -379,6 +379,20 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Absolute safety timer for initial load - 8 seconds max on Android Cold Start
+  useEffect(() => {
+    if (isInitialLoad) {
+      const initialSafetyTimer = setTimeout(() => {
+        if (isInitialLoad) {
+          console.log('[UpcomingPage] Absolute safety timer triggered - forcing content show');
+          setIsInitialLoad(false);
+        }
+      }, 8000);
+      
+      return () => clearTimeout(initialSafetyTimer);
+    }
+  }, [isInitialLoad]);
+
   // Update tasks when prop or fetched tasks change
   useEffect(() => {
     setTasks(propTasks || allTasks || []);

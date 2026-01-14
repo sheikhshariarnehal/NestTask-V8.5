@@ -187,6 +187,14 @@ async function refreshSessionOnResume() {
           console.error('[Supabase] Session refresh failed:', refreshError.message);
         } else {
           console.log('[Supabase] Session refreshed successfully');
+
+          // Notify app listeners (e.g., task loader) to refetch with a fresh token.
+          // Some environments (Android WebView / installed PWA) may not fire the same
+          // lifecycle events, so we bridge here.
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+            window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail: { success: true } }));
+          }
         }
       }
     }
@@ -309,6 +317,19 @@ export async function testConnection(forceCheck = false) {
           if (error.code === 'PGRST301' || error.message.includes('JWT')) {
             console.warn('JWT token invalid, signing out');
             await supabase.auth.signOut();
+            return false;
+          }
+
+          // CRITICAL FIX: Detect actual network errors (offline) vs server errors
+          // "Failed to fetch" is the standard error for network disconnects in fetch API
+          const isNetworkError = 
+            error.message.includes('Failed to fetch') || 
+            error.message.includes('Network request failed') ||
+            error.message.includes('connection refused') ||
+            error.message.includes('timeout');
+
+          if (isNetworkError) {
+            console.warn('[Connection] Network error identified - reporting offline');
             return false;
           }
           

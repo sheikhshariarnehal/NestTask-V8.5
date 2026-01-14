@@ -367,10 +367,14 @@ export function useTasks(userId: string | undefined) {
     // Only listen to critical events - removed redundant ones to prevent duplicate refreshes
     window.addEventListener('app-resume', debouncedRefresh);
     window.addEventListener('supabase-session-refreshed', debouncedRefresh);
+    window.addEventListener('supabase-visibility-refresh', debouncedRefresh);
+    window.addEventListener('supabase-network-reconnect', debouncedRefresh);
 
     return () => {
       window.removeEventListener('app-resume', debouncedRefresh);
       window.removeEventListener('supabase-session-refreshed', debouncedRefresh);
+      window.removeEventListener('supabase-visibility-refresh', debouncedRefresh);
+      window.removeEventListener('supabase-network-reconnect', debouncedRefresh);
     };
   }, [loadTasks]);
 

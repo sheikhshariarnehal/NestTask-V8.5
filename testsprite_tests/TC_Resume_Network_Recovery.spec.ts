@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test('TC_Resume_Network_Recovery', async ({ page, context }) => {
+  const email = process.env.E2E_EMAIL;
+  const password = process.env.E2E_PASSWORD;
+
+  if (!email || !password) {
+    test.skip(true, 'E2E_EMAIL/E2E_PASSWORD not set');
+  }
+
   // Setup Network Monitoring
   let tokenRefreshCheck = false;
   let taskFetchCount = 0;
@@ -44,8 +51,8 @@ test('TC_Resume_Network_Recovery', async ({ page, context }) => {
 
   if (await emailInput.isVisible()) {
     console.log('Login form detected. Logging in...');
-    await emailInput.fill('bxbbd8@diu.edu.bd');
-    await page.getByPlaceholder('Enter your password').fill('vbxbx bx');
+    await emailInput.fill(email!);
+    await page.getByPlaceholder('Enter your password').fill(password!);
     await signInButton.click();
     console.log('Submitted login. Waiting for dashboard...');
     await welcomeMessage.waitFor({ state: 'visible', timeout: 15000 });

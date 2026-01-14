@@ -4,45 +4,47 @@
     "date": "2026-01-13",
     "prepared_by": "Software Development Manager"
   },
-  "product_overview": "NestTask is an integrated task and academic management system designed for students and educators to efficiently organize daily routines, track assignments, and access study materials on both web and Android platforms.",
+  "product_overview": "NestTask is a comprehensive task and academic management system tailored for students and educators. It streamlines organization through unified management of daily routines, assignments, study materials, and course information across web and mobile platforms.",
   "core_goals": [
     "Provide secure and role-based user authentication and profile management.",
-    "Enable comprehensive task management with categorization, status tracking, and deadline notifications.",
-    "Offer academic management including daily routines, course info, and study material repository.",
-    "Implement an efficient global search with filtering capabilities across tasks, courses, and materials.",
-    "Facilitate real-time notifications for tasks and system updates.",
-    "Equip administrators with dashboard tools for user, content, and analytics management.",
-    "Ensure high performance with lazy loading, caching, and offline functionality.",
-    "Deliver a responsive, user-friendly, and secure application experience."
+    "Enable efficient task management with categorization, prioritization, and deadline tracking.",
+    "Facilitate academic management including routines, course materials, and lecture slides access.",
+    "Offer powerful search and filtering capabilities across tasks and academic content.",
+    "Deliver timely notifications to keep users informed of deadlines and updates.",
+    "Equip administrators with a dashboard for user, content, and analytics management.",
+    "Ensure high performance, responsive design, and offline capabilities for optimal user experience.",
+    "Maintain data privacy and security employing robust backend policies and environment protections."
   ],
   "key_features": [
-    "User Authentication & Profile Management with role-based access (User, Admin, Super Admin).",
-    "Task Management supporting CRUD, categories, statuses, drag-and-drop reordering, and deadline tracking.",
-    "Academic Management including routine schedules, course data, study material upload/download, and lecture slides access.",
-    "Advanced Search and Filtering to find tasks, routines, and academic content.",
-    "Push and In-App Notifications for deadlines and announcements using Capacitor and Firebase.",
-    "Admin Dashboard with user management, analytics visualizations, and academic content control.",
-    "Responsive UI using React, Tailwind CSS, with offline support and smooth animations.",
-    "Data security ensured through Supabase Row Level Security and environment safeguards."
+    "User authentication with login, signup, password recovery, and role-based access control (User, Admin, Super Admin).",
+    "Task management supporting CRUD operations, categorization, status tracking, drag-and-drop reordering, and deadline visualization.",
+    "Academic management features including daily/weekly routines, course information, study materials repository, and lecture slide viewer.",
+    "Global search functionality with filtering options for tasks by status, category, and date.",
+    "Push and in-app notifications integrated via Capacitor and Firebase for real-time alerts.",
+    "Admin dashboard for user account management, content control, and system usage analytics with visualizations.",
+    "Performance optimizations such as lazy loading, caching, and list virtualization.",
+    "Responsive and accessible UI with animations and offline support for seamless use on various devices.",
+    "Security implementations including Supabase Row Level Security, environment variable protections, and secure data storage."
   ],
   "user_flow_summary": [
-    "Users can sign up, log in, recover passwords, and manage profiles with different access roles.",
-    "Users create, categorize, update, and reorder tasks, marking their progress and scheduling deadlines.",
-    "Users view and manage academic routines, courses, and study materials including lecture slides.",
-    "Users search across all content types with filter options for status, categories, and dates.",
-    "Users receive timely notifications about task deadlines and system events.",
-    "Admins access dashboards to manage users, tasks, courses, and perform analytics monitoring.",
-    "The system supports offline access with cached data and optimized loading for seamless user experience across devices."
+    "Users sign up or log in using secure authentication and can recover passwords if needed.",
+    "Users access their personalized dashboard to view, create, and manage tasks sorted by categories and statuses.",
+    "Users manage academic routines and access course resources along with lecture slides.",
+    "Users perform global searches and apply filters to quickly find tasks and study materials.",
+    "Users receive push and in-app notifications about deadlines and system updates.",
+    "Admins log into the admin dashboard to manage users, courses, and monitor analytics.",
+    "The application supports smooth navigation with responsive design and maintains session through lifecycle hooks and offline caching."
   ],
   "validation_criteria": [
-    "Successful role-based authentication and secure password reset flows.",
-    "Full task CRUD functionality with correct categorization and status updates.",
-    "Accurate academic content management with seamless uploading and accessing study materials and slides.",
-    "Effective global search with multi-criteria filtering and relevant results.",
-    "Timely delivery of push and in-app notifications targeting correct user events.",
-    "Admin dashboard functionalities work accurately including user management and content analytics.",
-    "Application responsiveness and functionality across supported devices, including offline features.",
-    "Security compliance with Supabase RLS, protecting sensitive data and environment variables."
+    "Authentication workflows are tested for security and role-based access restrictions.",
+    "Task CRUD operations work correctly with category assignment and status updates.",
+    "Academic management features correctly display routines, courses, study materials, and lecture slides.",
+    "Search results are accurate and filters apply as expected.",
+    "Push notifications arrive timely and navigate users to relevant content within the app.",
+    "Admin dashboard reflects accurate user data, analytics, and allows content management.",
+    "Performance benchmarks for lazy loading and caching are met to ensure load times and responsiveness.",
+    "UI adapts fluidly across devices and offline mode retains basic app functionality.",
+    "Security validations confirm data privacy standards and environment variable confidentiality."
   ],
   "code_summary": {
     "tech_stack": [
@@ -84,9 +86,40 @@
           "src/pages/HomePage.tsx",
           "src/pages/TaskViewPage.tsx",
           "src/pages/UpcomingPage.tsx",
-          "src/components/task/TaskList.tsx",
-          "src/components/task/TaskItem.tsx",
-          "src/components/TaskCategories.tsx"
+          "src/components/TaskList.tsx",
+          "src/hooks/useTasks.ts",
+          "src/services/task.service.ts",
+          "src/components/task/TaskCategories.tsx"
+        ]
+      },
+      {
+        "name": "Supabase Client + Lifecycle",
+        "description": "Supabase client initialization plus session validation/refresh on resume/visibility/network to prevent long-idle zombie states.",
+        "files": [
+          "src/lib/supabase.ts",
+          "src/hooks/useSupabaseLifecycle.ts",
+          "src/hooks/useAppLifecycle.ts",
+          "src/utils/sessionValidation.ts"
+        ]
+      },
+      {
+        "name": "Push Notifications (FCM)",
+        "description": "Native push notification registration and navigation handlers for Capacitor Android.",
+        "files": [
+          "src/hooks/usePushNotifications.ts",
+          "src/services/pushNavigationService.ts",
+          "src/services/taskEnhanced.service.ts",
+          "src/services/task.service.ts"
+        ]
+      },
+      {
+        "name": "PWA Support",
+        "description": "Installed PWA configuration and Vite PWA build setup for web deployments.",
+        "files": [
+          "vite.config.ts",
+          "index.html",
+          "public/",
+          "vercel.json"
         ]
       },
       {

@@ -7,12 +7,13 @@
   "loginPassword": "vbxbx bx",
   "executionArgs": {
     "projectName": "NestTask-V8.5",
-    "projectPath": "e:/Poject/NESTTASK/NestTask-V8.5",
-    "testIds": [],
-    "additionalInstruction": "",
+    "projectPath": "E:\\Poject\\NESTTASK\\NestTask-V8.5",
+    "testIds": [
+      "TC021"
+    ],
+    "additionalInstruction": "Implement TC021 as a Playwright test targeting http://localhost:5173. Login using env vars E2E_EMAIL and E2E_PASSWORD (do not hardcode credentials). After landing on the dashboard, simulate long idle by setting localStorage key 'nesttask_supabase_auth' session expires_at to a timestamp in the past, then dispatch window focus and document visibilitychange events. Assert the app does not remain stuck in loading/skeleton state and that tasks API requests (/rest/v1/tasks) return 200 (or the UI returns to login if refresh fails). Include generous timeouts and log network responses for /token refresh and /rest/v1/tasks.",
     "envs": {
       "API_KEY": "sk-user-FEwPnzYiSLsoMQFGm-lCEJJisgt_rAUEDpcrxNxb0JTmQ3DelIUP9AFti5qeYCY5CqcES9JDREkDAzi258Ucc4epafeDz6Z2RWttB4KvwfhAfMORobWr6iK6R6YJ-8UmS8Y"
     }
-  },
-  "proxy": "http://34b378d6-5de9-4278-878e-5ee121030746:zVeTgNACDHtBcxztghPAq0jUASMmhHZ1@tun.testsprite.com:8080"
+  }
 }
