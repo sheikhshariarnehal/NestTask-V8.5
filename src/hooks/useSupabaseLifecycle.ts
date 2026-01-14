@@ -22,6 +22,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const lastValidationRef = useRef<number>(Date.now());
   const optionsRef = useRef(options);
   const isAutoRefreshEnabledRef = useRef<boolean>(false);
+  const httpRefreshSucceededRef = useRef<number>(0); // Timestamp of last successful HTTP refresh
 
   const emitSessionValidated = useCallback((detail: { success: boolean; error?: unknown }) => {
     if (typeof window === 'undefined') return;
@@ -105,6 +106,14 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
         const shouldForceRefresh = force && (timeUntilExpiry < aggressiveRefreshThreshold || wasExtendedInactive);
 
         if (timeUntilExpiry <= 0 || shouldForceRefresh) {
+          // Check if HTTP refresh already succeeded recently (within last 5 seconds)
+          const timeSinceHttpRefresh = now - httpRefreshSucceededRef.current;
+          if (timeSinceHttpRefresh < 5000) {
+            console.log('[Supabase Lifecycle] HTTP refresh already succeeded, skipping SDK refresh');
+            emitSessionValidated({ success: true });
+            return true;
+          }
+          
           console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'} (inactive: ${wasExtendedInactive}), refreshing...`);
           
           // Session is expired, try to refresh
@@ -328,10 +337,22 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       validateSession(true);
     };
     
+    // Listen for HTTP refresh success events to skip SDK refresh
+    const handleSessionRecovered = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const timestamp = customEvent.detail?.timestamp || Date.now();
+      httpRefreshSucceededRef.current = timestamp;
+      console.log('[Supabase Lifecycle] HTTP refresh succeeded, marking validation complete');
+      isValidatingRef.current = false; // Release lock so next validation can proceed
+      optionsRef.current.onSessionRefreshed?.();
+    };
+    
     window.addEventListener('request-session-validation', handleValidationRequest);
+    window.addEventListener('supabase-session-recovered', handleSessionRecovered);
     
     return () => {
       window.removeEventListener('request-session-validation', handleValidationRequest);
+      window.removeEventListener('supabase-session-recovered', handleSessionRecovered);
     };
   }, [validateSession]);
 
