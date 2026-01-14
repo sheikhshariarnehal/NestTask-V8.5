@@ -241,9 +241,26 @@ async function forceRefreshFromStorage(): Promise<SessionResult> {
           refresh_token: data.refresh_token
         });
         console.log('[Supabase] SDK session hydrated via setSession');
+        
+        // CRITICAL: Notify all waiting hooks that session is now available
+        if (typeof window !== 'undefined') {
+          console.log('[Supabase] Broadcasting session-recovered event to wake up data hooks');
+          window.dispatchEvent(new CustomEvent('supabase-session-recovered', { 
+            detail: { session, timestamp: Date.now() } 
+          }));
+          window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
+            detail: { success: true, recovered: true } 
+          }));
+        }
       } catch (e) {
         console.warn('[Supabase] setSession failed, but HTTP refresh succeeded:', e);
         // Continue anyway - we have a valid session in storage
+        // Still notify hooks even if setSession failed
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('supabase-session-recovered', { 
+            detail: { session, timestamp: Date.now() } 
+          }));
+        }
       }
       
       return { data: { session }, error: null };

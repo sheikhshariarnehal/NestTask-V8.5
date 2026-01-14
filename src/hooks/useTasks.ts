@@ -58,6 +58,30 @@ export function useTasks(userId: string | undefined) {
     userIdRef.current = userId;
   }, [userId]);
 
+  // Listen for session-recovered event from cold start token refresh
+  useEffect(() => {
+    const handleSessionRecovered = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      console.log('[useTasks] Session recovered event received, retrying task load...');
+      
+      // If we're stuck in loading state, retry immediately
+      if (loadingRef.current) {
+        loadingRef.current = false;
+        if (isMountedRef.current) {
+          setLoading(false);
+          setTimeout(() => {
+            if (isMountedRef.current && userId) {
+              loadTasks({ force: true });
+            }
+          }, 200);
+        }
+      }
+    };
+    
+    window.addEventListener('supabase-session-recovered', handleSessionRecovered);
+    return () => window.removeEventListener('supabase-session-recovered', handleSessionRecovered);
+  }, [userId]);
+
   // Track page visibility to prevent blank screens and recover from stuck states
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -179,15 +203,19 @@ export function useTasks(userId: string | undefined) {
           const loadingDuration = Date.now() - loadingStartedAtRef.current;
           console.error(`[useTasks] ZOMBIE STATE DETECTED: Loading for ${Math.round(loadingDuration / 1000)}s`);
           
-          // Force recovery: reset loading state and trigger forced refresh
+          // Force recovery: reset loading state and retry with force flag
           loadingRef.current = false;
           if (isMountedRef.current) {
             setLoading(false);
-            setError('Loading timed out. Pull down to refresh.');
           }
           
-          // Dispatch event to trigger session re-validation
-          window.dispatchEvent(new CustomEvent('request-session-validation'));
+          console.log('[useTasks] Zombie recovery: forcing immediate retry...');
+          // Retry immediately with force flag to bypass caching/throttling
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              loadTasks({ force: true });
+            }
+          }, 100);
         }
       }, 20000); // 20 second zombie detection
       if (isMountedRef.current) {
