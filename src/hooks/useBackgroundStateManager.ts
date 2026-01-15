@@ -24,11 +24,14 @@ export function useBackgroundStateManager() {
   const handleAppStateChange = useCallback((isActive: boolean) => {
     if (stateRef.current.isActive === isActive) return;
     
-    // CRITICAL: Ignore blur events within first 3 seconds of mount (cold start protection)
-    // Browser can fire spurious blur events during page load that shouldn't count as "backgrounding"
+    // CRITICAL: Ignore blur events during initial page load/session recovery
+    // Browser fires spurious blur events during:
+    // 1. Resource loading (first ~3 seconds)
+    // 2. Long-running HTTP requests (session recovery, connection tests)
+    // These shouldn't count as "backgrounding" as they block event recovery
     const timeSinceMount = Date.now() - mountTimeRef.current;
-    if (!isActive && timeSinceMount < 3000) {
-      console.log(`[Background Manager] Ignoring blur event ${Math.round(timeSinceMount / 1000)}s after mount (cold start)`);
+    if (!isActive && timeSinceMount < 30000) {
+      console.log(`[Background Manager] Ignoring blur event ${Math.round(timeSinceMount / 1000)}s after mount (initial load/recovery)`);
       return;
     }
     
