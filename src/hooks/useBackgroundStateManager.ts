@@ -19,9 +19,19 @@ export function useBackgroundStateManager() {
     wasInBackground: false,
     isActive: true
   });
+  const mountTimeRef = useRef<number>(Date.now());
 
   const handleAppStateChange = useCallback((isActive: boolean) => {
     if (stateRef.current.isActive === isActive) return;
+    
+    // CRITICAL: Ignore blur events within first 3 seconds of mount (cold start protection)
+    // Browser can fire spurious blur events during page load that shouldn't count as "backgrounding"
+    const timeSinceMount = Date.now() - mountTimeRef.current;
+    if (!isActive && timeSinceMount < 3000) {
+      console.log(`[Background Manager] Ignoring blur event ${Math.round(timeSinceMount / 1000)}s after mount (cold start)`);
+      return;
+    }
+    
     stateRef.current.isActive = isActive;
 
     if (!isActive) {
