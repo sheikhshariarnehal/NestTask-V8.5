@@ -244,13 +244,16 @@ async function forceRefreshFromStorage(): Promise<SessionResult> {
         
         // CRITICAL: Notify all waiting hooks that session is now available
         if (typeof window !== 'undefined') {
-          console.log('[Supabase] Broadcasting session-recovered event to wake up data hooks');
+          const recoveryTimestamp = Date.now();
+          console.log(`[Supabase] Broadcasting session-recovered event at ${recoveryTimestamp}`);
           window.dispatchEvent(new CustomEvent('supabase-session-recovered', { 
-            detail: { session, timestamp: Date.now() } 
+            detail: { session, timestamp: recoveryTimestamp } 
           }));
+          console.log('[Supabase] Broadcasting session-validated event with recovered flag');
           window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
-            detail: { success: true, recovered: true } 
+            detail: { success: true, recovered: true, timestamp: recoveryTimestamp } 
           }));
+          console.log('[Supabase] All recovery events dispatched');
         }
       } catch (e) {
         console.warn('[Supabase] setSession failed, but HTTP refresh succeeded:', e);

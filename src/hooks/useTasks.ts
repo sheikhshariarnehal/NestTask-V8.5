@@ -436,15 +436,21 @@ export function useTasks(userId: string | undefined) {
           // Use 15s timeout for native platforms to account for mobile network wake-up latency
           const isNative = Capacitor.isNativePlatform();
           const timeoutDuration = isNative ? 15000 : 10000;
+          const validationStartTime = Date.now();
+          console.log(`[useTasks] Starting validation wait (timeout: ${timeoutDuration}ms, timestamp: ${validationStartTime})`);
+          
           const timeout = setTimeout(() => {
-            console.log(`[useTasks] Session validation timeout (${timeoutDuration / 1000}s), proceeding anyway`);
+            console.log(`[useTasks] Session validation timeout after ${Date.now() - validationStartTime}ms, proceeding anyway`);
             resolve();
           }, timeoutDuration);
           
-          const handler = () => {
+          const handler = (e: Event) => {
+            const elapsed = Date.now() - validationStartTime;
+            const customEvent = e as CustomEvent;
+            const success = customEvent.detail?.success;
             clearTimeout(timeout);
             window.removeEventListener('supabase-session-validated', handler);
-            console.log('[useTasks] Session validation complete');
+            console.log(`[useTasks] Session validation event received after ${elapsed}ms (success: ${success})`);
             resolve();
           };
           
@@ -452,9 +458,11 @@ export function useTasks(userId: string | undefined) {
         });
         
         // Trigger session validation
+        console.log('[useTasks] Dispatching request-session-validation event');
         window.dispatchEvent(new CustomEvent('request-session-validation'));
         
         // Wait for validation to complete (with timeout)
+        console.log('[useTasks] Waiting for session validation...');
         await sessionValidPromise;
         
         console.log('[useTasks] Session validated, now fetching tasks');

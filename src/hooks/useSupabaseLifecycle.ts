@@ -26,6 +26,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
 
   const emitSessionValidated = useCallback((detail: { success: boolean; error?: unknown }) => {
     if (typeof window === 'undefined') return;
+    console.log(`[Supabase Lifecycle] Emitting session-validated event: success=${detail.success}, error=${detail.error ? 'yes' : 'no'}`);
     window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail }));
   }, []);
 
@@ -40,11 +41,15 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const validateSession = useCallback(async (force = false) => {
     if (!enabled) return true;
 
+    const now = Date.now();
+    console.log(`[Supabase Lifecycle] validateSession called (force=${force}, timestamp=${now})`);
+
     // Prevent concurrent validations
     // If validation is already in progress, just wait for it to finish (emitSessionValidated will be called by the original request)
     // This allows force=true requests to piggyback on existing in-flight validations rather than creating race conditions
     if (isValidatingRef.current) {
-      console.log(`[Supabase Lifecycle] Validation already in progress${force ? ' (joining)' : ''}`);
+      console.log(`[Supabase Lifecycle] Validation already in progress${force ? ' (joining)' : ''} - hook will wait for event`);
+      console.log(`[Supabase Lifecycle] HTTP refresh timestamp: ${httpRefreshSucceededRef.current}, now: ${now}`);
       // return true to signal "request accepted", but the actual readiness will be signaled via event
       // If we are simulating an immediate return for "await validateSession()", we might be returning early,
       // but callers who care about correctness should be listening to the event or relying on the state change.
@@ -54,7 +59,6 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     }
 
     // Don't validate too frequently (throttle to once per 5 seconds unless forced)
-    const now = Date.now();
     const timeSinceLastValidation = now - lastValidationRef.current;
     if (!force && timeSinceLastValidation < 5000) {
       console.log('[Supabase Lifecycle] Validation throttled');
@@ -121,6 +125,8 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
           let refreshData = null;
           let refreshError = null;
           let attempts = 0;
+          
+          console.log(`[Supabase Lifecycle] Starting SDK refresh attempts (HTTP bypass status: ${httpRefreshSucceededRef.current > 0 ? 'succeeded' : 'not attempted'})`);
           
           for (let i = 0; i < 3; i++) {
             attempts++;
@@ -341,12 +347,16 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     const handleSessionRecovered = (e: Event) => {
       const customEvent = e as CustomEvent;
       const timestamp = customEvent.detail?.timestamp || Date.now();
+      const wasValidating = isValidatingRef.current;
       httpRefreshSucceededRef.current = timestamp;
-      console.log('[Supabase Lifecycle] HTTP refresh succeeded, marking validation complete');
+      console.log(`[Supabase Lifecycle] HTTP refresh succeeded at ${timestamp}`);
+      console.log(`[Supabase Lifecycle] Was validating: ${wasValidating}, releasing lock and emitting success`);
       isValidatingRef.current = false; // Release lock so next validation can proceed
       optionsRef.current.onSessionRefreshed?.();
       // CRITICAL: Emit validation success event so hooks waiting on SDK validation can proceed
+      console.log('[Supabase Lifecycle] Emitting validation success event for waiting hooks');
       emitSessionValidated({ success: true });
+      console.log('[Supabase Lifecycle] Validation success event emitted');
     };
     
     window.addEventListener('request-session-validation', handleValidationRequest);
