@@ -108,17 +108,13 @@ export const fetchTasks = async (userId: string, sectionId?: string | null, abor
     const tasks = data.map(mapTaskFromDB);
     
     // Minimal logging in production
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[Debug] Fetched ${tasks.length} tasks for user ${userId}`);
-      if (tasks.length > 0) {
-        console.log('[Debug] Sample task data:', {
-          id: tasks[0].id,
-          name: tasks[0].name,
-          sectionId: tasks[0].sectionId,
-          isAdminTask: tasks[0].isAdminTask
-        });
-      }
-    }
+    /* 
+       REMOVE SENSITIVE LOGS IN PRODUCTION
+       If you need to debug, ensure variables are defined.
+    // if (process.env.NODE_ENV !== 'production') {
+    //   console.log(`[Debug] Fetched ${tasks.length} tasks for user ${userId}`);
+    // }
+    */
 
     return tasks;
   } catch (error: any) {
