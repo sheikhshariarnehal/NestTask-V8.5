@@ -51,13 +51,46 @@ export function initPWA(): void {
     deferredPrompt = null;
   });
 
-  // Handle service worker updates
+  // Handle service worker updates - auto reload when new version detected
   if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // Optionally show a notification that app has been updated
-      if (navigator.serviceWorker.controller) {
-        console.log('[PWA] App has been updated');
+      // New service worker has taken control - reload page automatically
+      if (refreshing) return; // Prevent infinite reload loop
+      
+      refreshing = true;
+      console.log('[PWA] New version detected, auto-reloading...');
+      
+      // Wait a tiny bit to ensure SW is fully active
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    });
+    
+    // Also listen for update notifications from the service worker
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'UPDATE_AVAILABLE') {
+        console.log('[PWA] Update available, will reload on next activation');
       }
+    });
+  }
+  
+  // Register update handler for service worker registration
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New service worker installed and ready - skip waiting
+              console.log('[PWA] New version installed, activating...');
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        }
+      });
     });
   }
 }

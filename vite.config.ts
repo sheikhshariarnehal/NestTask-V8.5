@@ -67,6 +67,9 @@ export default defineConfig({
           ]
         },
         workbox: {
+          // CRITICAL: Enable skipWaiting and clientsClaim for immediate updates
+          skipWaiting: true,
+          clientsClaim: true,
           // Cache Vite build outputs + common static assets.
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,eot,json}'],
           navigateFallback: '/index.html',
