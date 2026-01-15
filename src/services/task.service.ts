@@ -120,17 +120,6 @@ export const fetchTasks = async (userId: string, sectionId?: string | null, abor
       }
     }
 
-    // Additional debug for section tasks
-    if (userSectionId) {
-      const sectionTasks = tasks.filter(task => task.sectionId === userSectionId);
-      console.log(`[Debug] Found ${sectionTasks.length} section tasks with sectionId: ${userSectionId}`);
-      
-      // Log the section task IDs for easier troubleshooting
-      if (sectionTasks.length > 0) {
-        console.log('[Debug] Section task IDs:', sectionTasks.map(task => task.id));
-      }
-    }
-
     return tasks;
   } catch (error: any) {
     // Check if this is an AbortError (timeout)
