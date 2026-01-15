@@ -234,38 +234,35 @@ async function forceRefreshFromStorage(): Promise<SessionResult> {
       }
       
       // Notify SDK that session was updated (it may pick up from storage)
-      try {
-        // Use setSession to properly hydrate the SDK's internal state
-        await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token
-        });
-        console.log('[Supabase] SDK session hydrated via setSession');
-        
-        // CRITICAL: Notify all waiting hooks that session is now available
-        if (typeof window !== 'undefined') {
-          const recoveryTimestamp = Date.now();
-          console.log(`[Supabase] Broadcasting session-recovered event at ${recoveryTimestamp}`);
-          window.dispatchEvent(new CustomEvent('supabase-session-recovered', { 
-            detail: { session, timestamp: recoveryTimestamp } 
-          }));
-          console.log('[Supabase] Broadcasting session-validated event with recovered flag');
-          window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
-            detail: { success: true, recovered: true, timestamp: recoveryTimestamp } 
-          }));
-          console.log('[Supabase] All recovery events dispatched');
-        }
-      } catch (e) {
-        console.warn('[Supabase] setSession failed, but HTTP refresh succeeded:', e);
-        // Continue anyway - we have a valid session in storage
-        // Still notify hooks even if setSession failed
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('supabase-session-recovered', { 
-            detail: { session, timestamp: Date.now() } 
-          }));
-        }
+      // IMPORTANT: Broadcast events FIRST, then attempt setSession
+      // This ensures hooks don't wait for setSession which may hang
+      const recoveryTimestamp = Date.now();
+      if (typeof window !== 'undefined') {
+        console.log(`[Supabase] Broadcasting session-recovered event at ${recoveryTimestamp}`);
+        window.dispatchEvent(new CustomEvent('supabase-session-recovered', { 
+          detail: { session, timestamp: recoveryTimestamp } 
+        }));
+        console.log('[Supabase] Broadcasting session-validated event with recovered flag');
+        window.dispatchEvent(new CustomEvent('supabase-session-validated', { 
+          detail: { success: true, recovered: true, timestamp: recoveryTimestamp } 
+        }));
+        console.log('[Supabase] All recovery events dispatched');
       }
       
+      // Attempt SDK hydration in background (don't block on this)
+      Promise.race([
+        supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('setSession timeout')), 2000))
+      ]).then(() => {
+        console.log('[Supabase] SDK session hydrated via setSession');
+      }).catch((e) => {
+        console.warn('[Supabase] setSession failed or timed out (this is OK, session stored in localStorage):', e);
+      });
+      
+      console.log('[Supabase] HTTP refresh complete, returning session');
       return { data: { session }, error: null };
     }
     

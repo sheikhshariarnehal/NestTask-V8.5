@@ -345,6 +345,7 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     
     // Listen for HTTP refresh success events to skip SDK refresh
     const handleSessionRecovered = (e: Event) => {
+      console.log('[Supabase Lifecycle] *** session-recovered event RECEIVED ***');
       const customEvent = e as CustomEvent;
       const timestamp = customEvent.detail?.timestamp || Date.now();
       const wasValidating = isValidatingRef.current;
@@ -361,8 +362,10 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     
     window.addEventListener('request-session-validation', handleValidationRequest);
     window.addEventListener('supabase-session-recovered', handleSessionRecovered);
+    console.log('[Supabase Lifecycle] Event listeners attached (validation request & session recovered)');
     
     return () => {
+      console.log('[Supabase Lifecycle] Removing event listeners');
       window.removeEventListener('request-session-validation', handleValidationRequest);
       window.removeEventListener('supabase-session-recovered', handleSessionRecovered);
     };
