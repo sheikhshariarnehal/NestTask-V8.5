@@ -82,7 +82,8 @@ export const supabase = createClient<Database>(
     flowType: 'pkce',
     storage: localStorage,
     storageKey: 'nesttask_supabase_auth',
-    // Note: Session refresh is handled by useSupabaseLifecycle hook
+    autoRefreshToken: false, // CRITICAL: Disable SDK auto-refresh to prevent infinite loop with HTTP bypass
+    // Note: Session refresh is handled manually by HTTP bypass + useSupabaseLifecycle hook
     // We refresh proactively (5 minutes before expiry) to prevent RLS failures
   },
   global: {
