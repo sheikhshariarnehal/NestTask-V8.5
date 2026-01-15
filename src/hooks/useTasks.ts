@@ -225,14 +225,9 @@ export function useTasks(userId: string | undefined) {
       // Skip database connection test in development mode
       let isConnected = true;
       if (!import.meta.env.DEV) {
-        // On Android WebView / installed PWA, the first few seconds after launch can race
-        // with storage/session hydration. Validate first to avoid transient “no session”.
-        // Use much longer timeout for native platforms on cold start (15s vs 2s)
-        const isNative = Capacitor.isNativePlatform();
-        const validationTimeout = isNative ? 15000 : 2000;
-        console.log(`[useTasks] Requesting session validation (timeout: ${validationTimeout}ms, native: ${isNative})`);
-        await requestSessionValidation(validationTimeout);
-
+        // SIMPLIFIED: Session validation is already handled by useSupabaseLifecycle and resume handlers
+        // We don't need to validate again here - this was causing redundant 2-15 second timeouts
+        
         // Test connection before fetching
         // If connection test fails, try to use cache
         isConnected = await testConnection();
@@ -248,37 +243,9 @@ export function useTasks(userId: string | undefined) {
            throw new Error('Unable to connect to database');
         }
 
-        const safeGetSession = async () => {
-          return await getSessionSafe({ timeoutMs: 8000 });
-        };
-
-        // Check session - if no session, just return without reloading
-        // The auth flow will handle redirecting to login if needed
-        let { data: session } = await safeGetSession();
-        if (!session.session) {
-          console.log('[useTasks] No session on initial fetch; requesting validation and retrying once...');
-          await requestSessionValidation(4000);
-          ({ data: session } = await safeGetSession());
-        }
-
-        if (!session.session) {
-          console.log('[useTasks] Still no session; checks failed');
-          
-          // Fallback to cache if session fails (Offline Mode support)
-          if (userId && tasksCache.has(userId)) {
-             console.log('[useTasks] Session failed, falling back to cache');
-             if (isMountedRef.current) {
-                setTasks(tasksCache.get(userId)!.tasks);
-                // Use a different error message that doesn't sound scary
-                setError('Offline mode: Using cached tasks'); 
-             }
-             return; 
-           }
-
-          // If we have a userId but no session, we might be in a "zombie" state or offline without cache.
-          // Instead of throwing, let's TRY to fetch anyway. The fetch itself might fail or work if the session is just sticking.
-          console.warn('[useTasks] Proceeding to fetch despite missing session check (optimistic)');
-        }
+        // SIMPLIFIED: Session validation is already handled by useSupabaseLifecycle and resume handlers
+        // The fetchTasks() service will use getSessionSafe() which handles refresh internally via HTTP bypass
+        console.log('[useTasks] Connection OK, proceeding to fetch (session managed by lifecycle hook)');
       }
 
       // Check if the request was aborted
