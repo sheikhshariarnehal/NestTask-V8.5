@@ -78,14 +78,11 @@ export const fetchTasks = async (userId: string, sectionId?: string | null, abor
 
     const timeoutId = setTimeout(() => controller?.abort('timeout'), QUERY_TIMEOUT);
     
-    // Session is already validated by useSupabaseLifecycle and stored in localStorage
-    // Supabase client will use it automatically - no need to call getSessionSafe here
-    // (Calling getSessionSafe caused infinite refresh loop on PWA due to localStorage timeout)
-    const { data: { session } } = await supabase.auth.getSession();
+    // CRITICAL: Do NOT call getSession() or getSessionSafe() here
+    // On PWA, localStorage access can timeout/deadlock causing zombie loading state
+    // Session is already validated by useSupabaseLifecycle - Supabase client uses it automatically
+    // RLS policies handle all permission filtering, we don't need user role/section in query
     
-    const userRole = session?.user?.user_metadata?.role;
-    const userSectionId = sectionId || session?.user?.user_metadata?.section_id;
-
     // Start query builder with optimized field selection - no filters needed as RLS handles permissions
     let query = supabase
       .from('tasks')
