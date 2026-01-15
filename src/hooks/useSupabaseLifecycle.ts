@@ -345,6 +345,8 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       console.log('[Supabase Lifecycle] HTTP refresh succeeded, marking validation complete');
       isValidatingRef.current = false; // Release lock so next validation can proceed
       optionsRef.current.onSessionRefreshed?.();
+      // CRITICAL: Emit validation success event so hooks waiting on SDK validation can proceed
+      emitSessionValidated({ success: true });
     };
     
     window.addEventListener('request-session-validation', handleValidationRequest);
