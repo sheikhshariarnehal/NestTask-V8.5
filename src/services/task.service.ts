@@ -78,9 +78,10 @@ export const fetchTasks = async (userId: string, sectionId?: string | null, abor
 
     const timeoutId = setTimeout(() => controller?.abort('timeout'), QUERY_TIMEOUT);
     
-    // Get session to determine role (use getSession for speed/offline support instead of getUser)
-    // Serialized + timeout-protected to avoid Android WebView storage stalls.
-    const { data: { session } } = await getSessionSafe({ timeoutMs: 3000, maxAgeMs: 0 });
+    // Session is already validated by useSupabaseLifecycle and stored in localStorage
+    // Supabase client will use it automatically - no need to call getSessionSafe here
+    // (Calling getSessionSafe caused infinite refresh loop on PWA due to localStorage timeout)
+    const { data: { session } } = await supabase.auth.getSession();
     
     const userRole = session?.user?.user_metadata?.role;
     const userSectionId = sectionId || session?.user?.user_metadata?.section_id;
