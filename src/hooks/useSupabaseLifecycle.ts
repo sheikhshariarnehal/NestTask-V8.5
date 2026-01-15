@@ -20,12 +20,16 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const { enabled = true, onSessionExpired, onSessionRefreshed, onAuthError } = options;
   const isValidatingRef = useRef(false);
   const lastValidationRef = useRef<number>(Date.now());
+  const lastSuccessRef = useRef<number>(0); // Timestamp of last successful validation
   const optionsRef = useRef(options);
   const isAutoRefreshEnabledRef = useRef<boolean>(false);
   const httpRefreshSucceededRef = useRef<number>(0); // Timestamp of last successful HTTP refresh
 
   const emitSessionValidated = useCallback((detail: { success: boolean; error?: unknown }) => {
     if (typeof window === 'undefined') return;
+    if (detail.success) {
+      lastSuccessRef.current = Date.now();
+    }
     console.log(`[Supabase Lifecycle] Emitting session-validated event: success=${detail.success}, error=${detail.error ? 'yes' : 'no'}`);
     window.dispatchEvent(new CustomEvent('supabase-session-validated', { detail }));
   }, []);
@@ -43,6 +47,14 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
 
     const now = Date.now();
     console.log(`[Supabase Lifecycle] validateSession called (force=${force}, timestamp=${now})`);
+
+    // Check if validation succeeded recently (within 3 seconds)
+    const timeSinceSuccess = now - lastSuccessRef.current;
+    if (timeSinceSuccess < 3000) {
+      console.log(`[Supabase Lifecycle] Using cached validation (${timeSinceSuccess}ms ago) - emitting immediate success`);
+      emitSessionValidated({ success: true });
+      return true;
+    }
 
     // Prevent concurrent validations
     // If validation is already in progress, just wait for it to finish (emitSessionValidated will be called by the original request)

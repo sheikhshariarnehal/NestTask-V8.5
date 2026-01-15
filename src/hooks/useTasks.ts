@@ -227,9 +227,9 @@ export function useTasks(userId: string | undefined) {
       if (!import.meta.env.DEV) {
         // On Android WebView / installed PWA, the first few seconds after launch can race
         // with storage/session hydration. Validate first to avoid transient “no session”.
-        // Use much longer timeout for native platforms on cold start (15s vs 4s)
+        // Use much longer timeout for native platforms on cold start (15s vs 2s)
         const isNative = Capacitor.isNativePlatform();
-        const validationTimeout = isNative ? 15000 : 6000;
+        const validationTimeout = isNative ? 15000 : 2000;
         console.log(`[useTasks] Requesting session validation (timeout: ${validationTimeout}ms, native: ${isNative})`);
         await requestSessionValidation(validationTimeout);
 
