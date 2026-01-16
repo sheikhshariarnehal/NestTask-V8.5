@@ -21,11 +21,7 @@
               "teacher": "HMK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_A1)",
-              "teacher": "HMK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null,
             {
@@ -33,11 +29,7 @@
               "teacher": "FAF",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_H1)",
-              "teacher": "FAF",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -48,31 +40,19 @@
               "teacher": "MTN",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_S1)",
-              "teacher": "MTN",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE314(66_F2)",
               "teacher": "UH",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_F2)",
-              "teacher": "UH",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE114(70_J2)",
               "teacher": "SGP",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_J2)",
-              "teacher": "SGP",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -83,27 +63,15 @@
               "teacher": "SNR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_J1)",
-              "teacher": "SNR",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_J1)",
-              "teacher": "SNR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null,
             {
               "course": "CSE114(70_S2)",
               "teacher": "MTN",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_S2)",
-              "teacher": "MTN",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -114,31 +82,15 @@
               "teacher": "RYS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_B2)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_B2)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_C2)",
               "teacher": "AAA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_C2)",
-              "teacher": "AAA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_C2)",
-              "teacher": "AAA",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -149,27 +101,15 @@
               "teacher": "DRAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_F2)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_F2)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null,
             {
               "course": "CSE412(64_H1)",
               "teacher": "MAS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_H1)",
-              "teacher": "MAS",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -180,16 +120,8 @@
               "teacher": "KRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_M2)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_M2)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null,
             null,
             null
@@ -203,21 +135,13 @@
               "teacher": "SEA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_L2)",
-              "teacher": "SEA",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE312(66_I1)",
               "teacher": "MUM",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_I1)",
-              "teacher": "MUM",
-              "title": "Database Management System Lab"
-            },
+            null,
             null,
             null
           ]
@@ -232,11 +156,7 @@
               "teacher": "PDS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_I2)",
-              "teacher": "PDS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null,
             null
           ]
@@ -249,21 +169,13 @@
               "teacher": "SNK",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_G1)",
-              "teacher": "SNK",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE412(64_H2)",
               "teacher": "MAS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_H2)",
-              "teacher": "MAS",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null,
             null
           ]
@@ -276,26 +188,14 @@
               "teacher": "MUH",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_I1)",
-              "teacher": "MUH",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE416(62_F1)",
               "teacher": "MSJ",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_F1)",
-              "teacher": "MSJ",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_F1)",
-              "teacher": "MSJ",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             null
           ]
         },
@@ -307,26 +207,14 @@
               "teacher": "SMF",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_I2)",
-              "teacher": "SMF",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE422(62_F2)",
               "teacher": "MRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_F2)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_F2)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null
           ]
         },
@@ -338,26 +226,14 @@
               "teacher": "MIZ",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_J2)",
-              "teacher": "MIZ",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_J2)",
-              "teacher": "MIZ",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE214(68_M2)",
               "teacher": "SS",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_M2)",
-              "teacher": "SS",
-              "title": "Algorithms Lab"
-            },
+            null,
             null
           ]
         },
@@ -369,22 +245,14 @@
               "teacher": "FNN",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_A1)",
-              "teacher": "FNN",
-              "title": "Database Management System Lab"
-            },
+            null,
             null,
             {
               "course": "CSE412(64_G2)",
               "teacher": "NHE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_G2)",
-              "teacher": "NHE",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null
           ]
         },
@@ -396,11 +264,7 @@
               "teacher": "HHP",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_E2)",
-              "teacher": "HHP",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null,
             null,
@@ -415,31 +279,19 @@
               "teacher": "MAH",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_A2)",
-              "teacher": "MAH",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE324(65_J1)",
               "teacher": "HHP",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_J1)",
-              "teacher": "HHP",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE412(64_L2)",
               "teacher": "SAP",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_L2)",
-              "teacher": "SAP",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -450,31 +302,19 @@
               "teacher": "SHR",
               "title": "Algorithms"
             },
-            {
-              "course": "CSE213(68_P1)",
-              "teacher": "SHR",
-              "title": "Algorithms"
-            },
+            null,
             {
               "course": "CSE412(64_F1)",
               "teacher": "LAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_F1)",
-              "teacher": "LAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE412(64_F2)",
               "teacher": "LAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_F2)",
-              "teacher": "LAR",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -485,31 +325,19 @@
               "teacher": "FJ",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_O1)",
-              "teacher": "FJ",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE412(64_I1)",
               "teacher": "MRM",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_I1)",
-              "teacher": "MRM",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE412(64_I2)",
               "teacher": "MRM",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_I2)",
-              "teacher": "MRM",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -520,22 +348,14 @@
               "teacher": "MA",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_P1)",
-              "teacher": "MA",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null,
             {
               "course": "CSE114(70_P2)",
               "teacher": "MA",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_P2)",
-              "teacher": "MA",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null
           ]
         },
@@ -547,31 +367,19 @@
               "teacher": "AAM",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_N1)",
-              "teacher": "AAM",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE412(64_L1)",
               "teacher": "SAP",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_L1)",
-              "teacher": "SAP",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE214(68_B1)",
               "teacher": "MHN",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_B1)",
-              "teacher": "MHN",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -582,31 +390,19 @@
               "teacher": "NHE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_D1)",
-              "teacher": "NHE",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE214(68_D1)",
               "teacher": "FMA",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_D1)",
-              "teacher": "FMA",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE114(70_N2)",
               "teacher": "AAM",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_N2)",
-              "teacher": "AAM",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -1203,31 +999,15 @@
               "teacher": "NAE",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_B1)",
-              "teacher": "NAE",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_B1)",
-              "teacher": "NAE",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_C1)",
               "teacher": "SFMA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_C1)",
-              "teacher": "SFMA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_C1)",
-              "teacher": "SFMA",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -1238,26 +1018,14 @@
               "teacher": "SRS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_F1)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_F1)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE324(65_K1)",
               "teacher": "SEA",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_K1)",
-              "teacher": "SEA",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null
           ]
         },
@@ -1281,11 +1049,7 @@
               "teacher": "SMF",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_I1)",
-              "teacher": "SMF",
-              "title": "Operating Systems Lab"
-            }
+            null
           ]
         },
         {
@@ -1296,16 +1060,8 @@
               "teacher": "NT_3",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_M1)",
-              "teacher": "NT_3",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_M1)",
-              "teacher": "NT_3",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE112(71_G)",
               "teacher": "ACC",
@@ -1323,21 +1079,13 @@
               "teacher": "NSL",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_A1)",
-              "teacher": "NSL",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE114(70_J1)",
               "teacher": "SGP",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_J1)",
-              "teacher": "SGP",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null,
             null
           ]
@@ -1350,11 +1098,7 @@
               "teacher": "SGP",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_I2)",
-              "teacher": "SGP",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE112(71_J)",
               "teacher": "ARS",
@@ -1366,11 +1110,7 @@
               "teacher": "NSL",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_A2)",
-              "teacher": "NSL",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -1388,11 +1128,7 @@
               "teacher": "FZS",
               "title": "Systems Analysis and Design"
             },
-            {
-              "course": "CSE227(67_B)",
-              "teacher": "FZS",
-              "title": "Systems Analysis and Design"
-            },
+            null,
             null
           ]
         },
@@ -1407,11 +1143,7 @@
               "teacher": "MHR",
               "title": "Software Engineering"
             },
-            {
-              "course": "CSE315(65_C)",
-              "teacher": "MHR",
-              "title": "Software Engineering"
-            },
+            null,
             null
           ]
         },
@@ -1567,60 +1299,40 @@
               "teacher": "EEE_6",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_Q2)",
-              "teacher": "EEE_6",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_J1)",
               "teacher": "EEE_1",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_J1)",
-              "teacher": "EEE_1",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             {
               "course": "CSE224(67_G1)",
               "teacher": "TRN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_G1)",
-              "teacher": "TRN",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE122(69_K1)",
               "teacher": "EEE_2",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_K1)",
-              "teacher": "EEE_2",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_K2)",
               "teacher": "EEE_2",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_K2)",
-              "teacher": "EEE_2",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -1629,21 +1341,13 @@
               "teacher": "LR",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_D1)",
-              "teacher": "LR",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_G2)",
               "teacher": "TRN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_G2)",
-              "teacher": "TRN",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         },
         {
@@ -1677,31 +1381,19 @@
               "teacher": "MMH",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_G1)",
-              "teacher": "MMH",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_K2)",
               "teacher": "PNT_3",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_K2)",
-              "teacher": "PNT_3",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_P1)",
               "teacher": "AEE",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_P1)",
-              "teacher": "AEE",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -1712,31 +1404,19 @@
               "teacher": "PNT_2",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_H1)",
-              "teacher": "PNT_2",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_Q1)",
               "teacher": "PNT_5",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_Q1)",
-              "teacher": "PNT_5",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_P2)",
               "teacher": "PNT_7",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_P2)",
-              "teacher": "PNT_7",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -1778,7 +1458,7 @@
           ]
         },
         {
-          "room": "SH-103 LAB)",
+          "room": "SH-103 (LAB)",
           "courses": [
             null,
             null,
@@ -1787,21 +1467,13 @@
               "teacher": "TAB",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_E2)",
-              "teacher": "TAB",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_J2)",
               "teacher": "SHD",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_J2)",
-              "teacher": "SHD",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         }
       ]
@@ -1825,31 +1497,15 @@
               "teacher": "NAE",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_B2)",
-              "teacher": "NAE",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_B2)",
-              "teacher": "NAE",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_C1)",
               "teacher": "AAA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_C1)",
-              "teacher": "AAA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_C1)",
-              "teacher": "AAA",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -1860,31 +1516,19 @@
               "teacher": "ZZM",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_P2)",
-              "teacher": "ZZM",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE324(65_F1)",
               "teacher": "NJO",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_F1)",
-              "teacher": "NJO",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE314(66_F1)",
               "teacher": "UH",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_F1)",
-              "teacher": "UH",
-              "title": "Compiler Design Lab"
-            }
+            null
           ]
         },
         {
@@ -1895,21 +1539,13 @@
               "teacher": "HJ",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_E1)",
-              "teacher": "HJ",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE314(66_B1)",
               "teacher": "MUR",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_B1)",
-              "teacher": "MUR",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE227(67_L)",
               "teacher": "MNB",
@@ -1926,31 +1562,15 @@
               "teacher": "RYS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_B1)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_B1)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_K2)",
               "teacher": "KRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_K2)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_K2)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -1961,31 +1581,19 @@
               "teacher": "NTS",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_H1)",
-              "teacher": "NTS",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE312(66_C1)",
               "teacher": "MJA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_C1)",
-              "teacher": "MJA",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE312(66_P1)",
               "teacher": "ZZM",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_P1)",
-              "teacher": "ZZM",
-              "title": "Database Management System Lab"
-            }
+            null
           ]
         },
         {
@@ -1996,21 +1604,13 @@
               "teacher": "MMB",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_E2)",
-              "teacher": "MMB",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE312(66_D1)",
               "teacher": "SH",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_D1)",
-              "teacher": "SH",
-              "title": "Database Management System Lab"
-            },
+            null,
             null,
             null
           ]
@@ -2023,31 +1623,19 @@
               "teacher": "MJZ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_F1)",
-              "teacher": "MJZ",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE312(66_I2)",
               "teacher": "MUM",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_I2)",
-              "teacher": "MUM",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE412(64_D2)",
               "teacher": "NHE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_D2)",
-              "teacher": "NHE",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -2058,21 +1646,13 @@
               "teacher": "MTN",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_B2)",
-              "teacher": "MTN",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE114(70_K2)",
               "teacher": "JRY",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_K2)",
-              "teacher": "JRY",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null,
             null
           ]
@@ -2085,26 +1665,14 @@
               "teacher": "MSS",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_J2)",
-              "teacher": "MSS",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE416(62_A1)",
               "teacher": "IST",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_A1)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_A1)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             null
           ]
         },
@@ -2116,26 +1684,14 @@
               "teacher": "ZMK",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_M1)",
-              "teacher": "ZMK",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE422(62_A2)",
               "teacher": "TRA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_A2)",
-              "teacher": "TRA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_A2)",
-              "teacher": "TRA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null
           ]
         },
@@ -2147,26 +1703,14 @@
               "teacher": "DRAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_F1)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_F1)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE214(68_O2)",
               "teacher": "FJ",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_O2)",
-              "teacher": "FJ",
-              "title": "Algorithms Lab"
-            },
+            null,
             null
           ]
         },
@@ -2178,31 +1722,15 @@
               "teacher": "SRS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_F2)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_F2)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE416(62_F2)",
               "teacher": "MSJ",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_F2)",
-              "teacher": "MSJ",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_F2)",
-              "teacher": "MSJ",
-              "title": "Web Engineering Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -2213,31 +1741,15 @@
               "teacher": "SAL",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_E1)",
-              "teacher": "SAL",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_E1)",
-              "teacher": "SAL",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(62_F1)",
               "teacher": "MRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_F1)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_F1)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -2248,31 +1760,15 @@
               "teacher": "ALE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_E2)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_E2)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_J2)",
               "teacher": "SNR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_J2)",
-              "teacher": "SNR",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_J2)",
-              "teacher": "SNR",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -2283,27 +1779,15 @@
               "teacher": "CSA",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_D2)",
-              "teacher": "CSA",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_D2)",
-              "teacher": "CSA",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             null,
             {
               "course": "CSE124(69_H2)",
               "teacher": "NTS",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_H2)",
-              "teacher": "NTS",
-              "title": "Data Structure Lab"
-            }
+            null
           ]
         },
         {
@@ -2314,26 +1798,14 @@
               "teacher": "NNT",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_D1)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_D1)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE124(69_I1)",
               "teacher": "JHJ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_I1)",
-              "teacher": "JHJ",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -2345,26 +1817,14 @@
               "teacher": "MSA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_N1)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_N1)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_C2)",
               "teacher": "ROZ",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_C2)",
-              "teacher": "ROZ",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -2376,31 +1836,19 @@
               "teacher": "DAN",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_A2)",
-              "teacher": "DAN",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE312(66_B2)",
               "teacher": "MB",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_B2)",
-              "teacher": "MB",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE114(70_A1)",
               "teacher": "MHN",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_A1)",
-              "teacher": "MHN",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -2411,31 +1859,19 @@
               "teacher": "JHJ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_I2)",
-              "teacher": "JHJ",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE124(69_D2)",
               "teacher": "PPC",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_D2)",
-              "teacher": "PPC",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE114(70_F1)",
               "teacher": "FAF",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_F1)",
-              "teacher": "FAF",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -2448,21 +1884,13 @@
               "teacher": "ZMK",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_M2)",
-              "teacher": "ZMK",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE124(69_F2)",
               "teacher": "JLA",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_F2)",
-              "teacher": "JLA",
-              "title": "Data Structure Lab"
-            }
+            null
           ]
         },
         {
@@ -3258,31 +2686,15 @@
               "teacher": "PB",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_G1)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_G1)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_J1)",
               "teacher": "MIZ",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_J1)",
-              "teacher": "MIZ",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_J1)",
-              "teacher": "MIZ",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -3308,16 +2720,8 @@
               "teacher": "TAA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_K1)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_K1)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -3333,21 +2737,13 @@
               "teacher": "SRH",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_C)",
-              "teacher": "SRH",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE312(66_F2)",
               "teacher": "MSS",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_F2)",
-              "teacher": "MSS",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -3359,21 +2755,13 @@
               "teacher": "TIS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_G2)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
             {
               "course": "CSE314(66_D2)",
               "teacher": "TAS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_D2)",
-              "teacher": "TAS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "ENG102(70_C)",
               "teacher": "SMH",
@@ -3390,31 +2778,15 @@
               "teacher": "SBA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_N2)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_N2)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_C2)",
               "teacher": "SFMA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_C2)",
-              "teacher": "SFMA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_C2)",
-              "teacher": "SFMA",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -3425,11 +2797,7 @@
               "teacher": "MUH",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_F1)",
-              "teacher": "MUH",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "ENG101(71_B)",
               "teacher": "SMH",
@@ -3784,60 +3152,40 @@
               "teacher": "EEE_3",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_M1)",
-              "teacher": "EEE_3",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_M2)",
               "teacher": "EEE_3",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_M2)",
-              "teacher": "EEE_3",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             {
               "course": "CSE224(67_L1)",
               "teacher": "MRR",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_L1)",
-              "teacher": "MRR",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE122(69_I2)",
               "teacher": "EEE_1",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_I2)",
-              "teacher": "EEE_1",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_S1)",
               "teacher": "EEE_8",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_S1)",
-              "teacher": "EEE_8",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -3846,21 +3194,13 @@
               "teacher": "GR",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_M1)",
-              "teacher": "GR",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_P1)",
               "teacher": "TRN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_P1)",
-              "teacher": "TRN",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         },
         {
@@ -3902,31 +3242,19 @@
               "teacher": "AEE",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_B1)",
-              "teacher": "AEE",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_D1)",
               "teacher": "MAM",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_D1)",
-              "teacher": "MAM",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_E1)",
               "teacher": "AAR",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_E1)",
-              "teacher": "AAR",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -3937,31 +3265,19 @@
               "teacher": "RIM",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_C1)",
-              "teacher": "RIM",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_O1)",
               "teacher": "PNT_7",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_O1)",
-              "teacher": "PNT_7",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_G2)",
               "teacher": "MMH",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_G2)",
-              "teacher": "MMH",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -4031,7 +3347,7 @@
           ]
         },
         {
-          "room": "SH-103 LAB)",
+          "room": "SH-103 (LAB)",
           "courses": [
             null,
             null,
@@ -4040,21 +3356,13 @@
               "teacher": "TAB",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_E1)",
-              "teacher": "TAB",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_N2)",
               "teacher": "SMF",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_N2)",
-              "teacher": "SMF",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         }
       ]
@@ -4078,31 +3386,19 @@
               "teacher": "NHE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_G1)",
-              "teacher": "NHE",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE114(70_R2)",
               "teacher": "YI",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_R2)",
-              "teacher": "YI",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE124(69_S1)",
               "teacher": "JLA",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_S1)",
-              "teacher": "JLA",
-              "title": "Data Structure Lab"
-            }
+            null
           ]
         },
         {
@@ -4113,31 +3409,19 @@
               "teacher": "MHS",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_D1)",
-              "teacher": "MHS",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE324(65_F2)",
               "teacher": "NJO",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_F2)",
-              "teacher": "NJO",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE314(66_H1)",
               "teacher": "PDS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_H1)",
-              "teacher": "PDS",
-              "title": "Compiler Design Lab"
-            }
+            null
           ]
         },
         {
@@ -4153,26 +3437,14 @@
               "teacher": "MUR",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_B2)",
-              "teacher": "MUR",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE422(63_L2)",
               "teacher": "MRC",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_L2)",
-              "teacher": "MRC",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_L2)",
-              "teacher": "MRC",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4183,31 +3455,15 @@
               "teacher": "NNT",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_D2)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_D2)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_G2)",
               "teacher": "PB",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_G2)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_G2)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4218,31 +3474,19 @@
               "teacher": "AUA",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_P2)",
-              "teacher": "AUA",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE312(66_C2)",
               "teacher": "MJA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_C2)",
-              "teacher": "MJA",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE114(70_E1)",
               "teacher": "SI",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_E1)",
-              "teacher": "SI",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -4253,31 +3497,19 @@
               "teacher": "MUH",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_F2)",
-              "teacher": "MUH",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE312(66_D2)",
               "teacher": "SH",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_D2)",
-              "teacher": "SH",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE124(69_P1)",
               "teacher": "AUA",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_P1)",
-              "teacher": "AUA",
-              "title": "Data Structure Lab"
-            }
+            null
           ]
         },
         {
@@ -4288,31 +3520,15 @@
               "teacher": "IST",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_G2)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_G2)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(62_H1)",
               "teacher": "MSA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_H1)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_H1)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4323,31 +3539,15 @@
               "teacher": "MRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_G1)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_G1)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_L1)",
               "teacher": "SBA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_L1)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_L1)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4359,26 +3559,14 @@
               "teacher": "JLA",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_S2)",
-              "teacher": "JLA",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE416(62_A2)",
               "teacher": "IST",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_A2)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_A2)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4389,26 +3577,14 @@
               "teacher": "AHAK",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_E2)",
-              "teacher": "AHAK",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE422(62_A1)",
               "teacher": "TRA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_A1)",
-              "teacher": "TRA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_A1)",
-              "teacher": "TRA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null
           ]
         },
@@ -4420,31 +3596,15 @@
               "teacher": "MHD",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_C1)",
-              "teacher": "MHD",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_C1)",
-              "teacher": "MHD",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE416(62_E1)",
               "teacher": "SAL",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_E1)",
-              "teacher": "SAL",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_E1)",
-              "teacher": "SAL",
-              "title": "Web Engineering Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4455,31 +3615,15 @@
               "teacher": "RYS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_C2)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_C2)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(62_E2)",
               "teacher": "ALE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_E2)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_E2)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -4490,26 +3634,14 @@
               "teacher": "KRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_K1)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_K1)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE124(69_C2)",
               "teacher": "MJZ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_C2)",
-              "teacher": "MJZ",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -4521,22 +3653,14 @@
               "teacher": "JHJ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_E1)",
-              "teacher": "JHJ",
-              "title": "Data Structure Lab"
-            },
+            null,
             null,
             {
               "course": "CSE214(68_K2)",
               "teacher": "NSL",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_K2)",
-              "teacher": "NSL",
-              "title": "Algorithms Lab"
-            },
+            null,
             null
           ]
         },
@@ -4548,31 +3672,19 @@
               "teacher": "NJO",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_B2)",
-              "teacher": "NJO",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE124(69_G1)",
               "teacher": "PPC",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_G1)",
-              "teacher": "PPC",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE324(65_L1)",
               "teacher": "TAK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_L1)",
-              "teacher": "TAK",
-              "title": "Operating Systems Lab"
-            }
+            null
           ]
         },
         {
@@ -4583,22 +3695,14 @@
               "teacher": "HJ",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_E2)",
-              "teacher": "HJ",
-              "title": "Database Management System Lab"
-            },
+            null,
             null,
             {
               "course": "CSE324(65_A2)",
               "teacher": "HMK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_A2)",
-              "teacher": "HMK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null
           ]
         },
@@ -4610,31 +3714,19 @@
               "teacher": "MTN",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_B1)",
-              "teacher": "MTN",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE412(64_J1)",
               "teacher": "MAS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_J1)",
-              "teacher": "MAS",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE312(66_G1)",
               "teacher": "RIA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_G1)",
-              "teacher": "RIA",
-              "title": "Database Management System Lab"
-            }
+            null
           ]
         },
         {
@@ -4646,21 +3738,13 @@
               "teacher": "MB",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_B1)",
-              "teacher": "MB",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE314(66_G2)",
               "teacher": "SNK",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_G2)",
-              "teacher": "SNK",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -4672,31 +3756,19 @@
               "teacher": "MMB",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_E1)",
-              "teacher": "MMB",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE314(66_D1)",
               "teacher": "TAS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_D1)",
-              "teacher": "TAS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE114(70_A2)",
               "teacher": "MHN",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_A2)",
-              "teacher": "MHN",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -4709,21 +3781,13 @@
               "teacher": "SAJ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_O1)",
-              "teacher": "SAJ",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE324(65_N2)",
               "teacher": "FJ",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_N2)",
-              "teacher": "FJ",
-              "title": "Operating Systems Lab"
-            }
+            null
           ]
         },
         {
@@ -5519,31 +4583,15 @@
               "teacher": "TAA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_K2)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_K2)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_G1)",
               "teacher": "TIS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_G1)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_G1)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -5554,31 +4602,19 @@
               "teacher": "FRN",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_M1)",
-              "teacher": "FRN",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE214(68_M1)",
               "teacher": "SS",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_M1)",
-              "teacher": "SS",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE324(65_M2)",
               "teacher": "FRN",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_M2)",
-              "teacher": "FRN",
-              "title": "Operating Systems Lab"
-            }
+            null
           ]
         },
         {
@@ -5589,21 +4625,13 @@
               "teacher": "CSA",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_M2)",
-              "teacher": "CSA",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE324(65_N1)",
               "teacher": "FJ",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_N1)",
-              "teacher": "FJ",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE227(67_O)",
               "teacher": "MNB",
@@ -5620,11 +4648,7 @@
               "teacher": "RIA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_M1)",
-              "teacher": "RIA",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE112(71_C)",
               "teacher": "MHS",
@@ -5671,11 +4695,7 @@
               "teacher": "MSK",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_H2)",
-              "teacher": "MSK",
-              "title": "Database Management System Lab"
-            }
+            null
           ]
         },
         {
@@ -5706,11 +4726,7 @@
               "teacher": "MHS",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_D2)",
-              "teacher": "MHS",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -6053,25 +5069,17 @@
               "teacher": "MHK",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_D2)",
-              "teacher": "MHK",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_C1)",
               "teacher": "MHK",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_C1)",
-              "teacher": "MHK",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -6080,25 +5088,17 @@
               "teacher": "EEE_5",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_O2)",
-              "teacher": "EEE_5",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_P2)",
               "teacher": "EEE_6",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_P2)",
-              "teacher": "EEE_6",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -6107,11 +5107,7 @@
               "teacher": "IJN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_H1)",
-              "teacher": "IJN",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             null,
             null
           ]
@@ -6155,31 +5151,19 @@
               "teacher": "AAS",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_A1)",
-              "teacher": "AAS",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_F1)",
               "teacher": "PNT_1",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_F1)",
-              "teacher": "PNT_1",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_J1)",
               "teacher": "PNT_3",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_J1)",
-              "teacher": "PNT_3",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -6190,31 +5174,19 @@
               "teacher": "PNT_2",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_I1)",
-              "teacher": "PNT_2",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_B2)",
               "teacher": "AEE",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_B2)",
-              "teacher": "AEE",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_N1)",
               "teacher": "PNT_7",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_N1)",
-              "teacher": "PNT_7",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -6280,7 +5252,7 @@
           ]
         },
         {
-          "room": "SH-103 LAB)",
+          "room": "SH-103 (LAB)",
           "courses": [
             null,
             null,
@@ -6289,17 +5261,13 @@
               "teacher": "TAB",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_C1)",
-              "teacher": "TAB",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             null,
             null
           ]
         },
         {
-          "room": "SH-105 LAB)",
+          "room": "SH-105 (LAB)",
           "courses": [
             null,
             null,
@@ -6310,11 +5278,7 @@
               "teacher": "EEE_8",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_S2)",
-              "teacher": "EEE_8",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         }
       ]
@@ -6338,31 +5302,19 @@
               "teacher": "YI",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_R1)",
-              "teacher": "YI",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE114(70_I1)",
               "teacher": "MIH",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_I1)",
-              "teacher": "MIH",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE114(70_I2)",
               "teacher": "MIH",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_I2)",
-              "teacher": "MIH",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -6373,31 +5325,15 @@
               "teacher": "TAA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_I1)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_I1)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_E1)",
               "teacher": "SFMA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_E1)",
-              "teacher": "SFMA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_E1)",
-              "teacher": "SFMA",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -6408,31 +5344,15 @@
               "teacher": "DRAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_H2)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_H2)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_E2)",
               "teacher": "ALE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_E2)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_E2)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -6443,26 +5363,14 @@
               "teacher": "PB",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_I2)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_I2)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE312(66_K1)",
               "teacher": "HJ",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_K1)",
-              "teacher": "HJ",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -6474,26 +5382,14 @@
               "teacher": "MSA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_H2)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_H2)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_K2)",
               "teacher": "MIS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_K2)",
-              "teacher": "MIS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -6505,26 +5401,14 @@
               "teacher": "IST",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_H1)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_H1)",
-              "teacher": "IST",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_L2)",
               "teacher": "RAK",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_L2)",
-              "teacher": "RAK",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -6536,26 +5420,14 @@
               "teacher": "KRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_M1)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_M1)",
-              "teacher": "KRY",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE312(66_L1)",
               "teacher": "SEA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_L1)",
-              "teacher": "SEA",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -6567,26 +5439,14 @@
               "teacher": "MHD",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_C2)",
-              "teacher": "MHD",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_C2)",
-              "teacher": "MHD",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_M1)",
               "teacher": "CSA",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_M1)",
-              "teacher": "CSA",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -6598,26 +5458,14 @@
               "teacher": "RYS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_C1)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_C1)",
-              "teacher": "RYS",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE312(66_M2)",
               "teacher": "RIA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_M2)",
-              "teacher": "RIA",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -6629,31 +5477,19 @@
               "teacher": "JHJ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_E2)",
-              "teacher": "JHJ",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE312(66_A2)",
               "teacher": "FNN",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_A2)",
-              "teacher": "FNN",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE214(68_G2)",
               "teacher": "SNK",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_G2)",
-              "teacher": "SNK",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -6664,31 +5500,19 @@
               "teacher": "FMA",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_D2)",
-              "teacher": "FMA",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE314(66_A1)",
               "teacher": "MAH",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_A1)",
-              "teacher": "MAH",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE214(68_Q2)",
               "teacher": "NT_2",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_Q2)",
-              "teacher": "NT_2",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -6699,26 +5523,14 @@
               "teacher": "TIS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_A2)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_A2)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE312(66_J1)",
               "teacher": "MSS",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_J1)",
-              "teacher": "MSS",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -6730,31 +5542,19 @@
               "teacher": "AHAK",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_E1)",
-              "teacher": "AHAK",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE214(68_L2)",
               "teacher": "MAR",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_L2)",
-              "teacher": "MAR",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE124(69_G2)",
               "teacher": "PPC",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_G2)",
-              "teacher": "PPC",
-              "title": "Data Structure Lab"
-            }
+            null
           ]
         },
         {
@@ -6765,26 +5565,14 @@
               "teacher": "UA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_A1)",
-              "teacher": "UA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_A1)",
-              "teacher": "UA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE412(64_N2)",
               "teacher": "FFN",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_N2)",
-              "teacher": "FFN",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null
           ]
         },
@@ -6796,11 +5584,7 @@
               "teacher": "FFN",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_N1)",
-              "teacher": "FFN",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null,
             null,
             {
@@ -6808,11 +5592,7 @@
               "teacher": "ZZM",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_N2)",
-              "teacher": "ZZM",
-              "title": "Database Management System Lab"
-            }
+            null
           ]
         },
         {
@@ -6823,31 +5603,19 @@
               "teacher": "SEA",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_K2)",
-              "teacher": "SEA",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE324(65_H2)",
               "teacher": "HMK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_H2)",
-              "teacher": "HMK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE314(66_N1)",
               "teacher": "ROZ",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_N1)",
-              "teacher": "ROZ",
-              "title": "Compiler Design Lab"
-            }
+            null
           ]
         },
         {
@@ -6858,31 +5626,19 @@
               "teacher": "SI",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_C1)",
-              "teacher": "SI",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE314(66_I1)",
               "teacher": "PDS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_I1)",
-              "teacher": "PDS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE114(70_H2)",
               "teacher": "FAF",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_H2)",
-              "teacher": "FAF",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -6894,21 +5650,13 @@
               "teacher": "MSM",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_B1)",
-              "teacher": "MSM",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE124(69_C1)",
               "teacher": "MJZ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_C1)",
-              "teacher": "MJZ",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -6920,31 +5668,19 @@
               "teacher": "DAN",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_A1)",
-              "teacher": "DAN",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE114(70_Q2)",
               "teacher": "AGT",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_Q2)",
-              "teacher": "AGT",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE214(68_B2)",
               "teacher": "MHN",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_B2)",
-              "teacher": "MHN",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -6955,31 +5691,19 @@
               "teacher": "SGP",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_C2)",
-              "teacher": "SGP",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE214(68_J2)",
               "teacher": "FMA",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_J2)",
-              "teacher": "FMA",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE312(66_O2)",
               "teacher": "MSK",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_O2)",
-              "teacher": "MSK",
-              "title": "Database Management System Lab"
-            }
+            null
           ]
         },
         {
@@ -7775,16 +6499,8 @@
               "teacher": "SRS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_H1)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_H1)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "MAT101(71_A)",
               "teacher": "MSH",
@@ -7806,11 +6522,7 @@
               "teacher": "RKR",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_J1)",
-              "teacher": "RKR",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE328(65_N)",
               "teacher": "MKH",
@@ -7821,11 +6533,7 @@
               "teacher": "RKR",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_J2)",
-              "teacher": "RKR",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -7837,11 +6545,7 @@
               "teacher": "THT",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_K1)",
-              "teacher": "THT",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE226(66_O)",
               "teacher": "MNT_2",
@@ -7852,11 +6556,7 @@
               "teacher": "THT",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_K2)",
-              "teacher": "THT",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -7868,16 +6568,8 @@
               "teacher": "NT_3",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_M2)",
-              "teacher": "NT_3",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_M2)",
-              "teacher": "NT_3",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE323(65_O)",
               "teacher": "FRN",
@@ -7919,11 +6611,7 @@
               "teacher": "UH",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_O1)",
-              "teacher": "UH",
-              "title": "Compiler Design Lab"
-            }
+            null
           ]
         },
         {
@@ -7934,16 +6622,8 @@
               "teacher": "NNT",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_D2)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_D2)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE112(71_I)",
               "teacher": "MB",
@@ -8305,60 +6985,40 @@
               "teacher": "EEE_4",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_N1)",
-              "teacher": "EEE_4",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_P1)",
               "teacher": "EEE_6",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_P1)",
-              "teacher": "EEE_6",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             {
               "course": "CSE224(67_A1)",
               "teacher": "ARS",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_A1)",
-              "teacher": "ARS",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE122(69_R2)",
               "teacher": "EEE_7",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_R2)",
-              "teacher": "EEE_7",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_C2)",
               "teacher": "MHK",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_C2)",
-              "teacher": "MHK",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -8367,21 +7027,13 @@
               "teacher": "LR",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_D2)",
-              "teacher": "LR",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_L2)",
               "teacher": "MRR",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_L2)",
-              "teacher": "MRR",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         },
         {
@@ -8427,31 +7079,19 @@
               "teacher": "PNT_4",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_L2)",
-              "teacher": "PNT_4",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_R1)",
               "teacher": "PNT_5",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_R1)",
-              "teacher": "PNT_5",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_N2)",
               "teacher": "PNT_7",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_N2)",
-              "teacher": "PNT_7",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -8462,31 +7102,19 @@
               "teacher": "AAS",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_A2)",
-              "teacher": "AAS",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_J2)",
               "teacher": "PNT_3",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_J2)",
-              "teacher": "PNT_3",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_I2)",
               "teacher": "PNT_2",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_I2)",
-              "teacher": "PNT_2",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -8556,7 +7184,7 @@
           ]
         },
         {
-          "room": "SH-103 LAB)",
+          "room": "SH-103 (LAB)",
           "courses": [
             null,
             null,
@@ -8565,21 +7193,13 @@
               "teacher": "TAB",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_C2)",
-              "teacher": "TAB",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_A2)",
               "teacher": "ARS",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_A2)",
-              "teacher": "ARS",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         }
       ]
@@ -8603,31 +7223,19 @@
               "teacher": "RAK",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_L1)",
-              "teacher": "RAK",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE324(65_G2)",
               "teacher": "FFZ",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_G2)",
-              "teacher": "FFZ",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE114(70_E2)",
               "teacher": "SI",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_E2)",
-              "teacher": "SI",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -8638,16 +7246,8 @@
               "teacher": "MRC",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_L1)",
-              "teacher": "MRC",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_L1)",
-              "teacher": "MRC",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE114(RE_A1(1.5C))",
               "teacher": "NT_2",
@@ -8669,27 +7269,15 @@
               "teacher": "SRS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_H2)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_H2)",
-              "teacher": "SRS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             null,
             {
               "course": "CSE114(70_L1)",
               "teacher": "MAIT",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_L1)",
-              "teacher": "MAIT",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -8700,31 +7288,19 @@
               "teacher": "MDMR",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_G1)",
-              "teacher": "MDMR",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE114(70_G2)",
               "teacher": "MDMR",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_G2)",
-              "teacher": "MDMR",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE324(65_D2)",
               "teacher": "FFZ",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_D2)",
-              "teacher": "FFZ",
-              "title": "Operating Systems Lab"
-            }
+            null
           ]
         },
         {
@@ -8735,26 +7311,14 @@
               "teacher": "MSJ",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_G1)",
-              "teacher": "MSJ",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_G1)",
-              "teacher": "MSJ",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE214(68_J1)",
               "teacher": "FMA",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_J1)",
-              "teacher": "FMA",
-              "title": "Algorithms Lab"
-            },
+            null,
             null
           ]
         },
@@ -8766,26 +7330,14 @@
               "teacher": "MRY",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_G2)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_G2)",
-              "teacher": "MRY",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE124(69_N1)",
               "teacher": "NT_1",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_N1)",
-              "teacher": "NT_1",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -8797,21 +7349,13 @@
               "teacher": "NT_1",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_N2)",
-              "teacher": "NT_1",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE124(69_O2)",
               "teacher": "SAJ",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_O2)",
-              "teacher": "SAJ",
-              "title": "Data Structure Lab"
-            },
+            null,
             null,
             null
           ]
@@ -8824,31 +7368,19 @@
               "teacher": "LAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_A1)",
-              "teacher": "LAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE214(68_H2)",
               "teacher": "MAR",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_H2)",
-              "teacher": "MAR",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE213(68_N2)",
               "teacher": "SHR",
               "title": "Algorithms"
             },
-            {
-              "course": "CSE213(68_N2)",
-              "teacher": "SHR",
-              "title": "Algorithms"
-            }
+            null
           ]
         },
         {
@@ -8859,26 +7391,14 @@
               "teacher": "MAIT",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_B2)",
-              "teacher": "MAIT",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_B2)",
-              "teacher": "MAIT",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE412(64_A2)",
               "teacher": "LAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_A2)",
-              "teacher": "LAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null
           ]
         },
@@ -8890,26 +7410,14 @@
               "teacher": "STA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_B1)",
-              "teacher": "STA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_B1)",
-              "teacher": "STA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE312(66_K2)",
               "teacher": "HJ",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_K2)",
-              "teacher": "HJ",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -8921,26 +7429,14 @@
               "teacher": "SBA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_L2)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_L2)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_K1)",
               "teacher": "MIS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_K1)",
-              "teacher": "MIS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -8952,26 +7448,14 @@
               "teacher": "UA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_A2)",
-              "teacher": "UA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_A2)",
-              "teacher": "UA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_N2)",
               "teacher": "ROZ",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_N2)",
-              "teacher": "ROZ",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -8984,21 +7468,13 @@
               "teacher": "RIA",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_G2)",
-              "teacher": "RIA",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE312(66_N1)",
               "teacher": "ZZM",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_N1)",
-              "teacher": "ZZM",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -9010,31 +7486,19 @@
               "teacher": "KNA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_O1)",
-              "teacher": "KNA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE213(68_P2)",
               "teacher": "SHR",
               "title": "Algorithms"
             },
-            {
-              "course": "CSE213(68_P2)",
-              "teacher": "SHR",
-              "title": "Algorithms"
-            },
+            null,
             {
               "course": "CSE214(68_K1)",
               "teacher": "NSL",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_K1)",
-              "teacher": "NSL",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -9045,21 +7509,13 @@
               "teacher": "TAK",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_Q2)",
-              "teacher": "TAK",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE324(65_H1)",
               "teacher": "HMK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_H1)",
-              "teacher": "HMK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null
           ]
@@ -9073,21 +7529,13 @@
               "teacher": "SNK",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_G1)",
-              "teacher": "SNK",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE314(66_O2)",
               "teacher": "UH",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_O2)",
-              "teacher": "UH",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -9099,16 +7547,8 @@
               "teacher": "NNT",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_D1)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_D1)",
-              "teacher": "NNT",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null,
             null,
             null
@@ -9122,27 +7562,15 @@
               "teacher": "ALE",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_E1)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_E1)",
-              "teacher": "ALE",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null,
             {
               "course": "CSE412(64_O2)",
               "teacher": "KNA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_O2)",
-              "teacher": "KNA",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -9153,31 +7581,19 @@
               "teacher": "HH",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_L2)",
-              "teacher": "HH",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE312(66_H1)",
               "teacher": "MSK",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_H1)",
-              "teacher": "MSK",
-              "title": "Database Management System Lab"
-            },
+            null,
             {
               "course": "CSE312(66_O1)",
               "teacher": "MSK",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_O1)",
-              "teacher": "MSK",
-              "title": "Database Management System Lab"
-            }
+            null
           ]
         },
         {
@@ -9188,31 +7604,19 @@
               "teacher": "AGT",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_Q1)",
-              "teacher": "AGT",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE314(66_H2)",
               "teacher": "PDS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_H2)",
-              "teacher": "PDS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE214(68_L1)",
               "teacher": "MAR",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_L1)",
-              "teacher": "MAR",
-              "title": "Algorithms Lab"
-            }
+            null
           ]
         },
         {
@@ -10000,16 +8404,8 @@
               "teacher": "NT_3",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_E2)",
-              "teacher": "NT_3",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_E2)",
-              "teacher": "NT_3",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(64_D)",
               "teacher": "MA",
@@ -10031,16 +8427,8 @@
               "teacher": "TIS",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_A1)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_A1)",
-              "teacher": "TIS",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "BNS101(68_O)",
               "teacher": "UF",
@@ -10062,11 +8450,7 @@
               "teacher": "TAS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_P1)",
-              "teacher": "TAS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE123(69_D)",
               "teacher": "PPC",
@@ -10082,11 +8466,7 @@
               "teacher": "FAF",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_F2)",
-              "teacher": "FAF",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -10097,26 +8477,14 @@
               "teacher": "DRAR",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_H1)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_H1)",
-              "teacher": "DRAR",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE314(66_P2)",
               "teacher": "TAS",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_P2)",
-              "teacher": "TAS",
-              "title": "Compiler Design Lab"
-            },
+            null,
             null
           ]
         },
@@ -10128,16 +8496,8 @@
               "teacher": "CSA",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_D1)",
-              "teacher": "CSA",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_D1)",
-              "teacher": "CSA",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "PHY102(69_I)",
               "teacher": "PNT_2",
@@ -10174,11 +8534,7 @@
               "teacher": "TAK",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_Q1)",
-              "teacher": "TAK",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -10514,60 +8870,40 @@
               "teacher": "EEE_4",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_N2)",
-              "teacher": "EEE_4",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_J2)",
               "teacher": "EEE_1",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_J2)",
-              "teacher": "EEE_1",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             {
               "course": "CSE224(67_I2)",
               "teacher": "MIN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_I2)",
-              "teacher": "MIN",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE122(69_O1)",
               "teacher": "EEE_5",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_O1)",
-              "teacher": "EEE_5",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_F1)",
               "teacher": "SMC",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_F1)",
-              "teacher": "SMC",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -10576,21 +8912,13 @@
               "teacher": "FTJ",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_B2)",
-              "teacher": "FTJ",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_P2)",
               "teacher": "TRN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_P2)",
-              "teacher": "TRN",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         },
         {
@@ -10636,31 +8964,19 @@
               "teacher": "PNT_4",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_L1)",
-              "teacher": "PNT_4",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_C2)",
               "teacher": "RIM",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_C2)",
-              "teacher": "RIM",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_F2)",
               "teacher": "PNT_1",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_F2)",
-              "teacher": "PNT_1",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -10671,31 +8987,19 @@
               "teacher": "PNT_2",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_H2)",
-              "teacher": "PNT_2",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_M2)",
               "teacher": "PNT_4",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_M2)",
-              "teacher": "PNT_4",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_K1)",
               "teacher": "PNT_3",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_K1)",
-              "teacher": "PNT_3",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -10765,7 +9069,7 @@
           ]
         },
         {
-          "room": "SH-103 LAB)",
+          "room": "SH-103 (LAB)",
           "courses": [
             null,
             null,
@@ -10774,21 +9078,13 @@
               "teacher": "GR",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_M2)",
-              "teacher": "GR",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_O2)",
               "teacher": "ZMK",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_O2)",
-              "teacher": "ZMK",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         }
       ]
@@ -10812,16 +9108,8 @@
               "teacher": "SBA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_N1)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_N1)",
-              "teacher": "SBA",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             null,
             null,
             null
@@ -10835,11 +9123,7 @@
               "teacher": "FFZ",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_D1)",
-              "teacher": "FFZ",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null,
             {
@@ -10847,11 +9131,7 @@
               "teacher": "MIH",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_M1)",
-              "teacher": "MIH",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -10862,31 +9142,15 @@
               "teacher": "MSA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_N2)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_N2)",
-              "teacher": "MSA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE422(63_I1)",
               "teacher": "PB",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(63_I1)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(63_I1)",
-              "teacher": "PB",
-              "title": "Computer Graphics Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -10897,11 +9161,7 @@
               "teacher": "TAK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_L2)",
-              "teacher": "TAK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null,
             null,
@@ -10916,22 +9176,14 @@
               "teacher": "TI",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_R1)",
-              "teacher": "TI",
-              "title": "Data Structure Lab"
-            },
+            null,
             null,
             {
               "course": "CSE124(69_R2)",
               "teacher": "TI",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_R2)",
-              "teacher": "TI",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -10943,21 +9195,13 @@
               "teacher": "SHR",
               "title": "Algorithms"
             },
-            {
-              "course": "CSE213(68_N1)",
-              "teacher": "SHR",
-              "title": "Algorithms"
-            },
+            null,
             {
               "course": "CSE412(64_C2)",
               "teacher": "MIN",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_C2)",
-              "teacher": "MIN",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null,
             null
           ]
@@ -10970,21 +9214,13 @@
               "teacher": "FRN",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_O1)",
-              "teacher": "FRN",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE214(68_Q1)",
               "teacher": "NT_2",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_Q1)",
-              "teacher": "NT_2",
-              "title": "Algorithms Lab"
-            },
+            null,
             null,
             null
           ]
@@ -10997,11 +9233,7 @@
               "teacher": "MIN",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_C1)",
-              "teacher": "MIN",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE124",
               "teacher": "NT_1",
@@ -11024,26 +9256,14 @@
               "teacher": "MAIT",
               "title": "Web Engineering Lab"
             },
-            {
-              "course": "CSE416(62_B1)",
-              "teacher": "MAIT",
-              "title": "Web Engineering Lab"
-            },
-            {
-              "course": "CSE416(62_B1)",
-              "teacher": "MAIT",
-              "title": "Web Engineering Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE124(69_L1)",
               "teacher": "HH",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_L1)",
-              "teacher": "HH",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -11055,16 +9275,8 @@
               "teacher": "STA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE422(62_B2)",
-              "teacher": "STA",
-              "title": "Computer Graphics Lab"
-            },
-            {
-              "course": "CSE422(62_B2)",
-              "teacher": "STA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
+            null,
             null,
             null,
             null
@@ -11078,22 +9290,14 @@
               "teacher": "YI",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_B1)",
-              "teacher": "YI",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null,
             {
               "course": "CSE412(64_B2)",
               "teacher": "YI",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_B2)",
-              "teacher": "YI",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null
           ]
         },
@@ -11105,22 +9309,14 @@
               "teacher": "NJO",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_B1)",
-              "teacher": "NJO",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             {
               "course": "CSE324(65_O2)",
               "teacher": "FRN",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_O2)",
-              "teacher": "FRN",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null
           ]
         },
@@ -11132,22 +9328,14 @@
               "teacher": "PPC",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_D1)",
-              "teacher": "PPC",
-              "title": "Data Structure Lab"
-            },
+            null,
             null,
             {
               "course": "CSE312(66_F1)",
               "teacher": "MSS",
               "title": "Database Management System Lab"
             },
-            {
-              "course": "CSE312(66_F1)",
-              "teacher": "MSS",
-              "title": "Database Management System Lab"
-            },
+            null,
             null
           ]
         },
@@ -11159,21 +9347,13 @@
               "teacher": "MAR",
               "title": "Algorithms Lab"
             },
-            {
-              "course": "CSE214(68_H1)",
-              "teacher": "MAR",
-              "title": "Algorithms Lab"
-            },
+            null,
             {
               "course": "CSE324(65_G1)",
               "teacher": "FFZ",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_G1)",
-              "teacher": "FFZ",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null
           ]
@@ -11186,21 +9366,13 @@
               "teacher": "RAK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_C1)",
-              "teacher": "RAK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE324(65_C2)",
               "teacher": "RAK",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_C2)",
-              "teacher": "RAK",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null
           ]
@@ -11213,11 +9385,7 @@
               "teacher": "MIH",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_M2)",
-              "teacher": "MIH",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null,
             null,
             {
@@ -11225,11 +9393,7 @@
               "teacher": "MAS",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_J2)",
-              "teacher": "MAS",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -11240,31 +9404,19 @@
               "teacher": "JRY",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_K1)",
-              "teacher": "JRY",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             {
               "course": "CSE412(64_K1)",
               "teacher": "MRM",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_K1)",
-              "teacher": "MRM",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             {
               "course": "CSE412(64_K2)",
               "teacher": "MRM",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_K2)",
-              "teacher": "MRM",
-              "title": "Computer Graphics Lab"
-            }
+            null
           ]
         },
         {
@@ -11275,22 +9427,14 @@
               "teacher": "MSM",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_B2)",
-              "teacher": "MSM",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null,
             {
               "course": "CSE412(64_E2)",
               "teacher": "AAM",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_E2)",
-              "teacher": "AAM",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null
           ]
         },
@@ -11306,11 +9450,7 @@
               "teacher": "MAIT",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_L2)",
-              "teacher": "MAIT",
-              "title": "Programming and Problem Solving Lab"
-            }
+            null
           ]
         },
         {
@@ -11321,22 +9461,14 @@
               "teacher": "AGT",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_O1)",
-              "teacher": "AGT",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null,
             {
               "course": "CSE114(70_O2)",
               "teacher": "AGT",
               "title": "Programming and Problem Solving Lab"
             },
-            {
-              "course": "CSE114(70_O2)",
-              "teacher": "AGT",
-              "title": "Programming and Problem Solving Lab"
-            },
+            null,
             null
           ]
         },
@@ -11867,31 +9999,15 @@
               "teacher": "NAE",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_D1)",
-              "teacher": "NAE",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_D1)",
-              "teacher": "NAE",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE414(63_I2)",
               "teacher": "TAA",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_I2)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_I2)",
-              "teacher": "TAA",
-              "title": "Mobile Application Design Lab"
-            }
+            null,
+            null
           ]
         },
         {
@@ -11902,26 +10018,14 @@
               "teacher": "",
               "title": "Mobile Application Design Lab"
             },
-            {
-              "course": "CSE414(63_D2)",
-              "teacher": "",
-              "title": "Mobile Application Design Lab"
-            },
-            {
-              "course": "CSE414(63_D2)",
-              "teacher": "",
-              "title": "Mobile Application Design Lab"
-            },
+            null,
+            null,
             {
               "course": "CSE124(69_J1)",
               "teacher": "NTS",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_J1)",
-              "teacher": "NTS",
-              "title": "Data Structure Lab"
-            },
+            null,
             null
           ]
         },
@@ -11933,21 +10037,13 @@
               "teacher": "HHP",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_E1)",
-              "teacher": "HHP",
-              "title": "Operating Systems Lab"
-            },
+            null,
             {
               "course": "CSE324(65_J2)",
               "teacher": "HHP",
               "title": "Operating Systems Lab"
             },
-            {
-              "course": "CSE324(65_J2)",
-              "teacher": "HHP",
-              "title": "Operating Systems Lab"
-            },
+            null,
             null,
             null
           ]
@@ -11960,21 +10056,13 @@
               "teacher": "NTS",
               "title": "Data Structure Lab"
             },
-            {
-              "course": "CSE124(69_J2)",
-              "teacher": "NTS",
-              "title": "Data Structure Lab"
-            },
+            null,
             {
               "course": "CSE314(66_C1)",
               "teacher": "ROZ",
               "title": "Compiler Design Lab"
             },
-            {
-              "course": "CSE314(66_C1)",
-              "teacher": "ROZ",
-              "title": "Compiler Design Lab"
-            },
+            null,
             {
               "course": "CSE112(71_K)",
               "teacher": "SBA",
@@ -11991,22 +10079,14 @@
               "teacher": "KNA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_M1)",
-              "teacher": "KNA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null,
             {
               "course": "CSE412(64_M2)",
               "teacher": "KNA",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_M2)",
-              "teacher": "KNA",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null
           ]
         },
@@ -12018,11 +10098,7 @@
               "teacher": "AAM",
               "title": "Computer Graphics Lab"
             },
-            {
-              "course": "CSE412(64_E1)",
-              "teacher": "AAM",
-              "title": "Computer Graphics Lab"
-            },
+            null,
             null,
             null,
             null,
@@ -12179,60 +10255,40 @@
               "teacher": "EEE_1",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_I1)",
-              "teacher": "EEE_1",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_Q1)",
               "teacher": "EEE_6",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_Q1)",
-              "teacher": "EEE_6",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             {
               "course": "CSE224(67_K1)",
               "teacher": "ZS",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_K1)",
-              "teacher": "ZS",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE122(69_E1)",
               "teacher": "SMC",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_E1)",
-              "teacher": "SMC",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             {
               "course": "CSE122(69_R1)",
               "teacher": "EEE_7",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_R1)",
-              "teacher": "EEE_7",
-              "title": "Electrical Circuits Lab"
-            }
+            null
           ]
         },
         {
-          "room": "KT-810 LAB)",
+          "room": "KT-810 (LAB)",
           "courses": [
             null,
             null,
@@ -12241,21 +10297,13 @@
               "teacher": "ZS",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_K2)",
-              "teacher": "ZS",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             {
               "course": "CSE224(67_I1)",
               "teacher": "MIN",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_I1)",
-              "teacher": "MIN",
-              "title": "Digital Logic Design Lab"
-            }
+            null
           ]
         },
         {
@@ -12266,31 +10314,19 @@
               "teacher": "PNT_4",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_M1)",
-              "teacher": "PNT_4",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_E2)",
               "teacher": "AAR",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_E2)",
-              "teacher": "AAR",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_O2)",
               "teacher": "PNT_7",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_O2)",
-              "teacher": "PNT_7",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -12301,31 +10337,19 @@
               "teacher": "MAM",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_D2)",
-              "teacher": "MAM",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_R2)",
               "teacher": "PNT_5",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_R2)",
-              "teacher": "PNT_5",
-              "title": "Physics - II Lab"
-            },
+            null,
             {
               "course": "PHY103(69_Q2)",
               "teacher": "PNT_5",
               "title": "Physics - II Lab"
             },
-            {
-              "course": "PHY103(69_Q2)",
-              "teacher": "PNT_5",
-              "title": "Physics - II Lab"
-            }
+            null
           ]
         },
         {
@@ -12344,7 +10368,7 @@
           ]
         },
         {
-          "room": "SH-103 LAB)",
+          "room": "SH-103 (LAB)",
           "courses": [
             null,
             null,
@@ -12353,17 +10377,13 @@
               "teacher": "SMF",
               "title": "Digital Logic Design Lab"
             },
-            {
-              "course": "CSE224(67_N1)",
-              "teacher": "SMF",
-              "title": "Digital Logic Design Lab"
-            },
+            null,
             null,
             null
           ]
         },
         {
-          "room": "SH-105 LAB)",
+          "room": "SH-105 (LAB)",
           "courses": [
             null,
             null,
@@ -12373,11 +10393,7 @@
               "teacher": "EEE_2",
               "title": "Electrical Circuits Lab"
             },
-            {
-              "course": "CSE122(69_L2)",
-              "teacher": "EEE_2",
-              "title": "Electrical Circuits Lab"
-            },
+            null,
             null
           ]
         }
