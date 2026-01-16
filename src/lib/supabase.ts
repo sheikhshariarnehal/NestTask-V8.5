@@ -756,15 +756,10 @@ export async function testConnection(forceCheck = false) {
       );
       
       const checkLogic = async () => {
-        // First verify authentication status
-        const { data: session, error: authError } = await getSessionSafe({ timeoutMs: 8000 });
+        // First verify authentication status using SYNCHRONOUS check (no timeout!)
+        const { session: storedSession } = checkSessionExpirySynchronous();
         
-        if (authError) {
-          console.error('Auth error when checking session:', authError.message);
-          return false;
-        }
-        
-        if (!session.session) {
+        if (!storedSession) {
           console.warn('No active session found - this is expected for first-time visitors');
           return true;
         }
