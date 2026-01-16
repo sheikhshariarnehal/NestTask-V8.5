@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { supabase, getSessionSafe, wasInactiveForExtendedPeriod } from '../lib/supabase';
+import { supabase, getSessionSafe, wasInactiveForExtendedPeriod, checkSessionExpirySynchronous } from '../lib/supabase';
 import { useAppLifecycle } from './useAppLifecycle';
 
 export interface SupabaseLifecycleOptions {
@@ -84,87 +84,85 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     try {
       console.log('[Supabase Lifecycle] Validating session...');
 
-      const { data: { session }, error: sessionError } = await getSessionSafe({ timeoutMs: 10000 });
-
-      if (sessionError) {
-        if (sessionError.message === 'Session retrieval timed out') {
-           console.warn('[Supabase Lifecycle] Session check timed out - assuming offline or storage locked');
-           // Allow the app to proceed in offline mode
-           // This lets useTasks try to fetch and fall back to cache if needed
-           emitSessionValidated({ success: true });
-           return true;
-        } else {
-           console.error('[Supabase Lifecycle] Error getting session:', sessionError.message);
-        }
-        optionsRef.current.onAuthError?.(sessionError);
-        emitSessionValidated({ success: false, error: sessionError });
-        return false;
+      // CRITICAL FIX: Check session expiry SYNCHRONOUSLY first to avoid 8-10s timeout
+      // This reads directly from localStorage without any async localStorage access
+      // On PWA cold start, async getSession() can timeout for 8-10 seconds
+      const { needsRefresh, isExpired, session: storedSession } = checkSessionExpirySynchronous();
+      
+      // If session doesn't need refresh, skip async calls entirely!
+      if (storedSession && !needsRefresh) {
+        console.log('[Supabase Lifecycle] Session valid (synchronous check), no refresh needed');
+        emitSessionValidated({ success: true });
+        lastSuccessRef.current = now;
+        return true;
       }
-
-      if (!session) {
-        console.log('[Supabase Lifecycle] No active session found');
+      
+      // Only call async methods if we KNOW we need to refresh
+      if (!storedSession) {
+        console.log('[Supabase Lifecycle] No session found (synchronous check)');
         emitSessionValidated({ success: true });
         return true; // No session is not an error state
       }
 
-      // Check if session is expired or about to expire (within 5 minutes)
-      const expiresAt = session.expires_at;
-      if (expiresAt) {
-        const expiryTime = expiresAt * 1000; // Convert to milliseconds
-        const timeUntilExpiry = expiryTime - now;
-        const fiveMinutes = 5 * 60 * 1000;
+      // Session needs refresh - now we can afford the async call
+      console.log(`[Supabase Lifecycle] Session needs refresh (expired: ${isExpired}), calling async refresh...`);
+      
+      // Check if HTTP refresh already succeeded recently (within last 5 seconds)
+      const timeSinceHttpRefresh = now - httpRefreshSucceededRef.current;
+      if (timeSinceHttpRefresh < 5000) {
+        console.log(`[Supabase Lifecycle] HTTP refresh already succeeded ${timeSinceHttpRefresh}ms ago, skipping`);
+        emitSessionValidated({ success: true });
+        lastSuccessRef.current = now;
+        return true;
+      }
+
+      // Attempt refresh with retry
+      const expiresAt = storedSession.expires_at;
+      const timeUntilExpiry = expiresAt ? (expiresAt * 1000 - now) : 0;
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      // On resume (force=true), we are more aggressive with refreshing to ensure fresh token
+      // If less than 45 minutes remaining (token > 15 mins old), force refresh
+      // This fixes the "zombie" state after long inactivity
+      const aggressiveRefreshThreshold = 45 * 60 * 1000;
+      const wasExtendedInactive = wasInactiveForExtendedPeriod();
+      const shouldForceRefresh = force && (timeUntilExpiry < aggressiveRefreshThreshold || wasExtendedInactive);
+
+      if (timeUntilExpiry <= 0 || shouldForceRefresh) {
+        console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'} (inactive: ${wasExtendedInactive})`);
+        console.log('[Supabase Lifecycle] Skipping SDK refresh - relying on HTTP bypass for reliability');
         
-        // On resume (force=true), we are more aggressive with refreshing to ensure fresh token
-        // If less than 45 minutes remaining (token > 15 mins old), force refresh
-        // This fixes the "zombie" state after long inactivity
-        const aggressiveRefreshThreshold = 45 * 60 * 1000;
-        const wasExtendedInactive = wasInactiveForExtendedPeriod();
-        const shouldForceRefresh = force && (timeUntilExpiry < aggressiveRefreshThreshold || wasExtendedInactive);
+        // IMPORTANT: Skip SDK refresh entirely - it times out on Android WebView
+        // The HTTP bypass (getSessionSafe) will handle refresh if needed
+        // Just emit success and let the app proceed - HTTP bypass will kick in if session is truly invalid
+        emitSessionValidated({ success: true });
+        return true;
+      } else if (timeUntilExpiry < fiveMinutes) {
+        // Session will expire soon, proactively refresh
+        console.log(`[Supabase Lifecycle] Session expires in ${Math.round(timeUntilExpiry / 1000)}s, proactively refreshing...`);
+        
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
-        if (timeUntilExpiry <= 0 || shouldForceRefresh) {
-          // Check if HTTP refresh already succeeded recently (within last 5 seconds)
-          const timeSinceHttpRefresh = now - httpRefreshSucceededRef.current;
-          if (timeSinceHttpRefresh < 5000) {
-            console.log('[Supabase Lifecycle] HTTP refresh already succeeded, skipping SDK refresh');
-            emitSessionValidated({ success: true });
-            return true;
-          }
-          
-          console.log(`[Supabase Lifecycle] Session ${timeUntilExpiry <= 0 ? 'expired' : 'stale on resume'} (inactive: ${wasExtendedInactive})`);
-          console.log('[Supabase Lifecycle] Skipping SDK refresh - relying on HTTP bypass for reliability');
-          
-          // IMPORTANT: Skip SDK refresh entirely - it times out on Android WebView
-          // The HTTP bypass (getSessionSafe) will handle refresh if needed
-          // Just emit success and let the app proceed - HTTP bypass will kick in if session is truly invalid
-          emitSessionValidated({ success: true });
-          return true;
-        } else if (timeUntilExpiry < fiveMinutes) {
-          // Session will expire soon, proactively refresh
-          console.log(`[Supabase Lifecycle] Session expires in ${Math.round(timeUntilExpiry / 1000)}s, proactively refreshing...`);
-          
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-
-          if (refreshError) {
-            console.warn('[Supabase Lifecycle] Proactive refresh failed:', refreshError.message);
-            // Not critical since session hasn't expired yet
-            emitSessionValidated({ success: true });
-            return true;
-          }
-
-          if (refreshData.session) {
-            console.log('[Supabase Lifecycle] Session proactively refreshed');
-            optionsRef.current.onSessionRefreshed?.();
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
-            }
-            emitSessionValidated({ success: true });
-            return true;
-          }
-        } else {
-          console.log(`[Supabase Lifecycle] Session valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+        if (refreshError) {
+          console.warn('[Supabase Lifecycle] Proactive refresh failed:', refreshError.message);
+          // Not critical since session hasn't expired yet
           emitSessionValidated({ success: true });
           return true;
         }
+
+        if (refreshData.session) {
+          console.log('[Supabase Lifecycle] Session proactively refreshed');
+          optionsRef.current.onSessionRefreshed?.();
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('supabase-session-refreshed'));
+          }
+          emitSessionValidated({ success: true });
+          return true;
+        }
+      } else {
+        console.log(`[Supabase Lifecycle] Session valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+        emitSessionValidated({ success: true });
+        return true;
       }
 
       // No expires_at available (rare) - treat as validated.

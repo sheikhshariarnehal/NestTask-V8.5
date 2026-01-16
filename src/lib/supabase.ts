@@ -166,6 +166,42 @@ function getSessionFromStorage(): { access_token?: string; refresh_token?: strin
 }
 
 /**
+ * SYNCHRONOUS session expiry check - reads directly from localStorage without async calls
+ * This prevents 8-10 second timeouts on cold start by avoiding getSession() entirely
+ * Returns: { needsRefresh: boolean, isExpired: boolean, session: object | null }
+ */
+export function checkSessionExpirySynchronous(): { needsRefresh: boolean; isExpired: boolean; session: any | null } {
+  try {
+    const session = getSessionFromStorage();
+    
+    if (!session) {
+      console.log('[SessionCheck] No session in storage');
+      return { needsRefresh: false, isExpired: false, session: null };
+    }
+    
+    if (!session.expires_at) {
+      console.warn('[SessionCheck] Session has no expiry, assuming valid');
+      return { needsRefresh: false, isExpired: false, session };
+    }
+    
+    const now = Date.now();
+    const expiryTime = session.expires_at * 1000; // Convert to milliseconds
+    const timeUntilExpiry = expiryTime - now;
+    
+    const isExpired = timeUntilExpiry <= 0;
+    const expiringIn5Min = timeUntilExpiry < 5 * 60 * 1000;
+    const needsRefresh = isExpired || expiringIn5Min;
+    
+    console.log(`[SessionCheck] Session expires in ${Math.round(timeUntilExpiry / 1000)}s (expired: ${isExpired}, needsRefresh: ${needsRefresh})`);
+    
+    return { needsRefresh, isExpired, session };
+  } catch (e: any) {
+    console.error('[SessionCheck] Error checking session:', e.message);
+    return { needsRefresh: false, isExpired: false, session: null };
+  }
+}
+
+/**
  * Force refresh session using refresh_token from localStorage.
  * This bypasses the hung SDK methods by making a DIRECT HTTP call to Supabase Auth API.
  * This is the ultimate fallback when both getSession() and refreshSession() hang.
