@@ -288,19 +288,27 @@ async function forceRefreshFromStorage(): Promise<SessionResult> {
       
       // CRITICAL: Hydrate SDK with fresh session synchronously to ensure subsequent queries work
       // After HTTP refresh, the Supabase client MUST be updated or queries will fail with stale token
+      
+      // If setSession takes >20s, it means the SDK is stuck (cold start issue)
+      // Better to hard refresh and get fresh code than wait forever
+      const setSessionTimeout = setTimeout(() => {
+        console.warn('[Supabase] ⚠️ setSession taking too long (>20s), forcing page reload to get fresh code...');
+        window.location.reload();
+      }, 20000); // 20 second safety timeout
+      
       try {
-        // NO TIMEOUT: On cold start, setSession can take 10-15s - that's OK!
-        // Better to wait than to have broken queries with stale token
         console.log('[Supabase] Hydrating SDK with fresh token (may take a few seconds on cold start)...');
         await supabase.auth.setSession({
           access_token: data.access_token,
           refresh_token: data.refresh_token
         });
+        clearTimeout(setSessionTimeout); // Cancel reload if successful
         console.log('[Supabase] ✅ SDK session hydrated successfully - queries will use fresh token');
       } catch (e: any) {
-        console.error('[Supabase] ❌ setSession failed - queries will fail:', e);
-        // This is a CRITICAL error - without setSession, all queries will use stale token
-        // and fail with RLS errors. Throw to force error state rather than silent failure.
+        clearTimeout(setSessionTimeout);
+        console.error('[Supabase] ❌ setSession failed - forcing page reload to recover:', e);
+        // Force reload to get fresh code rather than being stuck with broken state
+        setTimeout(() => window.location.reload(), 1000);
         throw new Error(`Failed to hydrate Supabase client with fresh token: ${e.message}`);
       }
       
