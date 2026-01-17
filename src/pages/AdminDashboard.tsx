@@ -87,33 +87,19 @@ export function AdminDashboard({
 
   const handleRefresh = useCallback(async (event: RefresherCustomEvent) => {
     const startTime = Date.now();
-    const MIN_REFRESH_DURATION = 800; // Minimum duration for user feedback
+    const MIN_REFRESH_DURATION = 600; // Reduced minimum duration for snappier UX
     
     try {
-      console.log('[AdminDashboard] Pull-to-refresh initiated - performing hard refresh');
+      console.log('[AdminDashboard] Pull-to-refresh initiated - refreshing data');
       
       // Haptic feedback on pull start
       if ('vibrate' in navigator) navigator.vibrate(10);
       
-      // Step 1: Clear local caches for hard refresh
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const keysToPreserve = ['supabase.auth.token', 'nesttask_theme'];
-        const allKeys = Object.keys(window.localStorage);
-        allKeys.forEach(key => {
-          if (!keysToPreserve.some(preserve => key.includes(preserve))) {
-            try {
-              window.localStorage.removeItem(key);
-            } catch (e) {
-              console.warn('[AdminDashboard] Failed to clear cache key:', key);
-            }
-          }
-        });
-      }
-      
-      // Step 2: Force refresh with cache bypass
+      // Optimized: Only refresh data, DO NOT clear localStorage
+      // This preserves auth tokens and prevents unwanted logout
       const success = await refreshTasks(true);
       
-      // Step 3: Ensure minimum display time for smooth UX
+      // Ensure minimum display time for smooth UX
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_REFRESH_DURATION) {
         await new Promise(resolve => setTimeout(resolve, MIN_REFRESH_DURATION - elapsed));

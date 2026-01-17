@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ionic Configuration */
+:root {
+  --ionicons-cdn-path: https://unpkg.com/ionicons@7.1.0/dist/ionicons/svg;
+}
+
 /* Professional Page Transitions */
 @keyframes fadeIn {
   from {

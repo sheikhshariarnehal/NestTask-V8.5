@@ -209,44 +209,23 @@ export default function App() {
     return updateTask(taskId, updates);
   }, [updateTask]);
 
-  // Pull-to-refresh handler with hard refresh capabilities
+  // Pull-to-refresh handler optimized for performance and auth preservation
   const handlePullToRefresh = useCallback(async (event: CustomEvent<RefresherEventDetail>) => {
     const startTime = Date.now();
-    const MIN_REFRESH_DURATION = 800; // Minimum duration for user feedback
+    const MIN_REFRESH_DURATION = 600; // Reduced minimum duration for snappier UX
     
     try {
-      console.log('[App] Pull-to-refresh initiated - performing hard refresh');
+      console.log('[App] Pull-to-refresh initiated - refreshing data');
       
       // Haptic feedback on pull start
       if ('vibrate' in navigator) {
         navigator.vibrate(10);
       }
       
-      // Step 1: Validate and refresh session first
-      try {
-        window.dispatchEvent(new CustomEvent('request-session-validation'));
-        await new Promise(resolve => setTimeout(resolve, 100)); // Brief wait for session validation
-      } catch (sessionError) {
-        console.warn('[App] Session validation warning:', sessionError);
-      }
+      // Optimized: Skip session validation and localStorage clearing
+      // This prevents auth token issues and improves performance
       
-      // Step 2: Clear any cached data for hard refresh
-      if (typeof window !== 'undefined' && window.localStorage) {
-        // Clear specific caches but preserve auth
-        const keysToPreserve = ['supabase.auth.token', 'nesttask_theme', 'nesttask_refresh_interval'];
-        const allKeys = Object.keys(window.localStorage);
-        allKeys.forEach(key => {
-          if (!keysToPreserve.some(preserve => key.includes(preserve))) {
-            try {
-              window.localStorage.removeItem(key);
-            } catch (e) {
-              console.warn('[App] Failed to clear cache key:', key);
-            }
-          }
-        });
-      }
-      
-      // Step 3: Force refresh all data
+      // Force refresh all data in parallel
       const refreshPromises: Promise<unknown>[] = [];
       
       if (user?.id) {
@@ -269,7 +248,7 @@ export default function App() {
         console.warn('[App] Some refreshes failed:', failures);
       }
       
-      // Step 4: Ensure minimum display time for smooth UX
+      // Ensure minimum display time for smooth UX
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_REFRESH_DURATION) {
         await new Promise(resolve => setTimeout(resolve, MIN_REFRESH_DURATION - elapsed));

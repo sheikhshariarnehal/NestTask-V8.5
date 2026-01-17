@@ -301,21 +301,38 @@ setTimeout(() => {
   testConnection().catch(console.error);
 }, 1000);
 
+// Track if we're already reconnecting to prevent duplicate subscriptions
+let isReconnecting = false;
+
 // Handle app resume to reconnect realtime and refresh session
 if (typeof window !== 'undefined') {
   window.addEventListener('app-resume', async () => {
-    console.log('[Supabase] App resumed, reconnecting...');
-    
-    // Reconnect realtime channels
-    const channels = supabase.getChannels();
-    for (const channel of channels) {
-      console.log(`[Supabase] Reconnecting channel: ${channel.topic}`);
-      await channel.unsubscribe();
-      await channel.subscribe();
+    if (isReconnecting) {
+      console.log('[Supabase] Reconnection already in progress, skipping');
+      return;
     }
     
-    // Test connection
-    await testConnection();
+    isReconnecting = true;
+    console.log('[Supabase] App resumed, reconnecting...');
+    
+    try {
+      // Reconnect realtime channels
+      const channels = supabase.getChannels();
+      for (const channel of channels) {
+        console.log(`[Supabase] Reconnecting channel: ${channel.topic}`);
+        try {
+          await channel.unsubscribe();
+          await channel.subscribe();
+        } catch (error) {
+          console.warn(`[Supabase] Failed to reconnect channel ${channel.topic}:`, error);
+        }
+      }
+      
+      // Test connection
+      await testConnection();
+    } finally {
+      isReconnecting = false;
+    }
   });
 
   // Handle visibility change
