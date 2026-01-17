@@ -34,13 +34,14 @@
     <base href="/" />
     
     <!-- Resource hints for faster loading -->
-    <!-- Preconnect to Supabase API for critical data fetching -->
-    <link rel="preconnect" href="https://nglfbbdoyyfslzyjarqs.supabase.co" crossorigin />
-    <link rel="dns-prefetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co" />
-    
     <!-- Preconnect to Google Fonts for faster font loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    
+    <!-- Preconnect to Supabase API only when needed (auth page, not home) -->
+    <link rel="dns-prefetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co" />
     
     <!-- Note: don't modulepreload JSON; browsers enforce JS module MIME types -->
     
@@ -184,7 +185,7 @@
       // Backwards compatibility
       window.toggleTheme = window.themeController.toggle.bind(window.themeController);
     </script>
-    <script type="module" crossorigin src="/assets/js/index.DKgkbjjM.js"></script>
+    <script type="module" crossorigin src="/assets/js/index.ByUURyMP.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/css/index.DBru-dFS.css">
   <link rel="manifest" href="/manifest.webmanifest"></head>
   <body>
