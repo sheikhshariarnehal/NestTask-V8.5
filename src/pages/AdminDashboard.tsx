@@ -597,12 +597,9 @@ export function AdminDashboard({
         </header>
 
         <IonContent className="flex-1" style={{ '--background': 'transparent' }}>
-  <IonRefresher slot="fixed" onIonRefresh={handleRefresh} pullFactor={0.5} pullMin={60} pullMax={120}>
+  <IonRefresher slot="fixed" onIonRefresh={handleRefresh} pullFactor={0.4} pullMin={40} pullMax={80}>
     <IonRefresherContent
-      pullingIcon="chevron-down-circle-outline"
-      pullingText="Pull to refresh..."
-      refreshingSpinner="circles"
-      refreshingText="Refreshing data..."
+      refreshingSpinner="crescent"
     />
 
           <div className="max-w-full mx-auto p-3 sm:p-5 lg:p-6 pb-24 lg:pb-6">

@@ -791,12 +791,9 @@ export default function App() {
         {/* Main Content Area with Pull-to-Refresh */}
         <div className="flex-1 relative overflow-hidden">
           <IonContent scrollY fullscreen className="h-full">
-            <IonRefresher slot="fixed" onIonRefresh={handlePullToRefresh} pullFactor={0.5} pullMin={60} pullMax={120}>
+            <IonRefresher slot="fixed" onIonRefresh={handlePullToRefresh} pullFactor={0.4} pullMin={40} pullMax={80}>
               <IonRefresherContent
-                pullingIcon="chevron-down-circle-outline"
-                pullingText="Pull to refresh..."
-                refreshingSpinner="circles"
-                refreshingText="Refreshing..."
+                refreshingSpinner="crescent"
               />
             </IonRefresher>
             
