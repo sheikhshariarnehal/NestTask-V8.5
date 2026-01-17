@@ -25,15 +25,15 @@ export function useBackgroundStateManager() {
   const handleAppStateChange = useCallback((isActive: boolean) => {
     if (stateRef.current.isActive === isActive) return;
     
-    // CRITICAL: Ignore blur events within first 30 seconds of mount (cold start protection)
-    // During cold start, session recovery can take 3-20+ seconds:
+    // CRITICAL: Ignore blur events within first 60 seconds of mount (cold start protection)
+    // During cold start with optimizations:
     // - Session validation: < 1s
-    // - HTTP refresh if expired: 1-3s
-    // - setSession hydration: 2-10s (up to 20s on slow devices)
-    // If user switches tabs during "Hydrating SDK..." message, we should NOT background the app
+    // - HTTP refresh if expired: 1-3s  
+    // - setSession hydration: Now non-blocking (background)
+    // Extended to 60s to handle slow devices and network
     const timeSinceMount = Date.now() - mountTimeRef.current;
-    if (!isActive && timeSinceMount < 30000) {
-      console.log(`[Background Manager] ⏳ Ignoring blur event ${Math.round(timeSinceMount / 1000)}s after mount (cold start protection - session recovery in progress)`);
+    if (!isActive && timeSinceMount < 60000) {
+      console.log(`[Background Manager] ⏳ Ignoring blur event ${Math.round(timeSinceMount / 1000)}s after mount (cold start protection)`);
       return;
     }
         // CRITICAL: Ignore blur events during active session recovery (setSession in progress)
