@@ -48,9 +48,9 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
     const now = Date.now();
     console.log(`[Supabase Lifecycle] validateSession called (force=${force}, timestamp=${now})`);
 
-    // Check if validation succeeded recently (within 3 seconds)
+    // Check if validation succeeded recently (within 1 second) - reduced for faster cold start
     const timeSinceSuccess = now - lastSuccessRef.current;
-    if (timeSinceSuccess < 3000) {
+    if (timeSinceSuccess < 1000) {
       console.log(`[Supabase Lifecycle] Using cached validation (${timeSinceSuccess}ms ago) - emitting immediate success`);
       emitSessionValidated({ success: true });
       return true;
@@ -90,17 +90,19 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       const { needsRefresh, isExpired, session: storedSession } = checkSessionExpirySynchronous();
       
       // If session doesn't need refresh, skip async calls entirely!
+      // OPTIMIZATION: If session is valid, cache immediately and skip all async work
       if (storedSession && !needsRefresh) {
-        console.log('[Supabase Lifecycle] Session valid (synchronous check), no refresh needed');
+        console.log('[Supabase Lifecycle] ⚡ Session valid (synchronous check), no refresh needed');
+        lastSuccessRef.current = now; // Cache BEFORE emitting event
         emitSessionValidated({ success: true });
-        lastSuccessRef.current = now;
         return true;
       }
       
-      // Only call async methods if we KNOW we need to refresh
+      // OPTIMIZATION: Early bailout if no session - skip ALL async work
       if (!storedSession) {
-        console.log('[Supabase Lifecycle] No session found (synchronous check)');
+        console.log('[Supabase Lifecycle] No session found (synchronous check) - fast bailout');
         emitSessionValidated({ success: true });
+        lastSuccessRef.current = now; // Cache the result
         return true; // No session is not an error state
       }
 

@@ -150,19 +150,30 @@ export function useTasks(userId: string | undefined) {
     // but reduce to 1 second if we're in tab switch recovery mode
     const now = Date.now();
 
-    // Check cache first (network-first strategy optimization)
+    // OPTIMIZATION: Check cache first for instant render (network-first strategy)
+    // Use aggressive caching (500ms) for perceived instant loading
     if (!options.force && userId && tasksCache.has(userId)) {
       const cached = tasksCache.get(userId)!;
-      // Use cache if it's less than 2 seconds old (prevent double-fetch flickering)
-      // or if we are actively retrying/recovering
-      if (now - cached.timestamp < 2000) {
-        console.log('[useTasks] Using immediate cache (debounce)');
+      // Use cache immediately if it's less than 500ms old for instant perceived loading
+      // This prevents flickering and provides instant feedback to users
+      if (now - cached.timestamp < 500) {
+        console.log('[useTasks] ⚡ Using immediate cache (instant render)');
         if (isMountedRef.current) {
           setTasks(cached.tasks);
           setLoading(false);
           loadingRef.current = false;
         }
         return;
+      }
+      
+      // If cache is 500ms-5s old, show cached data immediately but refresh in background
+      if (now - cached.timestamp < 5000) {
+        console.log('[useTasks] ⚡ Showing cached data, refreshing in background...');
+        if (isMountedRef.current) {
+          setTasks(cached.tasks);
+          setLoading(false); // Don't show loading spinner
+        }
+        // Continue to background refresh below
       }
     }
 

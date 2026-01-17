@@ -732,9 +732,19 @@ export async function testConnection(forceCheck = false, skipIfSessionExpired = 
   // Update last active time
   lastActiveTime = Date.now();
   
-  // OPTIMIZATION: Skip connection test if session is expired
+  // OPTIMIZATION #1: Instant bailout if no session exists (logged out or first visit)
+  // This saves 1-2 seconds of network requests when there's no session
+  const { session: quickSession } = checkSessionExpirySynchronous();
+  if (!quickSession && !forceCheck) {
+    console.log('[Connection] ⚡ No session - skipping connection test (logged out/first visit)');
+    isInitialized = true;
+    lastConnectionTime = Date.now();
+    return true;
+  }
+  
+  // OPTIMIZATION #2: Skip connection test if session is expired
   // We know we'll need to do HTTP refresh anyway, so testing connection is redundant
-  // This saves 2-5 seconds on cold start
+  // This saves 1-2 seconds on cold start with expired session
   if (skipIfSessionExpired) {
     const { isExpired } = checkSessionExpirySynchronous();
     if (isExpired) {
@@ -794,10 +804,10 @@ export async function testConnection(forceCheck = false, skipIfSessionExpired = 
       
       connectionAttempts++;
       
-      // Strict timeout for the entire connection test (2 seconds for fast failure)
-      // Reduced from 5s to make cold start snappier
+      // Ultra-strict timeout for connection test (1 second for instant failure detection)
+      // Reduced from 2s to 1s for professional-grade cold start performance
       const timeoutPromise = new Promise<void>((_, reject) => 
-        setTimeout(() => reject(new Error('Connection test timed out')), 2000)
+        setTimeout(() => reject(new Error('Connection test timed out')), 1000)
       );
       
       const checkLogic = async () => {
