@@ -44,11 +44,6 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
     window.dispatchEvent(new CustomEvent('app-resume'));
   }, []);
 
-  const dispatchBackgroundEvent = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    window.dispatchEvent(new CustomEvent('app-background'));
-  }, []);
-
   // Update callbacks ref when they change
   useEffect(() => {
     callbacksRef.current = callbacks;
@@ -79,9 +74,8 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
 
     stateRef.current.isActive = false;
     callbacksRef.current.onAppStateChange?.(false);
-    dispatchBackgroundEvent();
     lastBlurTimeRef.current = Date.now();
-  }, [dispatchBackgroundEvent]);
+  }, []);
 
   // Handle visibility change
   const handleVisibilityChange = useCallback(() => {
@@ -100,11 +94,10 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
       dispatchResumeEvent();
     } else if (!isVisible) {
       lastResumeTimeRef.current = Date.now();
-      dispatchBackgroundEvent();
     }
 
     callbacksRef.current.onVisibilityChange?.(isVisible);
-  }, [dispatchBackgroundEvent, dispatchResumeEvent]);
+  }, []);
 
   // Handle network status change
   const handleOnline = useCallback(() => {
@@ -146,29 +139,11 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
         if (state.isActive && !wasActive) {
           callbacksRef.current.onResume?.();
           dispatchResumeEvent();
-        } else if (!state.isActive && wasActive) {
-          dispatchBackgroundEvent();
         }
       }).then((listener) => {
         appStateListener = listener;
       }).catch((err) => {
         console.warn('[Lifecycle] Failed to add app state listener:', err);
-      });
-
-      // Defensive: on cold start Android can emit appStateChange/networkStatusChange
-      // before JS listeners are attached. Initialize state explicitly.
-      App.getState().then((state) => {
-        const wasActive = stateRef.current.isActive;
-        stateRef.current.isActive = state.isActive;
-        if (state.isActive !== wasActive) {
-          callbacksRef.current.onAppStateChange?.(state.isActive);
-          if (state.isActive) {
-            callbacksRef.current.onResume?.();
-            dispatchResumeEvent();
-          }
-        }
-      }).catch((err) => {
-        console.warn('[Lifecycle] Failed to get initial app state:', err);
       });
 
       // Listen for network status changes in Capacitor
@@ -190,20 +165,6 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
       }).catch((err) => {
         console.warn('[Lifecycle] Failed to add network listener:', err);
       });
-
-      Network.getStatus().then((status) => {
-        const wasOnline = stateRef.current.isOnline;
-        stateRef.current.isOnline = status.connected;
-        if (status.connected !== wasOnline) {
-          callbacksRef.current.onNetworkChange?.(status.connected);
-          if (status.connected) {
-            callbacksRef.current.onResume?.();
-            dispatchResumeEvent();
-          }
-        }
-      }).catch((err) => {
-        console.warn('[Lifecycle] Failed to get initial network status:', err);
-      });
     }
 
     // Cleanup
@@ -219,7 +180,7 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
         networkListener?.remove();
       }
     };
-  }, [handleFocus, handleBlur, handleVisibilityChange, handleOnline, handleOffline, isNativePlatform, dispatchResumeEvent, dispatchBackgroundEvent]);
+  }, [handleFocus, handleBlur, handleVisibilityChange, handleOnline, handleOffline, isNativePlatform, dispatchResumeEvent]);
 
   return {
     isVisible: stateRef.current.isVisible,

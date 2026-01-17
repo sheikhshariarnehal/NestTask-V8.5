@@ -54,36 +54,13 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
         setShowSettingsModal(true);
       }
     },
-    ...(['admin', 'super-admin', 'section_admin'].includes(user?.role || '') ? [{
+    ...(user?.role === 'admin' ? [{
       id: 'admin',
       label: 'Admin Panel',
       icon: Shield,
       description: 'System Management',
-      onClick: () => {
-        setIsOpen(false);
-        navigate('/admin/dashboard');
-      }
-    }] : []),
-    {
-      id: 'lecture-slides',
-      label: 'Lecture Slides',
-      icon: BookOpen,
-      description: 'Course Materials',
-      onClick: () => {
-        setIsOpen(false);
-        navigate('/lecture-slides');
-      }
-    },
-    {
-      id: 'routine',
-      label: 'Academic Routine',
-      icon: Layers,
-      description: 'Class Schedule',
-      onClick: () => {
-        setIsOpen(false);
-        navigate('/routine');
-      }
-    }
+      onClick: () => console.log('Admin clicked')
+    }] : [])
   ];
 
   const userInitial = user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?';
@@ -124,14 +101,14 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
             onClick={() => setIsOpen(false)}
           />
           <div className="
-            absolute right-0 top-full
+            absolute right-0 sm:-right-2 md:right-0 
             mt-2 
-            w-[calc(100vw-32px)] max-w-[320px] sm:w-80
+            w-[calc(100vw-2rem)] xs:w-[280px] sm:w-[300px] md:w-[320px] 
             max-h-[calc(100vh-80px)] overflow-y-auto
             bg-white dark:bg-gray-800 
             rounded-xl shadow-xl 
             ring-1 ring-black/5 dark:ring-white/5 
-            z-50 
+            z-20 
             animate-scale-in origin-top-right 
             divide-y divide-gray-100 dark:divide-gray-700
           ">

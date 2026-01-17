@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, testConnection, getSessionSafe } from '../lib/supabase';
+import { supabase, testConnection } from '../lib/supabase';
 import { dataCache, cacheKeys } from '../lib/dataCache';
 import { loginUser, signupUser, logoutUser, resetPassword } from '../services/auth.service';
 import { forceCleanReload, updateAuthStatus } from '../utils/auth';
@@ -104,16 +104,11 @@ export function useAuth() {
         }
       }
 
-      const { data: { session }, error: sessionError } = await getSessionSafe({ timeoutMs: 8000 });
+      // Try to get the session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        if (sessionError.message === 'Session retrieval timed out') {
-           console.warn('[useAuth] Session check timed out - assuming offline');
-           // Fall through to cached user check below
-        } else {
-           console.error('Error getting auth session:', sessionError.message);
-        }
-        
+        console.error('Error getting auth session:', sessionError.message);
         // Try cached user as fallback
         const cachedUser = localStorage.getItem('nesttask_cached_user');
         if (cachedUser) {
@@ -617,7 +612,7 @@ export function useAuth() {
 
   const refreshUser = async () => {
     try {
-      const { data: { session } } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         // Clear cache before fetching fresh data
         const cacheKey = cacheKeys.userWithFullInfo(session.user.id);

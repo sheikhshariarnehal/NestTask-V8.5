@@ -87,15 +87,33 @@ export function AdminDashboard({
 
   const handleRefresh = useCallback(async (event: RefresherCustomEvent) => {
     const startTime = Date.now();
-    const MIN_REFRESH_DURATION = 500;
+    const MIN_REFRESH_DURATION = 800; // Minimum duration for user feedback
     
     try {
+      console.log('[AdminDashboard] Pull-to-refresh initiated - performing hard refresh');
+      
       // Haptic feedback on pull start
       if ('vibrate' in navigator) navigator.vibrate(10);
       
+      // Step 1: Clear local caches for hard refresh
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const keysToPreserve = ['supabase.auth.token', 'nesttask_theme'];
+        const allKeys = Object.keys(window.localStorage);
+        allKeys.forEach(key => {
+          if (!keysToPreserve.some(preserve => key.includes(preserve))) {
+            try {
+              window.localStorage.removeItem(key);
+            } catch (e) {
+              console.warn('[AdminDashboard] Failed to clear cache key:', key);
+            }
+          }
+        });
+      }
+      
+      // Step 2: Force refresh with cache bypass
       const success = await refreshTasks(true);
       
-      // Ensure minimum display time for smooth UX
+      // Step 3: Ensure minimum display time for smooth UX
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_REFRESH_DURATION) {
         await new Promise(resolve => setTimeout(resolve, MIN_REFRESH_DURATION - elapsed));
@@ -105,6 +123,8 @@ export function AdminDashboard({
       if (success && 'vibrate' in navigator) {
         navigator.vibrate([5, 50, 5]);
       }
+      
+      console.log('[AdminDashboard] Pull-to-refresh completed:', success ? 'success' : 'with errors');
     } catch (error) {
       console.error('[AdminDashboard] Refresh error:', error);
       if ('vibrate' in navigator) navigator.vibrate(100);
@@ -591,9 +611,13 @@ export function AdminDashboard({
         </header>
 
         <IonContent className="flex-1" style={{ '--background': 'transparent' }}>
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent></IonRefresherContent>
-          </IonRefresher>
+  <IonRefresher slot="fixed" onIonRefresh={handleRefresh} pullFactor={0.5} pullMin={60} pullMax={120}>
+    <IonRefresherContent
+      pullingIcon="chevron-down-circle-outline"
+      pullingText="Pull to refresh..."
+      refreshingSpinner="circles"
+      refreshingText="Refreshing data..."
+    />
 
           <div className="max-w-full mx-auto p-3 sm:p-5 lg:p-6 pb-24 lg:pb-6">
 

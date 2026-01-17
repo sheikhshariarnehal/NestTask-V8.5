@@ -1,5 +1,5 @@
 // Service Worker for NestTask PWA
-const CACHE_NAME = 'nesttask-cache-v2';
+const CACHE_NAME = 'nesttask-cache-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -7,24 +7,6 @@ const STATIC_ASSETS = [
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
 ];
-
-const NETWORK_RETRY_COUNT = 2;
-const NETWORK_RETRY_BASE_DELAY_MS = 250;
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchWithRetry(request, retries = NETWORK_RETRY_COUNT) {
-  try {
-    return await fetch(request);
-  } catch (err) {
-    if (retries <= 0) throw err;
-    const attempt = NETWORK_RETRY_COUNT - retries + 1;
-    await sleep(NETWORK_RETRY_BASE_DELAY_MS * attempt);
-    return fetchWithRetry(request, retries - 1);
-  }
-}
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -63,7 +45,7 @@ self.addEventListener('fetch', (event) => {
   if (!isSameOrigin && !isGoogleFonts) return;
 
   event.respondWith(
-    fetchWithRetry(event.request)
+    fetch(event.request)
       .then((response) => {
         // Don't cache non-successful responses
         if (!response || response.status !== 200) {
@@ -90,7 +72,7 @@ self.addEventListener('fetch', (event) => {
             }
             // Return offline page for navigation requests
             if (event.request.mode === 'navigate') {
-              return caches.match('/index.html').then((r) => r || caches.match('/'));
+              return caches.match('/');
             }
             return new Response('Offline', { status: 503 });
           });

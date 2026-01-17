@@ -27,85 +27,127 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    // PWA: enabled for web builds only (avoid SW caching issues in Capacitor WebView).
-    ...(!isCapacitorBuild ? [
-      VitePWA({
-        // We'll register from app code (src/utils/pwa.ts) to keep dev clean.
-        injectRegister: null,
-        registerType: 'autoUpdate',
-        // Keep existing public URL to avoid breaking any deploy assumptions.
-        manifestFilename: 'manifest.json',
-        filename: 'sw.js',
-        includeAssets: [
-          'icons/favicon.svg',
-          'icons/icon-192x192.png',
-          'icons/icon-512x512.png',
-          'icons/badge.png'
+    // PWA Plugin Configuration
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['icons/icon-192x192.png', 'icons/icon-512x512.png', 'icons/favicon.svg'],
+      manifest: {
+        name: 'NestTask',
+        short_name: 'NestTask',
+        description: 'Smart task management for teams and individuals',
+        theme_color: '#0284c7',
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        categories: ['productivity', 'utilities'],
+        icons: [
+          {
+            src: '/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
         ],
-        manifest: {
-          name: 'NestTask',
-          short_name: 'NestTask',
-          description: 'Smart task management for teams and individuals',
-          start_url: '/',
-          scope: '/',
-          display: 'standalone',
-          background_color: '#ffffff',
-          theme_color: '#0284c7',
-          icons: [
-            {
-              src: '/icons/icon-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: '/icons/icon-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any'
-            }
-          ]
-        },
-        workbox: {
-          // CRITICAL: Enable skipWaiting and clientsClaim for immediate updates
-          skipWaiting: true,
-          clientsClaim: true,
-          // Cache Vite build outputs + common static assets.
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,eot,json}'],
-          navigateFallback: '/index.html',
-          runtimeCaching: [
-            // Supabase REST calls (best-effort offline: cache recent reads).
-            {
-              urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/(rest|auth)\/v1\//i,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'supabase-api',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60
-                }
-              }
-            },
-            // Google Fonts.
-            {
-              urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//i,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'google-fonts',
-                expiration: {
-                  maxEntries: 20,
-                  maxAgeSeconds: 60 * 60 * 24 * 365
-                }
+        screenshots: [
+          {
+            src: '/icons/add-task.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Add new tasks'
+          },
+          {
+            src: '/icons/view-tasks.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'View your tasks'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
-          ]
-        },
-        // Do not enable SW in dev by default; test PWA using `npm run build` + `npm run preview`.
-        devOptions: {
-          enabled: false
-        }
-      })
-    ] : []),
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 // 1 hour
+              },
+              networkTimeoutSeconds: 10,
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          }
+        ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module',
+        navigateFallback: 'index.html',
+        suppressWarnings: true
+      }
+    }),
     // Disable compression for Capacitor builds to avoid duplicate resources
     ...(!isCapacitorBuild ? [
       compression({
@@ -126,8 +168,21 @@ export default defineConfig({
   build: {
     // For Capacitor, prefer maximum runtime compatibility over aggressive minification.
     // (Prevents rare TDZ/circular-init crashes like "Cannot access 'E' before initialization" in WebView.)
-    minify: isCapacitorBuild ? 'esbuild' : 'esbuild', // Changed from terser to esbuild for web to prevent console dropping
-    terserOptions: isCapacitorBuild ? undefined : undefined, // Disabled terser options entirely to keep logs
+    minify: isCapacitorBuild ? 'esbuild' : 'terser',
+    terserOptions: isCapacitorBuild ? undefined : {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.debug', 'console.info'],
+        passes: 2
+      },
+      mangle: {
+        safari10: true
+      },
+      format: {
+        comments: false
+      }
+    },
     cssMinify: true,
     target: 'es2018',
     reportCompressedSize: true,

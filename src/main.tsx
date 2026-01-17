@@ -13,7 +13,7 @@ import '@ionic/react/css/typography.css';
 import { MicroLoader } from './components/MicroLoader';
 import { initPWA } from './utils/pwa';
 import { initResourcePreloading } from './utils/resourcePreloader';
-import { getSessionSafe, supabase } from './lib/supabase';
+import { supabase } from './lib/supabase';
 import type { LoginCredentials, SignupCredentials } from './types/auth';
 import { initPushNotificationListeners } from './services/pushNavigationService';
 
@@ -80,18 +80,15 @@ if (import.meta.env.PROD) {
 }
 
 // Lazy load Analytics and SpeedInsights only in production for web
-const isLocalhost = typeof window !== 'undefined'
-  && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-const AnalyticsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform() && !isLocalhost
+const AnalyticsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform()
   ? lazy(() => import('@vercel/analytics/react').then(mod => ({ default: mod.Analytics })))
   : () => null;
 
-const SpeedInsightsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform() && !isLocalhost
+const SpeedInsightsComponent = import.meta.env.PROD && !Capacitor.isNativePlatform()
   ? lazy(() => import('@vercel/speed-insights/react').then(mod => ({ default: mod.SpeedInsights })))
   : () => null;
 
-const shouldRenderAnalytics = import.meta.env.PROD && !Capacitor.isNativePlatform() && !isLocalhost;
+const shouldRenderAnalytics = import.meta.env.PROD && !Capacitor.isNativePlatform();
 
 // Simple error boundary for analytics
 const AnalyticsErrorBoundary = ({ children }: { children: React.ReactNode }) => {
@@ -112,7 +109,7 @@ const router = createBrowserRouter([
     path: '/auth',
     loader: async () => {
       // Redirect to appropriate page if already logged in
-      const { data: { session } } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const { data: userData } = await supabase
           .from('users')
@@ -258,25 +255,6 @@ function initApp() {
     import.meta.env.VITE_SUPABASE_URL && 
     import.meta.env.VITE_SUPABASE_ANON_KEY
   );
-
-  // In native Capacitor builds, proactively disable any previously-installed service worker.
-  // Android WebView can keep SW state across app updates; if it intercepts critical chunks,
-  // it can produce 503/blocked loads and look like an infinite loading screen.
-  if (Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then((registrations) => Promise.all(registrations.map((r) => r.unregister())))
-      .catch(() => {
-        // Best effort
-      });
-
-    if ('caches' in window) {
-      caches.keys()
-        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-        .catch(() => {
-          // Best effort
-        });
-    }
-  }
   
   if (!hasEnvVars) {
     console.error('❌ Missing environment variables!');
@@ -332,10 +310,15 @@ function initApp() {
     </StrictMode>
   );
   
-  // Initialize PWA features (service worker registration handled in initPWA)
+  // Initialize PWA features (service worker registered in index.html)
   // Never run PWA utilities in native Capacitor WebView.
-  if (!Capacitor.isNativePlatform()) {
-    setTimeout(() => initPWA(), 500);
+  if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+    // Wait for existing registration before initializing PWA utilities
+    navigator.serviceWorker.ready.then(() => {
+      setTimeout(() => initPWA(), 500);
+    }).catch(() => {
+      // SW not registered yet, that's fine - index.html handles it
+    });
   }
 }
 

@@ -145,9 +145,9 @@ export function RoutineView() {
   }, []);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
       {/* Header Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl mb-3 p-3 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-xl mb-4 p-4 shadow-sm border border-gray-200 dark:border-gray-700">
         {/* Mobile View Header */}
         <div className="flex flex-col space-y-3 sm:hidden">
           <div className="flex items-center justify-between">
@@ -229,8 +229,8 @@ export function RoutineView() {
       </div>
 
       {/* Calendar Strip */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
           <button
             onClick={() => {
               const prevDay = addDays(selectedDate, -1);
@@ -258,20 +258,20 @@ export function RoutineView() {
           </button>
         </div>
 
-        <div className="grid grid-cols-6 gap-1.5">
+        <div className="grid grid-cols-6 gap-2">
           {weekDays.map((day) => (
             <button
               key={day.dayName}
               onClick={() => handleDaySelect(day.date)}
               className={`
-                flex flex-col items-center py-2 rounded-lg transition-all
+                flex flex-col items-center py-3 rounded-lg transition-all
                 ${day.isSelected
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
                 }
               `}
             >
-              <span className={`text-xs font-medium mb-0.5 ${day.isSelected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
+              <span className={`text-xs font-medium mb-1 ${day.isSelected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
                 {day.dayName}
               </span>
               <span className={`text-lg font-bold ${day.isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
@@ -283,10 +283,10 @@ export function RoutineView() {
       </div>
 
       {/* Class Schedule */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {filteredSlots.length === 0 ? (
-          <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-            <Clock className="w-10 h-10 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <Clock className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
               No Classes Scheduled
             </h3>
@@ -314,48 +314,49 @@ export function RoutineView() {
             .map((slot: any) => (
               <div
                 key={slot.id}
-                className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-shadow flex"
+                className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
               >
-                {/* Time Column */}
-                <div className="w-16 sm:w-20 bg-gradient-to-b from-blue-50 to-blue-25 dark:from-blue-900/20 dark:to-blue-900/10 flex flex-col items-center border-r-2 border-blue-300 dark:border-blue-700 flex-shrink-0 pt-0.5 pb-2.5 sm:pt-1 sm:pb-3.5">
-                  <div className="py-1.5 text-center leading-tight">
-                    <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {(() => {
-                        let [hours, minutes] = slot.startTime.split(':').map(Number);
-                        if (hours >= 1 && hours <= 6) hours += 12;
-                        const display12Hour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-                        return `${display12Hour}:${String(minutes).padStart(2, '0')}`;
-                      })()}
+                <div className="flex">
+                  {/* Time Column */}
+                  <div className="w-20 sm:w-24 bg-blue-50 dark:bg-blue-900/20 flex flex-col justify-center items-center py-4 border-r-2 border-blue-500 flex-shrink-0">
+                    <div className="text-center">
+                      <div className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
+                        {(() => {
+                          let [hours, minutes] = slot.startTime.split(':').map(Number);
+                          // Convert to PM if stored as early morning hours
+                          if (hours >= 1 && hours <= 6) hours += 12;
+                          // Convert to 12-hour format
+                          const display12Hour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+                          return `${display12Hour}:${String(minutes).padStart(2, '0')}`;
+                        })()}
+                      </div>
+                    </div>
+                    
+                    <div className="my-2 w-px h-4 bg-blue-300 dark:bg-blue-600"></div>
+                    
+                    <div className="text-center">
+                      <div className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
+                        {(() => {
+                          let [hours, minutes] = slot.endTime.split(':').map(Number);
+                          // Convert to PM if stored as early morning hours
+                          if (hours >= 1 && hours <= 6) hours += 12;
+                          // Convert to 12-hour format
+                          const display12Hour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+                          return `${display12Hour}:${String(minutes).padStart(2, '0')}`;
+                        })()}
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex-1 flex items-center justify-center py-1">
-                    <div className="w-0.5 h-6 border-l-2 border-dashed border-blue-300 dark:border-blue-600"></div>
-                  </div>
-                  
-                  <div className="py-1.5 text-center leading-tight">
-                    <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {(() => {
-                        let [hours, minutes] = slot.endTime.split(':').map(Number);
-                        if (hours >= 1 && hours <= 6) hours += 12;
-                        const display12Hour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-                        return `${display12Hour}:${String(minutes).padStart(2, '0')}`;
-                      })()}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-1 flex flex-col">
 
                   {/* Content Column */}
-                  <div className="flex-1 pt-0.5 pb-2.5 px-3 sm:pt-1 sm:pb-3.5 sm:px-4 min-w-0">
-                     <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white mb-1 leading-tight">
+                  <div className="flex-1 p-3 sm:p-4 min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white mb-3 truncate">
                       {slot.courseName || (slot.course ? slot.course.title : 'No Course Name')}
                     </h3>
                     
-                    <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs sm:text-sm">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs sm:text-sm">
                       <div className="text-gray-500 dark:text-gray-400">Course</div>
-                      <div className="font-semibold text-gray-900 dark:text-white text-right">
+                      <div className="font-semibold text-gray-900 dark:text-white text-right truncate">
                         {slot.course?.code || 'N/A'}
                       </div>
                       

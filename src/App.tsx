@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useAuth } from './hooks/useAuth';
 import { useTasks } from './hooks/useTasks';
 import { useUsers } from './hooks/useUsers';
@@ -14,7 +16,7 @@ import type { NavPage } from './types/navigation';
 import type { TaskCategory } from './types/task';
 import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { supabase, validateSessionOnColdStart, updateLastActiveTime } from './lib/supabase';
+import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
 import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
 import { useBackgroundStateManager } from './hooks/useBackgroundStateManager';
@@ -24,6 +26,7 @@ import { getPendingOpenTaskId } from './services/pushNavigationService';
 import { IonApp, IonContent, IonRefresher, IonRefresherContent, setupIonicReact } from '@ionic/react';
 import type { RefresherEventDetail } from '@ionic/react';
 import { RoutineSkeleton } from './components/routine/RoutineSkeleton';
+import ReloadPrompt from './components/pwa/ReloadPrompt';
 
 // Initialize Ionic React
 setupIonicReact({
@@ -106,48 +109,8 @@ export default function App() {
   // Always call all hooks first, regardless of any conditions
   const { user, loading: authLoading, error: authError, login, signup, logout, forgotPassword } = useAuth();
 
-  // Cold start session validation - runs once on mount
-  // This ensures session is valid BEFORE any data fetching begins
-  useEffect(() => {
-    const runColdStartValidation = async () => {
-      if (Capacitor.isNativePlatform()) {
-        console.log('[App] Running cold start session validation for native platform');
-        const result = await validateSessionOnColdStart(15000); // 15s timeout for native
-        
-        if (!result.valid && result.error) {
-          console.error('[App] Cold start validation failed:', result.error.message);
-          // If refresh token is invalid, force logout
-          if (result.error.message?.includes('Invalid Refresh Token') ||
-              result.error.message?.includes('invalid_grant')) {
-            console.log('[App] Invalid refresh token detected, forcing logout');
-            logout();
-          }
-        } else {
-          console.log('[App] Cold start validation completed successfully');
-        }
-      }
-    };
-    
-    runColdStartValidation();
-    
-    // Track last active time on unmount/background
-    return () => {
-      updateLastActiveTime();
-    };
-  }, []); // Run only once on mount
-
   // Critical: keep Supabase session healthy across tab/app backgrounding.
-  // Handle session expiry by logging out to prevent "zombie" state with invalid tokens
-  useSupabaseLifecycle({ 
-    enabled: true,
-    onSessionExpired: () => {
-      console.log('[App] Session expired, forcing logout');
-      logout();
-    },
-    onAuthError: (err) => {
-      console.warn('[App] Auth error:', err);
-    }
-  });
+  useSupabaseLifecycle({ enabled: true });
   
   const { users, loading: usersLoading, deleteUser, refreshUsers } = useUsers();
   
@@ -246,12 +209,48 @@ export default function App() {
     return updateTask(taskId, updates);
   }, [updateTask]);
 
-  // Pull-to-refresh handler
+  // Pull-to-refresh handler with hard refresh capabilities
   const handlePullToRefresh = useCallback(async (event: CustomEvent<RefresherEventDetail>) => {
+    const startTime = Date.now();
+    const MIN_REFRESH_DURATION = 800; // Minimum duration for user feedback
+    
     try {
+      console.log('[App] Pull-to-refresh initiated - performing hard refresh');
+      
+      // Haptic feedback on pull start
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+      
+      // Step 1: Validate and refresh session first
+      try {
+        window.dispatchEvent(new CustomEvent('request-session-validation'));
+        await new Promise(resolve => setTimeout(resolve, 100)); // Brief wait for session validation
+      } catch (sessionError) {
+        console.warn('[App] Session validation warning:', sessionError);
+      }
+      
+      // Step 2: Clear any cached data for hard refresh
+      if (typeof window !== 'undefined' && window.localStorage) {
+        // Clear specific caches but preserve auth
+        const keysToPreserve = ['supabase.auth.token', 'nesttask_theme', 'nesttask_refresh_interval'];
+        const allKeys = Object.keys(window.localStorage);
+        allKeys.forEach(key => {
+          if (!keysToPreserve.some(preserve => key.includes(preserve))) {
+            try {
+              window.localStorage.removeItem(key);
+            } catch (e) {
+              console.warn('[App] Failed to clear cache key:', key);
+            }
+          }
+        });
+      }
+      
+      // Step 3: Force refresh all data
       const refreshPromises: Promise<unknown>[] = [];
       
       if (user?.id) {
+        // Force refresh with cache bypass
         refreshPromises.push(refreshTasks(true));
       }
       
@@ -261,7 +260,33 @@ export default function App() {
         refreshPromises.push(refreshUsers());
       }
       
-      await Promise.allSettled(refreshPromises);
+      // Wait for all refreshes to complete
+      const results = await Promise.allSettled(refreshPromises);
+      
+      // Check if any refresh failed
+      const failures = results.filter(r => r.status === 'rejected');
+      if (failures.length > 0) {
+        console.warn('[App] Some refreshes failed:', failures);
+      }
+      
+      // Step 4: Ensure minimum display time for smooth UX
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_REFRESH_DURATION) {
+        await new Promise(resolve => setTimeout(resolve, MIN_REFRESH_DURATION - elapsed));
+      }
+      
+      // Success haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate([5, 50, 5]);
+      }
+      
+      console.log('[App] Pull-to-refresh completed successfully');
+    } catch (error) {
+      console.error('[App] Pull-to-refresh error:', error);
+      // Error haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(100);
+      }
     } finally {
       event.detail.complete();
     }
@@ -299,19 +324,7 @@ export default function App() {
       const { durationSeconds, requiresRefresh } = customEvent.detail;
       
       if (requiresRefresh) {
-        console.log(`[App] Resuming after ${durationSeconds}s background...`);
-        
-        // Anti-Zombie Measure:
-        // If the app was in background for more than 5 minutes (300s) on mobile,
-        // force a hard reload. WebView networks often fail to reconnect WebSocket/Fetch
-        // sockets properly after deep sleep.
-        if (Capacitor.isNativePlatform() && durationSeconds > 300) {
-           console.log('[App] Long background duration detected (>5m). Reloading to fix zombie sockets.');
-           window.location.reload();
-           return;
-        }
-
-        console.log('[App] Refreshing data...');
+        console.log(`[App] Resuming after ${durationSeconds}s background, refreshing data...`);
         setIsResumingFromBackground(true);
         
         // Auto-hide after 3 seconds
@@ -799,8 +812,13 @@ export default function App() {
         {/* Main Content Area with Pull-to-Refresh */}
         <div className="flex-1 relative overflow-hidden">
           <IonContent scrollY fullscreen className="h-full">
-            <IonRefresher slot="fixed" onIonRefresh={handlePullToRefresh}>
-              <IonRefresherContent />
+            <IonRefresher slot="fixed" onIonRefresh={handlePullToRefresh} pullFactor={0.5} pullMin={60} pullMax={120}>
+              <IonRefresherContent
+                pullingIcon="chevron-down-circle-outline"
+                pullingText="Pull to refresh..."
+                refreshingSpinner="circles"
+                refreshingText="Refreshing..."
+              />
             </IonRefresher>
             
             <main 
@@ -819,6 +837,13 @@ export default function App() {
           todayTaskCount={todayTaskCount}
         />
       </div>
+      
+      {/* PWA Reload Prompt */}
+      <ReloadPrompt />
+      
+      {/* Vercel Analytics & Speed Insights */}
+      <Analytics />
+      <SpeedInsights />
     </IonApp>
   );
 }

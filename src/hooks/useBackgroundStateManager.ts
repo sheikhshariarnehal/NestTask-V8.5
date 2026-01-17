@@ -1,11 +1,10 @@
-import { useRef, useCallback, useEffect } from 'react';
-import { useAppLifecycle } from './useAppLifecycle';
+import { useEffect, useRef, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 interface BackgroundState {
   enteredBackgroundAt: number | null;
   backgroundDuration: number;
   wasInBackground: boolean;
-  isActive: boolean;
 }
 
 /**
@@ -16,34 +15,10 @@ export function useBackgroundStateManager() {
   const stateRef = useRef<BackgroundState>({
     enteredBackgroundAt: null,
     backgroundDuration: 0,
-    wasInBackground: false,
-    isActive: true
+    wasInBackground: false
   });
-  const mountTimeRef = useRef<number>(Date.now());
-  const isSessionRecoveryInProgressRef = useRef<boolean>(false);
 
   const handleAppStateChange = useCallback((isActive: boolean) => {
-    if (stateRef.current.isActive === isActive) return;
-    
-    // CRITICAL: Ignore blur events within first 60 seconds of mount (cold start protection)
-    // During cold start with optimizations:
-    // - Session validation: < 1s
-    // - HTTP refresh if expired: 1-3s  
-    // - setSession hydration: Now non-blocking (background)
-    // Extended to 60s to handle slow devices and network
-    const timeSinceMount = Date.now() - mountTimeRef.current;
-    if (!isActive && timeSinceMount < 60000) {
-      console.log(`[Background Manager] ⏳ Ignoring blur event ${Math.round(timeSinceMount / 1000)}s after mount (cold start protection)`);
-      return;
-    }
-        // CRITICAL: Ignore blur events during active session recovery (setSession in progress)
-    // If user switches tabs while seeing "Hydrating SDK..." we must NOT background
-    if (!isActive && isSessionRecoveryInProgressRef.current) {
-      console.log(`[Background Manager] 🔒 Ignoring blur event - session recovery in progress (don't interrupt critical auth)`);
-      return;
-    }
-        stateRef.current.isActive = isActive;
-
     if (!isActive) {
       // App going to background
       stateRef.current.enteredBackgroundAt = Date.now();
@@ -72,33 +47,30 @@ export function useBackgroundStateManager() {
     }
   }, []);
 
-  // Listen for session recovery events to prevent backgrounding during critical auth
   useEffect(() => {
-    const handleRecoveryStart = () => {
-      console.log('[Background Manager] 🔒 Session recovery started - preventing background state');
-      isSessionRecoveryInProgressRef.current = true;
+    // Listen to visibility changes (web/browser tabs)
+    const handleVisibilityChange = () => {
+      handleAppStateChange(!document.hidden);
     };
-    
-    const handleRecoveryComplete = () => {
-      console.log('[Background Manager] ✅ Session recovery complete - allowing background state');
-      isSessionRecoveryInProgressRef.current = false;
+
+    // Listen to Capacitor app state changes (native apps)
+    const setupCapacitor = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const { App } = await import('@capacitor/app');
+        App.addListener('appStateChange', ({ isActive }) => {
+          handleAppStateChange(isActive);
+        });
+      }
     };
-    
-    window.addEventListener('supabase-session-recovery-start', handleRecoveryStart);
-    window.addEventListener('supabase-session-recovery-complete', handleRecoveryComplete);
-    
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    setupCapacitor();
+
     return () => {
-      window.removeEventListener('supabase-session-recovery-start', handleRecoveryStart);
-      window.removeEventListener('supabase-session-recovery-complete', handleRecoveryComplete);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // Note: Capacitor listeners cleanup is handled automatically on unmount
     };
-  }, []);
-  
-  // Consume the centralized lifecycle hook instead of registering our own listeners.
-  // This avoids multiple native plugin listeners and keeps resume semantics consistent.
-  useAppLifecycle({
-    onAppStateChange: handleAppStateChange,
-    onVisibilityChange: (isVisible) => handleAppStateChange(isVisible)
-  });
+  }, [handleAppStateChange]);
 
   return {
     getBackgroundDuration: () => stateRef.current.backgroundDuration,

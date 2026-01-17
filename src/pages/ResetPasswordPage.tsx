@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Lock, Check, X, EyeOff, Eye, ArrowLeft, ShieldCheck, Loader2 } from 'lucide-react';
-import { getSessionSafe, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { AuthError } from '../components/auth/AuthError';
 import { AuthInput } from '../components/auth/AuthInput';
 import { AuthSubmitButton } from '../components/auth/AuthSubmitButton';
@@ -59,7 +59,7 @@ export function ResetPasswordPage() {
     const checkSession = async () => {
       try {
         // This ensures we're working with a valid session
-        const { data: { session } } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
           console.error('No active session found for password reset');

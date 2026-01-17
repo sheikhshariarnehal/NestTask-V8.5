@@ -77,8 +77,8 @@ function parseCourseString(courseStr: string): { courseId: string; sectionRaw: s
 /**
  * Generates a unique ID for a slot
  */
-function generateSlotId(dayOfWeek: string, timeIndex: number, room: string, courseId: string): string {
-  return `${dayOfWeek.toLowerCase()}-${timeIndex}-${room}-${courseId}`.replace(/\s+/g, '-');
+function generateSlotId(dayOfWeek: string, timeIndex: number, room: string): string {
+  return `${dayOfWeek.toLowerCase()}-${timeIndex}-${room}`.replace(/\s+/g, '-');
 }
 
 /**
@@ -114,7 +114,7 @@ function transformDay(
       const { courseId, sectionRaw, sectionGroup } = parseCourseString(courseData.course);
       
       const slot: TransformedSlot = {
-        id: generateSlotId(dayOfWeek, timeIndex, roomNumber, courseId),
+        id: generateSlotId(dayOfWeek, timeIndex, roomNumber),
         routineId,
         dayOfWeek,
         startTime,

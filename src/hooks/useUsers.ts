@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUsers, deleteUser, promoteUser as promoteUserService, demoteUser as demoteUserService } from '../services/user.service';
 import type { User } from '../types/auth';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
-import { requestSessionValidation } from '../utils/sessionValidation';
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -15,24 +14,30 @@ export function useUsers() {
     // Prevent concurrent requests
     if (loadingRef.current && !force) return;
     
-    // Throttle requests (minimum 10 seconds between refreshes unless forced)
-    const now = Date.now();
-    if (!force && now - lastLoadTimeRef.current < 10000) return;
+    // For forced refresh (hard refresh), skip throttling
+    if (force) {
+      console.log('[useUsers] Force refresh - bypassing throttle and cache');
+    } else {
+      // Throttle requests (minimum 10 seconds between refreshes unless forced)
+      const now = Date.now();
+      if (now - lastLoadTimeRef.current < 10000) {
+        console.log('[useUsers] Refresh throttled');
+        return;
+      }
+    }
     
     try {
       loadingRef.current = true;
       setLoading(true);
-      setError(null);
-
-      // Avoid transient RLS/auth failures on first launch (Android WebView / PWA shortcut)
-      if (!import.meta.env.DEV) {
-        await requestSessionValidation(2500);
-      }
-
+      setError(null); // Clear any previous errors
+      
+      console.log('[useUsers] Fetching users from database...');
       const data = await fetchUsers();
       setUsers(data);
       lastLoadTimeRef.current = Date.now();
+      console.log(`[useUsers] Successfully loaded ${data.length} users`);
     } catch (err: any) {
+      console.error('[useUsers] Failed to load users:', err);
       setError(err.message);
     } finally {
       setLoading(false);

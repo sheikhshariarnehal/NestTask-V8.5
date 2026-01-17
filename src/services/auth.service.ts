@@ -1,4 +1,4 @@
-import { getSessionSafe, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { getAuthErrorMessage } from '../utils/authErrors';
 import type { LoginCredentials, SignupCredentials, User } from '../types/auth';
 import type { Database } from '../types/supabase';
@@ -120,8 +120,6 @@ export async function loginUser({ email, password }: LoginCredentials): Promise<
     ];
     
     // In development, accept ANY password for these test accounts - RETURN IMMEDIATELY
-    // CRITICAL SECURITY FIX: Disabled bypass to prevent invalid logins during testing
-    /*
     if (isDevelopment && testAccounts.includes(email)) {
       console.log('🔧 [DEV MODE] Using demo login for:', email);
       
@@ -156,7 +154,6 @@ export async function loginUser({ email, password }: LoginCredentials): Promise<
       // IMPORTANT: Return immediately - don't try Supabase auth
       return mockUser;
     }
-    */
 
     console.log('📡 Attempting Supabase authentication for:', email);
 
@@ -180,8 +177,6 @@ export async function loginUser({ email, password }: LoginCredentials): Promise<
     
     if (authError) {
       // If we're in development mode, allow any login with a fallback user
-      // CRITICAL SECURITY FIX: Disabled error fallback to ensure invalid credentials fail
-      /*
       if (isDevelopment) {
         console.warn('Development mode: Creating fallback user after failed login attempt');
         console.warn('Error from auth service:', authError.message);
@@ -208,7 +203,6 @@ export async function loginUser({ email, password }: LoginCredentials): Promise<
         
         return fallbackUser;
       }
-      */
       
       // Non-development mode - throw the error
       console.error('Login error:', authError);
@@ -536,7 +530,7 @@ export async function logoutUser(): Promise<void> {
 // Helper function to handle focus refresh
 async function handleFocusRefresh() {
   try {
-    const { data } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
+    const { data } = await supabase.auth.getSession();
     if (data?.session) {
       await supabase.auth.refreshSession({
         refresh_token: data.session.refresh_token,
@@ -556,7 +550,7 @@ function setupTokenRefresh(refreshToken: string) {
   const intervalId = setInterval(async () => {
     try {
       // Get the current session
-      const { data } = await getSessionSafe({ timeoutMs: 8000, maxAgeMs: 0 });
+      const { data } = await supabase.auth.getSession();
       
       if (data?.session) {
         // Refresh the session

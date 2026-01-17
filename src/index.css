@@ -263,19 +263,58 @@ button {
   }
 }
 
-/* Ionic Pull-to-Refresh */
+/* Ionic Pull-to-Refresh - Enhanced styling */
 ion-app,
 ion-content {
   --ion-background-color: transparent;
   --background: transparent;
 }
 
+/* Pull-to-refresh content styling */
 ion-refresher-content {
   --color: #3b82f6;
+  --spinner-color: #3b82f6;
+  --refreshing-text-color: #3b82f6;
+  --pulling-text-color: #6b7280;
 }
 
 .dark ion-refresher-content {
   --color: #60a5fa;
+  --spinner-color: #60a5fa;
+  --refreshing-text-color: #60a5fa;
+  --pulling-text-color: #9ca3af;
+}
+
+/* Custom pull-to-refresh icon animation */
+ion-refresher.refresher-active {
+  z-index: 1;
+}
+
+ion-refresher-content .refresher-pulling-icon,
+ion-refresher-content .refresher-refreshing-icon {
+  color: var(--color);
+  font-size: 24px;
+}
+
+/* Smooth animation for pull gesture */
+ion-refresher {
+  transition: all 0.3s ease;
+}
+
+/* Add backdrop effect during refresh */
+ion-refresher.refresher-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.05), transparent);
+  pointer-events: none;
+}
+
+.dark ion-refresher.refresher-active::before {
+  background: linear-gradient(to bottom, rgba(96, 165, 250, 0.05), transparent);
 }
 
 @layer base {

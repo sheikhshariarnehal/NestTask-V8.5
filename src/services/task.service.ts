@@ -1,4 +1,4 @@
-import { getSessionSafe, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { sendTaskNotification } from './telegram.service';
 import type { Task, NewTask } from '../types/task';
 import { mapTaskFromDB } from '../utils/taskMapper';
@@ -45,9 +45,7 @@ export const fetchTasksForDateRange = async (
  * @param userId - The user ID to fetch tasks for
  * @param sectionId - The user's section ID (if applicable)
  */
-export const fetchTasks = async (userId: string, sectionId?: string | null, abortSignal?: AbortSignal): Promise<Task[]> => {
-  let controller: AbortController | null = null;
-
+export const fetchTasks = async (userId: string, sectionId?: string | null): Promise<Task[]> => {
   try {
     // For development environment, return faster with reduced logging
     if (process.env.NODE_ENV === 'development') {
@@ -62,32 +60,22 @@ export const fetchTasks = async (userId: string, sectionId?: string | null, abor
     }
     
     // Performance optimization: Use a timeout for the query
-    const QUERY_TIMEOUT = 14000; // 14 seconds
-
-    // Create abort controller for the timeout and to support caller cancellation
-    controller = new AbortController();
-
-    // Propagate caller aborts into our controller
-    if (abortSignal) {
-      if (abortSignal.aborted) {
-        controller.abort((abortSignal as any).reason ?? 'aborted');
-      } else {
-        abortSignal.addEventListener('abort', () => controller?.abort((abortSignal as any).reason ?? 'aborted'), { once: true });
-      }
-    }
-
-    const timeoutId = setTimeout(() => controller?.abort('timeout'), QUERY_TIMEOUT);
+    const QUERY_TIMEOUT = 8000; // 8 seconds
     
-    // CRITICAL: Do NOT call getSession() or getSessionSafe() here
-    // On PWA, localStorage access can timeout/deadlock causing zombie loading state
-    // Session is already validated by useSupabaseLifecycle - Supabase client uses it automatically
-    // RLS policies handle all permission filtering, we don't need user role/section in query
+    // Create abort controller for the timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), QUERY_TIMEOUT);
     
+    // Get user metadata to determine role
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const userRole = user?.user_metadata?.role;
+    const userSectionId = sectionId || user?.user_metadata?.section_id;
+
     // Start query builder with optimized field selection - no filters needed as RLS handles permissions
     let query = supabase
       .from('tasks')
-      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at')
-      .abortSignal(controller.signal);
+      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at');
 
     // We only need to order the results, the Row Level Security policy 
     // will handle filtering based on user_id, is_admin_task, and section_id
@@ -108,27 +96,35 @@ export const fetchTasks = async (userId: string, sectionId?: string | null, abor
     const tasks = data.map(mapTaskFromDB);
     
     // Minimal logging in production
-    /* 
-       REMOVE SENSITIVE LOGS IN PRODUCTION
-       If you need to debug, ensure variables are defined.
-    // if (process.env.NODE_ENV !== 'production') {
-    //   console.log(`[Debug] Fetched ${tasks.length} tasks for user ${userId}`);
-    // }
-    */
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Debug] Fetched ${tasks.length} tasks for user ${userId}`);
+      if (tasks.length > 0) {
+        console.log('[Debug] Sample task data:', {
+          id: tasks[0].id,
+          name: tasks[0].name,
+          sectionId: tasks[0].sectionId,
+          isAdminTask: tasks[0].isAdminTask
+        });
+      }
+    }
+
+    // Additional debug for section tasks
+    if (userSectionId) {
+      const sectionTasks = tasks.filter(task => task.sectionId === userSectionId);
+      console.log(`[Debug] Found ${sectionTasks.length} section tasks with sectionId: ${userSectionId}`);
+      
+      // Log the section task IDs for easier troubleshooting
+      if (sectionTasks.length > 0) {
+        console.log('[Debug] Section task IDs:', sectionTasks.map(task => task.id));
+      }
+    }
 
     return tasks;
   } catch (error: any) {
     // Check if this is an AbortError (timeout)
     if (error.name === 'AbortError') {
-      const finalReason = controller ? (controller.signal as any).reason : undefined;
-
-      if (finalReason === 'timeout') {
-        console.error('Task fetch timed out');
-        throw new Error('Task fetch timed out. Please try again.');
-      }
-
-      // Benign cancel (superseded / navigation)
-      throw new Error('Task fetch aborted');
+      console.error('Task fetch timed out');
+      throw new Error('Task fetch timed out. Please try again.');
     }
     
     console.error('Error in fetchTasks:', error);

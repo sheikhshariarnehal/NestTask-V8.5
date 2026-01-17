@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { Trash2, AlertTriangle, Search } from 'lucide-react';
 import { User } from '../../types/auth';
 
@@ -11,7 +11,8 @@ interface UserListProps {
   isLoading?: boolean;
 }
 
-export function UserList({ 
+// Memoize UserList to prevent re-renders when parent updates
+export const UserList = memo(function UserList({ 
   users, 
   onDeleteUser, 
   onPromoteUser, 
@@ -26,9 +27,9 @@ export function UserList({
   const [searchTerm, setSearchTerm] = useState('');
 
   // Helper function to check if a user is a section admin
-  const isSectionAdminRole = (role: string) => role === 'section_admin';
+  const isSectionAdminRole = useCallback((role: string) => role === 'section_admin', []);
 
-  const handleDeleteClick = (user: User) => {
+  const handleDeleteClick = useCallback((user: User) => {
     // Check if section admin is trying to delete user from different section
     const currentSectionAdmin = users.find(u => isSectionAdminRole(u.role));
     if (isSectionAdmin && user.sectionId !== currentSectionAdmin?.sectionId) {
@@ -45,9 +46,9 @@ export function UserList({
     setSelectedUser(user);
     setShowConfirmation(true);
     setError(null);
-  };
+  }, [isSectionAdmin, isSectionAdminRole, users]);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!selectedUser) return;
     
     try {
@@ -61,21 +62,21 @@ export function UserList({
       setShowConfirmation(false);
       setSelectedUser(null);
     }
-  };
+  }, [selectedUser, onDeleteUser]);
 
-  // Filter users based on search term
-  const filteredUsers = users.filter(user => 
+  // Filter users based on search term - memoized for performance
+  const filteredUsers = useMemo(() => users.filter(user => 
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.sectionName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.sectionId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [users, searchTerm]);
 
-  // If section admin, only show users from their section
-  const displayUsers = isSectionAdmin 
+  // If section admin, only show users from their section - memoized
+  const displayUsers = useMemo(() => isSectionAdmin 
     ? filteredUsers.filter(user => user.sectionId === users.find(u => isSectionAdminRole(u.role))?.sectionId)
-    : filteredUsers;
+    : filteredUsers, [isSectionAdmin, filteredUsers, users, isSectionAdminRole]);
 
   if (isLoading) {
     return (
