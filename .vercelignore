@@ -1,0 +1,68 @@
+# Dependencies
+node_modules
+
+# Build files
+.git
+.github
+.gitignore
+.eslintrc
+.editorconfig
+*.log
+
+# Development files
+.vscode
+.idea
+*.test.*
+
+# Android files
+android/
+resources/
+
+# Test files
+testsprite_tests/
+*.spec.ts
+*.spec.tsx
+
+# Documentation (except main README)
+ADMIN_DASHBOARD_OPTIMIZATIONS.md
+ANDROID_README.md
+AUTH_SCROLL_FIX.md
+BUG_FIX_SUMMARY.md
+FCM_DATABASE_FIX_VERIFICATION.md
+FCM_ROUTE_FIX_SUMMARY.md
+FCM_TOKEN_STORAGE_FIX.md
+IMPLEMENTATION_SUMMARY.md
+LIFECYCLE_FIXES.md
+LOADING_OPTIMIZATION_SUMMARY.md
+LOGO_UPDATE_SUMMARY.md
+NOTIFICATION_FIX_README.md
+NOTIFICATION_TROUBLESHOOTING.md
+PERFORMANCE_ANALYSIS_REPORT.md
+PERFORMANCE_FIXES_IMPLEMENTED.md
+PUSH_NOTIFICATION_FIX.md
+PUSH_NOTIFICATION_GUIDE.md
+ROUTINE_PAGE_FIX.md
+SIGNUP_FIX_SUMMARY.md
+SIMPLE_NOTIFICATION_TEST.md
+SUPER_ADMIN_REDESIGN_SUMMARY.md
+TASK_MANAGEMENT_UI_IMPROVEMENTS.md
+TASK_REMINDER_FIX_SUMMARY.md
+UI_CLEANUP_SUMMARY.md
+
+# Backup files
+supabase/Backup/
+
+# Deployment scripts (not needed in production)
+deploy-reminders.ps1
+deploy-reminders.sh
+
+# SQL migration files
+*.sql
+
+# Stats files
+stats.html
+
+# Misc
+.DS_Store
+Thumbs.db
+ 

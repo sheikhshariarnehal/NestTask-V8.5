@@ -1,0 +1,104 @@
+.pwa-reload-prompt {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99999;
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pwa-reload-prompt-toast {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 340px;
+  backdrop-filter: blur(10px);
+}
+
+.dark .pwa-reload-prompt-toast {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pwa-reload-prompt-message {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.pwa-reload-prompt-message strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.pwa-reload-prompt-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.pwa-reload-prompt-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pwa-reload-prompt-button-primary {
+  background: white;
+  color: #0284c7;
+}
+
+.pwa-reload-prompt-button-primary:hover {
+  background: #f0f9ff;
+  transform: translateY(-1px);
+}
+
+.pwa-reload-prompt-button-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.pwa-reload-prompt-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.dark .pwa-reload-prompt-button-primary {
+  background: #0284c7;
+  color: white;
+}
+
+.dark .pwa-reload-prompt-button-primary:hover {
+  background: #0369a1;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .pwa-reload-prompt {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+  }
+
+  .pwa-reload-prompt-toast {
+    max-width: none;
+  }
+}
