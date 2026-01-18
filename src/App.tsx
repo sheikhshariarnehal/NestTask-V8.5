@@ -209,21 +209,58 @@ export default function App() {
     return updateTask(taskId, updates);
   }, [updateTask]);
 
+  const { 
+    notifications, 
+    unreadCount,
+    markAsRead, 
+    markAllAsRead, 
+    clearNotification 
+  } = useNotifications(user?.id);
+  
+  // Initialize activePage from URL pathname
+  const getInitialPage = (): NavPage => {
+    const path = window.location.pathname.slice(1); // Remove leading slash
+    const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides', 'profile'];
+    return validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
+  };
+
+  const [activePage, setActivePage] = useState<NavPage>(getInitialPage());
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationOpenTaskId, setNotificationOpenTaskId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
+  const [hasCompletedInitialTasksLoad, setHasCompletedInitialTasksLoad] = useState(false);
+  const [isResumingFromBackground, setIsResumingFromBackground] = useState(false);
+
   // Pull-to-refresh handler optimized for performance and auth preservation
   const handlePullToRefresh = useCallback(async (event: CustomEvent<RefresherEventDetail>) => {
     const startTime = Date.now();
     const MIN_REFRESH_DURATION = 600; // Reduced minimum duration for snappier UX
     
     try {
+      // HOME PAGE: Perform hard refresh (like Ctrl+Shift+R)
+      if (activePage === 'home') {
+        console.log('[App] Home page pull-to-refresh - performing hard refresh');
+        
+        // Haptic feedback
+        if ('vibrate' in navigator) {
+          navigator.vibrate(10);
+        }
+        
+        // Brief delay for visual feedback
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Hard refresh: bypass cache and reload from server
+        window.location.reload();
+        return; // Don't call event.detail.complete() as page will reload
+      }
+      
+      // OTHER PAGES: Normal data refresh
       console.log('[App] Pull-to-refresh initiated - refreshing data');
       
       // Haptic feedback on pull start
       if ('vibrate' in navigator) {
         navigator.vibrate(10);
       }
-      
-      // Optimized: Skip session validation and localStorage clearing
-      // This prevents auth token issues and improves performance
       
       // Force refresh all data in parallel
       const refreshPromises: Promise<unknown>[] = [];
@@ -269,29 +306,7 @@ export default function App() {
     } finally {
       event.detail.complete();
     }
-  }, [user?.id, user?.role, refreshTasks, refreshUsers]);
-
-  const { 
-    notifications, 
-    unreadCount,
-    markAsRead, 
-    markAllAsRead, 
-    clearNotification 
-  } = useNotifications(user?.id);
-  
-  // Initialize activePage from URL pathname
-  const getInitialPage = (): NavPage => {
-    const path = window.location.pathname.slice(1); // Remove leading slash
-    const validPages: NavPage[] = ['home', 'upcoming', 'search', 'routine', 'lecture-slides', 'profile'];
-    return validPages.includes(path as NavPage) ? (path as NavPage) : 'home';
-  };
-
-  const [activePage, setActivePage] = useState<NavPage>(getInitialPage());
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationOpenTaskId, setNotificationOpenTaskId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
-  const [hasCompletedInitialTasksLoad, setHasCompletedInitialTasksLoad] = useState(false);
-  const [isResumingFromBackground, setIsResumingFromBackground] = useState(false);
+  }, [activePage, user?.id, user?.role, refreshTasks, refreshUsers]);
 
   // Track background/foreground state
   useBackgroundStateManager();
