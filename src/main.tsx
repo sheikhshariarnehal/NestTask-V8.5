@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { ErrorBoundary, EnvErrorFallback } from './components/ErrorBoundary';
+import { SessionReadyProvider } from './contexts/SessionReadyContext';
 // Import CSS (Vite handles this correctly)
 import './index.css';
 // Import Ionic CSS for components (non-critical, loaded after)
@@ -294,17 +295,19 @@ function initApp() {
         {!hasEnvVars ? (
           <EnvErrorFallback />
         ) : (
-          <Suspense fallback={<MicroLoader />}>
-            <RouterProvider router={router} />
-            {shouldRenderAnalytics && (
-              <AnalyticsErrorBoundary>
-                <Suspense fallback={null}>
-                  <AnalyticsComponent />
-                  <SpeedInsightsComponent />
-                </Suspense>
-              </AnalyticsErrorBoundary>
-            )}
-          </Suspense>
+          <SessionReadyProvider>
+            <Suspense fallback={<MicroLoader />}>
+              <RouterProvider router={router} />
+              {shouldRenderAnalytics && (
+                <AnalyticsErrorBoundary>
+                  <Suspense fallback={null}>
+                    <AnalyticsComponent />
+                    <SpeedInsightsComponent />
+                  </Suspense>
+                </AnalyticsErrorBoundary>
+              )}
+            </Suspense>
+          </SessionReadyProvider>
         )}
       </ErrorBoundary>
     </StrictMode>

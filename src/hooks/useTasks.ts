@@ -3,6 +3,7 @@ import { supabase, testConnection } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
+import { useSessionReady } from '../contexts/SessionReadyContext';
 
 // Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
 const TASK_FETCH_TIMEOUT = 45000;
@@ -22,6 +23,9 @@ const MAX_RETRIES_TIMEOUT = 5;
 const MAX_RETRIES_OTHER = 3;
 
 export function useTasks(userId: string | undefined) {
+  // Session-ready gate: prevents data fetching until session is validated
+  const { isSessionReady, isValidating } = useSessionReady();
+  
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +97,13 @@ export function useTasks(userId: string | undefined) {
   }, []);
 
   const loadTasks = useCallback(async (options: { force?: boolean } = {}) => {
+    // CRITICAL: Gate on session ready to prevent cold start failures
+    // This ensures token is validated before any data fetching
+    if (!isSessionReady) {
+      console.log('[useTasks] Session not ready, waiting for validation...');
+      return;
+    }
+    
     if (!userId) return;
     
     // Cancel any ongoing request
@@ -235,7 +246,7 @@ export function useTasks(userId: string | undefined) {
         setLoading(false);
       }
     }
-  }, [userId, retryCount]);
+  }, [userId, retryCount, isSessionReady]);
 
   // Refresh tasks when the app resumes or network reconnects.
   // This covers cases where the WebView stays "visible" while Capacitor is backgrounded.
@@ -297,13 +308,18 @@ export function useTasks(userId: string | undefined) {
     // Only listen to critical events - removed redundant ones to prevent duplicate refreshes
     window.addEventListener('app-resume', debouncedRefresh);
     window.addEventListener('supabase-session-refreshed', debouncedRefresh);
+    
+    // Also listen for session-ready event to trigger refresh after cold start validation
+    window.addEventListener('session-ready', debouncedRefresh);
 
     return () => {
       window.removeEventListener('app-resume', debouncedRefresh);
       window.removeEventListener('supabase-session-refreshed', debouncedRefresh);
+      window.removeEventListener('session-ready', debouncedRefresh);
     };
   }, [loadTasks]);
 
+  // Initial load effect - now gates on isSessionReady
   useEffect(() => {
     if (!userId) {
       setTasks([]);
@@ -313,6 +329,16 @@ export function useTasks(userId: string | undefined) {
 
     // Set mounted ref
     isMountedRef.current = true;
+    
+    // CRITICAL: Wait for session to be ready before initial fetch
+    // This prevents cold start failures where expired tokens cause RLS errors
+    if (!isSessionReady) {
+      console.log('[useTasks] Waiting for session ready before initial load...');
+      setLoading(true); // Keep showing skeleton
+      return;
+    }
+    
+    console.log('[useTasks] Session ready, starting initial load for user:', userId);
     
     // Initial load - show loading immediately, then fetch.
     // This makes initial skeletons (e.g., Home task cards) reliably visible.
@@ -332,7 +358,7 @@ export function useTasks(userId: string | undefined) {
         abortControllerRef.current.abort();
       }
     };
-  }, [userId, loadTasks]);
+  }, [userId, loadTasks, isSessionReady]);
 
   const handleCreateTask = async (newTask: NewTask, sectionId?: string) => {
     if (!userId) {
@@ -433,7 +459,8 @@ export function useTasks(userId: string | undefined) {
 
   return {
     tasks,
-    loading,
+    // Include isValidating in loading state so UI shows skeleton during cold start validation
+    loading: loading || isValidating,
     error,
     createTask: handleCreateTask,
     updateTask: handleUpdateTask,
