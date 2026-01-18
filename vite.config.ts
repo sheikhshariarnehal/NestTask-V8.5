@@ -171,9 +171,8 @@ export default defineConfig({
     minify: isCapacitorBuild ? 'esbuild' : 'terser',
     terserOptions: isCapacitorBuild ? undefined : {
       compress: {
-        drop_console: true,
+        drop_console: false,  // Keep console logs for debugging on Vercel
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info'],
         passes: 2
       },
       mangle: {
