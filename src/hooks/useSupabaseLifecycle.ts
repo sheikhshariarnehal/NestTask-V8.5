@@ -36,41 +36,11 @@ function detectAndHandleColdStart(): boolean {
     if (timeSinceActive > COLD_START_THRESHOLD_MS) {
       console.log(`[Cold Start] Detected! App was inactive for ${Math.round(timeSinceActive / 60000)} minutes`);
       
-      // Check if session might be expired
-      const checkSessionAndRefresh = async () => {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session) {
-            const expiresAt = session.expires_at ?? 0;
-            const nowSeconds = Math.floor(now / 1000);
-            const bufferSeconds = 5 * 60; // 5 minutes buffer
-            
-            // If session is expired or about to expire, force refresh
-            if (expiresAt - nowSeconds < bufferSeconds) {
-              console.log('[Cold Start] Session expired/expiring, forcing page refresh');
-              sessionStorage.setItem(COLD_START_REFRESH_KEY, 'true');
-              window.location.reload();
-              return true;
-            } else {
-              console.log('[Cold Start] Session still valid, no refresh needed');
-            }
-          } else {
-            // No session - user needs to login, no refresh needed
-            console.log('[Cold Start] No session found, user will be redirected to login');
-          }
-        } catch (error) {
-          console.error('[Cold Start] Error checking session:', error);
-          // On error, force refresh to be safe
-          sessionStorage.setItem(COLD_START_REFRESH_KEY, 'true');
-          window.location.reload();
-          return true;
-        }
-        return false;
-      };
-      
-      // Execute async check
-      checkSessionAndRefresh();
+      // IMMEDIATE REFRESH on cold start - don't wait for session check
+      // This is the most reliable way to ensure fresh state
+      console.log('[Cold Start] Forcing immediate page refresh for clean state');
+      sessionStorage.setItem(COLD_START_REFRESH_KEY, 'true');
+      window.location.reload();
       return true;
     }
   }
