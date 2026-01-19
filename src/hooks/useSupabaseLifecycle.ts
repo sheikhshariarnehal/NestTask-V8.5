@@ -2,58 +2,6 @@ import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAppLifecycle } from './useAppLifecycle';
 
-// Cold start detection constants
-const COLD_START_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
-const LAST_ACTIVE_KEY = 'nesttask_last_active_time';
-const COLD_START_REFRESH_KEY = 'nesttask_cold_start_refresh';
-
-/**
- * Detects if this is a cold start (app opened after being closed for a significant period)
- * and forces a hard refresh to ensure fresh session state.
- * This runs BEFORE React hydration issues can occur.
- */
-function detectAndHandleColdStart(): boolean {
-  if (typeof window === 'undefined') return false;
-  
-  const now = Date.now();
-  const lastActiveStr = localStorage.getItem(LAST_ACTIVE_KEY);
-  const coldStartRefreshFlag = sessionStorage.getItem(COLD_START_REFRESH_KEY);
-  
-  // Update last active time immediately
-  localStorage.setItem(LAST_ACTIVE_KEY, now.toString());
-  
-  // If we just did a cold start refresh, don't do it again (prevent infinite loop)
-  if (coldStartRefreshFlag === 'true') {
-    sessionStorage.removeItem(COLD_START_REFRESH_KEY);
-    console.log('[Cold Start] Skipping - already refreshed this session');
-    return false;
-  }
-  
-  if (lastActiveStr) {
-    const lastActive = parseInt(lastActiveStr, 10);
-    const timeSinceActive = now - lastActive;
-    
-    if (timeSinceActive > COLD_START_THRESHOLD_MS) {
-      console.log(`[Cold Start] Detected! App was inactive for ${Math.round(timeSinceActive / 60000)} minutes`);
-      
-      // IMMEDIATE REFRESH on cold start - don't wait for session check
-      // This is the most reliable way to ensure fresh state
-      console.log('[Cold Start] Forcing immediate page refresh for clean state');
-      sessionStorage.setItem(COLD_START_REFRESH_KEY, 'true');
-      window.location.reload();
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-// Run cold start detection immediately when module loads
-let coldStartHandled = false;
-if (typeof window !== 'undefined') {
-  coldStartHandled = detectAndHandleColdStart();
-}
-
 export interface SupabaseLifecycleOptions {
   onSessionExpired?: () => void;
   onSessionRefreshed?: () => void;
@@ -63,7 +11,6 @@ export interface SupabaseLifecycleOptions {
 
 /**
  * Hook to manage Supabase session lifecycle:
- * - Detects cold start and forces refresh if session expired
  * - Validates session on app resume
  * - Refreshes expired sessions automatically
  * - Prevents silent RLS failures due to invalid tokens
@@ -75,30 +22,6 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   const lastValidationRef = useRef<number>(Date.now());
   const optionsRef = useRef(options);
   const isAutoRefreshEnabledRef = useRef<boolean>(false);
-
-  // Update last active time periodically to track activity
-  useEffect(() => {
-    const updateLastActive = () => {
-      localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
-    };
-    
-    // Update on visibility change (when user switches back to app)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        updateLastActive();
-      }
-    };
-    
-    // Update periodically while app is active (every 5 minutes)
-    const intervalId = setInterval(updateLastActive, 5 * 60 * 1000);
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
 
   // Update options ref when they change
   useEffect(() => {
