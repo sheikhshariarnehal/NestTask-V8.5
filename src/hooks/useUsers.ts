@@ -2,12 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUsers, deleteUser, promoteUser as promoteUserService, demoteUser as demoteUserService } from '../services/user.service';
 import type { User } from '../types/auth';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
-import { useSessionReady } from '../contexts/SessionReadyContext';
 
 export function useUsers() {
-  // Session-ready gate: prevents data fetching until session is validated
-  const { isSessionReady, isValidating } = useSessionReady();
-  
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,12 +11,6 @@ export function useUsers() {
   const loadingRef = useRef<boolean>(false);
 
   const loadUsers = useCallback(async (force = false) => {
-    // CRITICAL: Gate on session ready to prevent cold start failures
-    if (!isSessionReady) {
-      console.log('[useUsers] Session not ready, waiting for validation...');
-      return;
-    }
-    
     // Prevent concurrent requests
     if (loadingRef.current && !force) return;
     
@@ -53,15 +43,11 @@ export function useUsers() {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [isSessionReady]);
+  }, []);
 
-  // Initial load - gates on isSessionReady
   useEffect(() => {
-    if (isSessionReady) {
-      console.log('[useUsers] Session ready, starting initial load');
-      loadUsers(true);
-    }
-  }, [loadUsers, isSessionReady]);
+    loadUsers(true);
+  }, [loadUsers]);
 
   // Use stable callback reference to prevent memory leaks
   const handleResumeRefreshRef = useRef<() => void>();
@@ -153,8 +139,7 @@ export function useUsers() {
 
   return {
     users,
-    // Include isValidating in loading state so UI shows skeleton during cold start validation
-    loading: loading || isValidating,
+    loading,
     error,
     refreshUsers: () => loadUsers(true),
     deleteUser: handleDeleteUser,

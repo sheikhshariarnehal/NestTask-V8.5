@@ -5,7 +5,6 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useAuth } from './hooks/useAuth';
 import { useTasks } from './hooks/useTasks';
 import { useUsers } from './hooks/useUsers';
-import { useSessionReady } from './contexts/SessionReadyContext';
 import { useNotifications } from './hooks/useNotifications';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import { AuthPage } from './pages/AuthPage';
