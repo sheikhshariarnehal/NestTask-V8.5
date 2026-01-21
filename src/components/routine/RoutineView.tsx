@@ -312,33 +312,7 @@ export function RoutineView() {
 
       {/* Calendar Strip */}
       <div className="mb-3">
-        <div className="flex items-center justify-between mb-2">
-          <button
-            onClick={() => {
-              const prevDay = addDays(selectedDate, -1);
-              handleDaySelect(prevDay);
-            }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="Previous day"
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
 
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-            {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-          </h2>
-
-          <button
-            onClick={() => {
-              const nextDay = addDays(selectedDate, 1);
-              handleDaySelect(nextDay);
-            }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="Next day"
-          >
-            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
-        </div>
 
         <div className="grid grid-cols-6 gap-2 sm:gap-3">
           {weekDays.map((day) => (
