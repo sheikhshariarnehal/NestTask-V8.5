@@ -11,9 +11,11 @@ type CompressionAlgorithm = 'gzip' | 'brotliCompress' | 'deflate' | 'deflateRaw'
 // Check if building for Capacitor (disable compression for mobile)
 const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
 
-// Disable manual chunking for web to avoid TDZ errors
-// Vite's automatic chunking is safer and prevents circular dependency issues
-const useManualChunks = isCapacitorBuild ? false : false; // Disabled for all builds
+// IMPORTANT: Manual chunking is DISABLED for Capacitor builds
+// It causes circular dependency issues ("Cannot access 'X' before initialization")
+// in Android WebView due to unpredictable chunk loading order.
+// Vite's automatic chunking is safer for Capacitor.
+const useManualChunks = false;
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -27,8 +29,8 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    // PWA Plugin Configuration
-    VitePWA({
+    // PWA Plugin Configuration - Disabled for Capacitor builds (native apps don't need PWA)
+    ...(!isCapacitorBuild ? [VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192x192.png', 'icons/icon-512x512.png', 'icons/favicon.svg'],
       manifest: {
@@ -147,7 +149,7 @@ export default defineConfig({
         navigateFallback: 'index.html',
         suppressWarnings: true
       }
-    }),
+    })] : []),
     // Disable compression for Capacitor builds to avoid duplicate resources
     ...(!isCapacitorBuild ? [
       compression({
@@ -188,11 +190,75 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // Disable manual chunking to prevent TDZ errors and circular dependency issues
-        // Vite's automatic chunking handles dependencies correctly
-        manualChunks: useManualChunks ? (id) => {
-          // This code path is currently disabled
-          // Manual chunking can cause "Cannot access before initialization" errors
+        // Smart manual chunking for Capacitor builds to optimize loading
+        // Splits large vendor libraries for better caching and parallel loading
+        manualChunks: useManualChunks ? (id: string) => {
+          // Core React - highest priority, smallest chunk
+          if (id.includes('node_modules/react-dom') || 
+              id.includes('node_modules/react/') ||
+              id.includes('node_modules/scheduler')) {
+            return 'vendor-react';
+          }
+          
+          // Router - needed early for navigation
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor-router';
+          }
+          
+          // Capacitor plugins - essential for native functionality
+          if (id.includes('node_modules/@capacitor/')) {
+            return 'vendor-capacitor';
+          }
+          
+          // Supabase client - needed for auth
+          if (id.includes('node_modules/@supabase/')) {
+            return 'vendor-supabase';
+          }
+          
+          // Ionic framework - large, can load after initial paint
+          if (id.includes('node_modules/@ionic/') || 
+              id.includes('node_modules/ionicons')) {
+            return 'vendor-ionic';
+          }
+          
+          // Lucide icons - large bundle, lazy load
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+          
+          // Charts libraries - only needed for specific pages
+          if (id.includes('node_modules/recharts') || 
+              id.includes('node_modules/chart.js') ||
+              id.includes('node_modules/react-chartjs') ||
+              id.includes('node_modules/d3-')) {
+            return 'vendor-charts';
+          }
+          
+          // Animation library - can be deferred
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-animation';
+          }
+          
+          // Radix UI components - used throughout the app
+          if (id.includes('node_modules/@radix-ui/')) {
+            return 'vendor-radix';
+          }
+          
+          // DnD Kit - only needed for specific features
+          if (id.includes('node_modules/@dnd-kit/')) {
+            return 'vendor-dnd';
+          }
+          
+          // Date utilities
+          if (id.includes('node_modules/date-fns')) {
+            return 'vendor-date';
+          }
+          
+          // All other vendor modules
+          if (id.includes('node_modules/')) {
+            return 'vendor-other';
+          }
+          
           return undefined;
         } : undefined,
         // Ensure proper file types and names

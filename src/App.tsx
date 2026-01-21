@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, startTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useAuth } from './hooks/useAuth';
 import { useTasks } from './hooks/useTasks';
 import { useUsers } from './hooks/useUsers';
@@ -20,7 +18,6 @@ import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
 import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
 import { useBackgroundStateManager } from './hooks/useBackgroundStateManager';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { getPendingOpenTaskId } from './services/pushNavigationService';
 import { IonApp, IonContent, IonRefresher, IonRefresherContent, setupIonicReact } from '@ionic/react';
@@ -28,10 +25,23 @@ import type { RefresherEventDetail } from '@ionic/react';
 import { RoutineSkeleton } from './components/routine/RoutineSkeleton';
 import ReloadPrompt from './components/pwa/ReloadPrompt';
 
-// Initialize Ionic React
+// Lazy load Vercel analytics (not needed for native apps)
+const Analytics = !Capacitor.isNativePlatform() 
+  ? lazy(() => import('@vercel/analytics/react').then(m => ({ default: m.Analytics })))
+  : () => null;
+const SpeedInsights = !Capacitor.isNativePlatform()
+  ? lazy(() => import('@vercel/speed-insights/react').then(m => ({ default: m.SpeedInsights })))
+  : () => null;
+
+// Lazy load StatusBar to avoid blocking initial render
+const loadStatusBar = () => import('@capacitor/status-bar');
+
+// Initialize Ionic React with performance optimizations
 setupIonicReact({
   mode: 'md', // Use Material Design mode for consistent look
-  animated: false, // Disable animations to reduce forced reflows
+  animated: !Capacitor.isNativePlatform() ? true : false, // Disable animations on native for performance
+  rippleEffect: false, // Disable ripple effect for faster touch response
+  hardwareBackButton: true, // Enable hardware back button handling
 });
 
 // Page import functions
@@ -54,41 +64,48 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize Status Bar for native mobile apps - optimized for proper safe area handling
+  // Initialize Status Bar for native mobile apps - deferred to not block initial render
   useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    
+    // Defer status bar initialization to after first paint
     const initStatusBar = async () => {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          // Set status bar to not overlay WebView - this ensures proper safe area calculation
-          await StatusBar.setOverlaysWebView({ overlay: false });
-          
-          // Set status bar style (light text for dark backgrounds)
-          await StatusBar.setStyle({ style: Style.Dark });
-          
-          // Set status bar background color to match header
-          await StatusBar.setBackgroundColor({ color: '#ffffff' });
-          
-          // Show the status bar (in case it was hidden)
-          await StatusBar.show();
-          
-          console.log('[StatusBar] Configured successfully');
-        } catch (error) {
-          console.error('[StatusBar] Failed to configure:', error);
-        }
+      try {
+        // Lazy load the StatusBar module
+        const { StatusBar, Style } = await loadStatusBar();
+        
+        // Set status bar to not overlay WebView - this ensures proper safe area calculation
+        await StatusBar.setOverlaysWebView({ overlay: false });
+        
+        // Set status bar style (light text for dark backgrounds)
+        await StatusBar.setStyle({ style: Style.Dark });
+        
+        // Set status bar background color to match header
+        await StatusBar.setBackgroundColor({ color: '#ffffff' });
+        
+        // Show the status bar (in case it was hidden)
+        await StatusBar.show();
+        
+        console.log('[StatusBar] Configured successfully');
+      } catch (error) {
+        console.error('[StatusBar] Failed to configure:', error);
       }
     };
-    initStatusBar();
+    
+    // Use requestAnimationFrame to defer until after first paint
+    requestAnimationFrame(() => {
+      initStatusBar();
+    });
     
     // Also handle theme changes for status bar color
     const handleThemeChange = async () => {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const isDark = document.documentElement.classList.contains('dark');
-          await StatusBar.setBackgroundColor({ color: isDark ? '#111827' : '#ffffff' });
-          await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
-        } catch (error) {
-          console.error('[StatusBar] Failed to update theme:', error);
-        }
+      try {
+        const { StatusBar, Style } = await loadStatusBar();
+        const isDark = document.documentElement.classList.contains('dark');
+        await StatusBar.setBackgroundColor({ color: isDark ? '#111827' : '#ffffff' });
+        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+      } catch (error) {
+        console.error('[StatusBar] Failed to update theme:', error);
       }
     };
     

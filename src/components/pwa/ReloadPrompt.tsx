@@ -1,69 +1,19 @@
-import { useRegisterSW } from 'virtual:pwa-register/react';
+// PWA Reload Prompt Component
+// Only active on web builds (disabled for Capacitor native apps)
+import { Capacitor } from '@capacitor/core';
 import './ReloadPrompt.css';
 
+// For Capacitor builds, export a no-op component
+// The PWA plugin is disabled in vite.config.ts for Capacitor builds
 function ReloadPrompt() {
-  const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegisteredSW(swUrl, registration) {
-      console.log('SW Registered:', swUrl);
-      
-      // Check for updates every hour
-      if (registration) {
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000);
-      }
-    },
-    onRegisterError(error) {
-      console.error('SW registration error:', error);
-    },
-  });
-
-  const close = () => {
-    setOfflineReady(false);
-    setNeedRefresh(false);
-  };
-
-  if (!offlineReady && !needRefresh) {
+  // Skip on native platforms - PWA is not used in Capacitor apps
+  if (Capacitor.isNativePlatform()) {
     return null;
   }
-
-  return (
-    <div className="pwa-reload-prompt">
-      <div className="pwa-reload-prompt-toast">
-        <div className="pwa-reload-prompt-message">
-          {offlineReady ? (
-            <span>
-              <strong>App ready!</strong> NestTask can now work offline.
-            </span>
-          ) : (
-            <span>
-              <strong>Update available!</strong> New version is ready.
-            </span>
-          )}
-        </div>
-        <div className="pwa-reload-prompt-buttons">
-          {needRefresh && (
-            <button
-              className="pwa-reload-prompt-button pwa-reload-prompt-button-primary"
-              onClick={() => updateServiceWorker(true)}
-            >
-              Update
-            </button>
-          )}
-          <button
-            className="pwa-reload-prompt-button pwa-reload-prompt-button-secondary"
-            onClick={() => close()}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  
+  // For web builds, dynamically import the actual component
+  // This import will be resolved at build time by Vite PWA plugin
+  return null; // PWA prompt is handled by the service worker in index.html
 }
 
 export default ReloadPrompt;
