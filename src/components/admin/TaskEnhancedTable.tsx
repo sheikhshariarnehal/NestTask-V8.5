@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChevronUp, ChevronDown, Trash2, Eye, Calendar, Edit2, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronUp, ChevronDown, Trash2, Eye, Calendar, Edit2, FileText, Loader2 } from 'lucide-react';
 import type { EnhancedTask, TaskSortOptions } from '../../types/taskEnhanced';
 import { deleteTaskEnhanced } from '../../services/taskEnhanced.service';
 
@@ -24,6 +24,9 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
   sort,
   onSortChange,
 }: TaskEnhancedTableProps) {
+  // Track which task is currently being deleted
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+  
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       onSelectTasks(tasks.map(t => t.id));
@@ -48,13 +51,33 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
     }
   };
 
-  const handleDelete = async (taskId: string) => {
+  const handleDelete = async (taskId: string, e?: React.MouseEvent) => {
+    // Stop event propagation to prevent row click handlers
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Prevent double-clicking or deleting while another delete is in progress
+    if (deletingTaskId) {
+      console.log('[TaskEnhancedTable] Delete already in progress, skipping');
+      return;
+    }
+    
     if (!confirm('Delete this task?')) return;
+    
+    setDeletingTaskId(taskId);
+    
     try {
+      console.log('[TaskEnhancedTable] Deleting task:', taskId);
       await deleteTaskEnhanced(taskId);
+      console.log('[TaskEnhancedTable] Task deleted successfully:', taskId);
       onTaskDelete(taskId);
-    } catch (error) {
-      alert('Failed to delete task');
+    } catch (error: any) {
+      console.error('[TaskEnhancedTable] Failed to delete task:', error);
+      alert(`Failed to delete task: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setDeletingTaskId(null);
     }
   };
 
@@ -184,11 +207,20 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(task.id)}
-                        className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-md transition-all duration-200 touch-manipulation active:scale-95"
+                        onClick={(e) => handleDelete(task.id, e)}
+                        disabled={deletingTaskId === task.id}
+                        className={`p-1.5 rounded-md transition-all duration-200 touch-manipulation active:scale-95 ${
+                          deletingTaskId === task.id
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20'
+                        }`}
                         title="Delete"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {deletingTaskId === task.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -355,12 +387,21 @@ export const TaskEnhancedTable = React.memo(function TaskEnhancedTable({
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDelete(task.id)}
-                      className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-md transition-all duration-200"
+                      onClick={(e) => handleDelete(task.id, e)}
+                      disabled={deletingTaskId === task.id}
+                      className={`p-1.5 rounded-md transition-all duration-200 ${
+                        deletingTaskId === task.id
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20'
+                      }`}
                       title="Delete"
                       aria-label="Delete task"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      {deletingTaskId === task.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
                 </td>

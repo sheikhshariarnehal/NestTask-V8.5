@@ -346,20 +346,36 @@ export async function updateTaskEnhanced(
  * Delete a task
  */
 export async function deleteTaskEnhanced(taskId: string): Promise<void> {
-  await SupabaseService.executeVoid(
-    () => supabase.from('tasks').delete().eq('id', taskId),
-    'Delete task'
-  );
+  console.log('[taskEnhanced.service] deleteTaskEnhanced called with taskId:', taskId);
+  
+  try {
+    await SupabaseService.executeVoid(
+      () => supabase.from('tasks').delete().eq('id', taskId),
+      'Delete task'
+    );
+    console.log('[taskEnhanced.service] Task deleted successfully:', taskId);
+  } catch (error) {
+    console.error('[taskEnhanced.service] Failed to delete task:', taskId, error);
+    throw error;
+  }
 }
 
 /**
  * Bulk delete tasks
  */
 export async function bulkDeleteTasks(taskIds: string[]): Promise<void> {
-  await SupabaseService.executeVoid(
-    () => supabase.from('tasks').delete().in('id', taskIds),
-    'Bulk delete tasks'
-  );
+  console.log('[taskEnhanced.service] bulkDeleteTasks called with', taskIds.length, 'tasks:', taskIds);
+  
+  try {
+    await SupabaseService.executeVoid(
+      () => supabase.from('tasks').delete().in('id', taskIds),
+      'Bulk delete tasks'
+    );
+    console.log('[taskEnhanced.service] Bulk delete successful');
+  } catch (error) {
+    console.error('[taskEnhanced.service] Bulk delete failed:', error);
+    throw error;
+  }
 }
 
 /**

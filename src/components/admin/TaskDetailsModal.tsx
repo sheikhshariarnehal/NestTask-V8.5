@@ -79,12 +79,14 @@ export function TaskDetailsModal({
     if (!confirm('Delete this task? This action cannot be undone.')) return;
 
     try {
+      console.log('[TaskDetailsModal] Deleting task:', task.id);
       await deleteTaskEnhanced(task.id);
+      console.log('[TaskDetailsModal] Task deleted successfully:', task.id);
       onTaskDeleted(task.id);
       onClose();
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-      alert('Failed to delete task');
+    } catch (error: any) {
+      console.error('[TaskDetailsModal] Failed to delete task:', error);
+      alert(`Failed to delete task: ${error?.message || 'Unknown error'}`);
     }
   };
 
