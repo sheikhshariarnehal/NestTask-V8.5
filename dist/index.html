@@ -34,16 +34,19 @@
     <base href="/" />
     
     <!-- Resource hints for faster loading -->
-    <!-- Preconnect to Google Fonts for faster font loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    
-    <!-- Preconnect to Supabase API only when needed (auth page, not home) -->
+    <!-- Preconnect to Supabase API (critical - 15+ API calls per page load) -->
+    <!-- This saves ~100-200ms by establishing TCP + TLS before JavaScript loads -->
+    <link rel="preconnect" href="https://nglfbbdoyyfslzyjarqs.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co" />
     
+    <!-- Google Fonts preconnect - only enable if fonts are actually used -->
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin /> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /> -->
+    
     <!-- Note: don't modulepreload JSON; browsers enforce JS module MIME types -->
+    
+    <!-- Preload critical fonts to prevent FOIT (Flash of Invisible Text) -->
+    <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" onerror="this.remove()" />
     
     <!-- PWA assets -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.png" />
@@ -185,8 +188,8 @@
       // Backwards compatibility
       window.toggleTheme = window.themeController.toggle.bind(window.themeController);
     </script>
-    <script type="module" crossorigin src="/assets/js/index.D6B7_sTU.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/css/index.CYisyyCB.css">
+    <script type="module" crossorigin src="/assets/js/index.CHTyq4DC.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/css/index.BQxXXyTp.css">
   <link rel="manifest" href="/manifest.webmanifest"></head>
   <body>
     <div id="root"></div>

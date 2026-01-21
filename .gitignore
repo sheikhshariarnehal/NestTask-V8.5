@@ -76,6 +76,19 @@ out
 .netlify
 
 # Capacitor
-
 ios/
 .capacitor/
+
+# Build outputs
+/dev-dist
+/dist
+stats.html
+
+# Vite temp files
+*.timestamp-*.mjs
+
+# Supabase temp
+supabase/.temp/
+
+# MCP config
+mcp.json

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 interface BackgroundState {
   enteredBackgroundAt: number | null;
@@ -54,9 +55,8 @@ export function useBackgroundStateManager() {
     };
 
     // Listen to Capacitor app state changes (native apps)
-    const setupCapacitor = async () => {
+    const setupCapacitor = () => {
       if (Capacitor.isNativePlatform()) {
-        const { App } = await import('@capacitor/app');
         App.addListener('appStateChange', ({ isActive }) => {
           handleAppStateChange(isActive);
         });
