@@ -144,8 +144,9 @@
       }
     </style>
     
-    <!-- Fonts - Non-render blocking with preload -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <!-- Fonts - Load asynchronously without preload to avoid "preloaded but not used" warnings -->
+    <!-- The Inter font is nice-to-have; system fonts are used as fallback for faster initial paint -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     
     <!-- Theme controller script -->
@@ -188,8 +189,8 @@
       // Backwards compatibility
       window.toggleTheme = window.themeController.toggle.bind(window.themeController);
     </script>
-    <script type="module" crossorigin src="/assets/js/index.CMTPhI4G.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/css/index.BvTG8MDW.css">
+    <script type="module" crossorigin src="/assets/js/index.DvL3zXpU.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/css/index.DK3pxo57.css">
   </head>
   <body>
     <div id="root"></div>

@@ -939,7 +939,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
               <>
                 <div className="w-64 h-64 -my-4">
                   <DotLottieReact
-                    src="https://lottie.host/f3725d03-1114-42e2-9031-be9e4be5d9be/0J1f27i2Kk.lottie"
+                    src="/animations/no_tasks.lottie"
                     loop
                     autoplay
                   />

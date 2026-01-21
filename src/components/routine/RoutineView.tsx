@@ -346,7 +346,7 @@ export function RoutineView() {
 
             <div className="w-64 h-64 sm:w-96 sm:h-96 -mb-24 sm:-mb-44 -ml-16 transform hover:scale-105 transition-transform duration-500 ease-out flex items-center justify-center">
               <DotLottieReact
-                src="https://lottie.host/d3268ded-6789-4389-b25a-3e888bf97fea/PEo7lYi2zw.lottie"
+                src="/animations/cat_relaxing.lottie"
                 loop
                 autoplay
               />
