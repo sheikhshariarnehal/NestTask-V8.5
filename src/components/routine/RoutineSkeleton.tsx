@@ -6,53 +6,46 @@ export function RoutineSkeleton() {
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
       {/* Header Section Skeleton */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl mb-3 p-3 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="mb-4 sm:mb-6">
         {/* Mobile View Header Skeleton */}
-        <div className="flex flex-col space-y-2 sm:hidden">
-          <div className="flex items-center justify-between">
-            {/* Title skeleton */}
-            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-            {/* Search icon skeleton */}
-            <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        <div className="flex flex-col gap-3 sm:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              {/* Title skeleton */}
+              <div className="h-7 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-1 animate-pulse"></div>
+              {/* Subtitle skeleton */}
+              <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '100ms' }}></div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Section dropdown skeleton */}
+              <div className="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+              {/* Search button skeleton */}
+              <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+            </div>
           </div>
-
-          {/* Subtitle skeleton */}
-          <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '100ms' }}></div>
-
-          {/* Section dropdown skeleton */}
-          <div className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" style={{ animationDelay: '200ms' }}></div>
         </div>
 
         {/* Desktop View Header Skeleton */}
-        <div className="hidden sm:flex sm:items-center sm:justify-between gap-4">
-          <div className="flex-1">
+        <div className="hidden sm:flex sm:items-center sm:justify-between gap-6">
+          <div>
             {/* Title skeleton */}
-            <div className="h-7 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-2 animate-pulse"></div>
+            <div className="h-9 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2 animate-pulse"></div>
             {/* Subtitle skeleton */}
-            <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '100ms' }}></div>
+            <div className="h-5 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '100ms' }}></div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Section dropdown skeleton */}
-            <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" style={{ animationDelay: '200ms' }}></div>
+            <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" style={{ animationDelay: '200ms' }}></div>
             {/* Search input skeleton */}
-            <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" style={{ animationDelay: '300ms' }}></div>
+            <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
 
       {/* Calendar Strip Skeleton */}
       <div className="mb-3">
-        <div className="flex items-center justify-between mb-2">
-          {/* Previous button skeleton */}
-          <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-
-          {/* Date text skeleton */}
-          <div className="h-6 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ animationDelay: '100ms' }}></div>
-
-          {/* Next button skeleton */}
-          <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-        </div>
 
         {/* Week days skeleton */}
         <div className="grid grid-cols-6 gap-2 sm:gap-3">

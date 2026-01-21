@@ -5,6 +5,7 @@ import { useTasks } from '../hooks/useTasks';
 import { useAuth } from '../hooks/useAuth';
 import type { Task } from '../types';
 import React from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 // Constants for retry mechanism
 const MAX_RETRIES = 3;
@@ -36,8 +37,8 @@ const TasksSkeleton = React.memo(() => (
   <div className="px-3 xs:px-4 md:max-w-4xl lg:max-w-5xl md:mx-auto pb-8">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div 
-          key={i} 
+        <div
+          key={i}
           className="relative overflow-hidden bg-white dark:bg-gray-800/90 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700/50 border-l-[3px] border-l-blue-300 dark:border-l-blue-600"
           style={{ animationDelay: `${i * 100}ms` }}
         >
@@ -59,7 +60,7 @@ const TasksSkeleton = React.memo(() => (
                 <div className="w-3.5 h-3.5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse" style={{ animationDelay: '150ms' }}></div>
               </div>
-              
+
               {/* Category badge skeleton */}
               <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded-md px-2.5 py-0.5 w-24 animate-pulse" style={{ animationDelay: '250ms' }}></div>
             </div>
@@ -90,21 +91,18 @@ const CalendarSkeleton = React.memo(() => (
     <div className="pb-4">
       <div className="grid grid-cols-7 gap-2 md:gap-3 px-2 md:px-4">
         {Array.from({ length: 7 }).map((_, i) => (
-          <div 
+          <div
             key={i}
-            className={`flex flex-col items-center justify-center h-16 sm:h-20 md:h-24 w-full p-2 md:p-3 rounded-lg animate-pulse ${
-              i === 3 ? 'bg-blue-500/80' : 'bg-gray-200 dark:bg-gray-700'
-            }`}
+            className={`flex flex-col items-center justify-center h-16 sm:h-20 md:h-24 w-full p-2 md:p-3 rounded-lg animate-pulse ${i === 3 ? 'bg-blue-500/80' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
             style={{ animationDelay: `${i * 50}ms` }}
           >
             {/* Weekday abbreviation (WED, THU, etc.) */}
-            <div className={`w-6 h-2.5 rounded mb-1 ${
-              i === 3 ? 'bg-blue-200' : 'bg-gray-300 dark:bg-gray-600'
-            }`}></div>
+            <div className={`w-6 h-2.5 rounded mb-1 ${i === 3 ? 'bg-blue-200' : 'bg-gray-300 dark:bg-gray-600'
+              }`}></div>
             {/* Day number (31, 01, etc.) */}
-            <div className={`w-7 h-7 rounded ${
-              i === 3 ? 'bg-blue-200' : 'bg-gray-300 dark:bg-gray-600'
-            }`}></div>
+            <div className={`w-7 h-7 rounded ${i === 3 ? 'bg-blue-200' : 'bg-gray-300 dark:bg-gray-600'
+              }`}></div>
           </div>
         ))}
       </div>
@@ -113,10 +111,10 @@ const CalendarSkeleton = React.memo(() => (
 ));
 
 // Memoized day button component
-const DayButton = memo(({ 
-  day, 
-  onClick 
-}: { 
+const DayButton = memo(({
+  day,
+  onClick
+}: {
   day: { date: Date; day: string; weekDay: string; isSelected: boolean; isToday: boolean; },
   onClick: () => void
 }) => {
@@ -132,8 +130,8 @@ const DayButton = memo(({
         ${day.isSelected
           ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 border-blue-400/50 shadow-md shadow-blue-500/20 dark:shadow-blue-600/20 scale-[1.02] -translate-y-0.5 md:scale-105'
           : day.isToday
-          ? 'bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50 border-blue-200/70 dark:from-blue-900/50 dark:via-indigo-900/40 dark:to-purple-900/50 dark:border-blue-700/50'
-          : 'bg-white/90 dark:bg-gray-800/90 border-gray-200/50 dark:border-gray-700/50'
+            ? 'bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50 border-blue-200/70 dark:from-blue-900/50 dark:via-indigo-900/40 dark:to-purple-900/50 dark:border-blue-700/50'
+            : 'bg-white/90 dark:bg-gray-800/90 border-gray-200/50 dark:border-gray-700/50'
         }
         hover:shadow-md hover:-translate-y-0.5
         hover:border-blue-300/70 dark:hover:border-blue-600/70
@@ -148,8 +146,8 @@ const DayButton = memo(({
         ${day.isSelected
           ? 'text-blue-100'
           : day.isToday
-          ? 'text-blue-600/90 dark:text-blue-400'
-          : 'text-gray-500 group-hover:text-blue-500 dark:text-gray-400 dark:group-hover:text-blue-400'
+            ? 'text-blue-600/90 dark:text-blue-400'
+            : 'text-gray-500 group-hover:text-blue-500 dark:text-gray-400 dark:group-hover:text-blue-400'
         }
         mb-0.5 sm:mb-1 md:mb-2
       `}>
@@ -163,8 +161,8 @@ const DayButton = memo(({
         ${day.isSelected
           ? 'text-white'
           : day.isToday
-          ? 'text-blue-600/90 dark:text-blue-400'
-          : 'text-gray-700 group-hover:text-blue-600 dark:text-gray-300 dark:group-hover:text-blue-400'
+            ? 'text-blue-600/90 dark:text-blue-400'
+            : 'text-gray-700 group-hover:text-blue-600 dark:text-gray-300 dark:group-hover:text-blue-400'
         }
       `}>
         {day.day}
@@ -186,19 +184,19 @@ const DayButton = memo(({
 });
 
 // Memoized task card component
-const TaskCard = memo(({ 
-  task, 
-  status, 
-  categoryInfo, 
-  hasAttachments, 
+const TaskCard = memo(({
+  task,
+  status,
+  categoryInfo,
+  hasAttachments,
   cleanTaskDescription,
   onClick,
   preventTaskSelection
-}: { 
-  task: Task, 
-  status: any, 
-  categoryInfo: any, 
-  hasAttachments: boolean, 
+}: {
+  task: Task,
+  status: any,
+  categoryInfo: any,
+  hasAttachments: boolean,
   cleanTaskDescription: (desc: string) => string,
   onClick: () => void,
   preventTaskSelection: boolean
@@ -211,7 +209,7 @@ const TaskCard = memo(({
   const getLeftBorderColor = () => {
     if (task.status === 'completed') return 'border-l-green-500/80';
     if (isOverdue) return 'border-l-red-500/80';
-    
+
     const colors: Record<string, string> = {
       presentation: 'border-l-purple-500/80',
       project: 'border-l-blue-500/80',
@@ -222,7 +220,7 @@ const TaskCard = memo(({
       'lab-perf': 'border-l-amber-500/80',
       documents: 'border-l-sky-500/80'
     };
-    
+
     return colors[task.category.toLowerCase()] || 'border-l-gray-300 dark:border-l-gray-600';
   };
 
@@ -283,22 +281,22 @@ const TaskCard = memo(({
           <div className="flex items-center gap-1 sm:gap-1.5">
             <Calendar className={`
               w-3 h-3 sm:w-3.5 sm:h-3.5
-              ${isOverdue && !task.status 
-                ? 'text-red-500 dark:text-red-400' 
+              ${isOverdue && !task.status
+                ? 'text-red-500 dark:text-red-400'
                 : 'text-gray-500 dark:text-gray-400'
-              }`} 
+              }`}
             />
             <span className={`
               text-[10px] sm:text-xs font-medium
-              ${isOverdue && !task.status 
-                ? 'text-red-500 dark:text-red-400' 
+              ${isOverdue && !task.status
+                ? 'text-red-500 dark:text-red-400'
                 : 'text-gray-500 dark:text-gray-400'
               }`
             }>
               Due: {format(dueDate, 'MMM d')}
             </span>
           </div>
-          
+
           {/* Status Badge and Category Tag */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Status Badge - only show for Completed or Overdue */}
@@ -318,7 +316,7 @@ const TaskCard = memo(({
                 <span>{status.label}</span>
               </span>
             )}
-            
+
             {/* Category Tag */}
             <span className={`
               inline-flex items-center gap-1 sm:gap-1.5
@@ -331,14 +329,14 @@ const TaskCard = memo(({
               border-opacity-30
               ${categoryInfo.color.includes('blue') ? 'border-blue-200 dark:border-blue-700' :
                 categoryInfo.color.includes('purple') ? 'border-purple-200 dark:border-purple-700' :
-                categoryInfo.color.includes('emerald') ? 'border-emerald-200 dark:border-emerald-700' :
-                categoryInfo.color.includes('indigo') ? 'border-indigo-200 dark:border-indigo-700' :
-                categoryInfo.color.includes('green') ? 'border-green-200 dark:border-green-700' :
-                categoryInfo.color.includes('red') ? 'border-red-200 dark:border-red-700' :
-                categoryInfo.color.includes('yellow') ? 'border-yellow-200 dark:border-yellow-700' :
-                categoryInfo.color.includes('amber') ? 'border-amber-200 dark:border-amber-700' :
-                categoryInfo.color.includes('sky') ? 'border-sky-200 dark:border-sky-700' :
-                'border-gray-200 dark:border-gray-700'}
+                  categoryInfo.color.includes('emerald') ? 'border-emerald-200 dark:border-emerald-700' :
+                    categoryInfo.color.includes('indigo') ? 'border-indigo-200 dark:border-indigo-700' :
+                      categoryInfo.color.includes('green') ? 'border-green-200 dark:border-green-700' :
+                        categoryInfo.color.includes('red') ? 'border-red-200 dark:border-red-700' :
+                          categoryInfo.color.includes('yellow') ? 'border-yellow-200 dark:border-yellow-700' :
+                            categoryInfo.color.includes('amber') ? 'border-amber-200 dark:border-amber-700' :
+                              categoryInfo.color.includes('sky') ? 'border-sky-200 dark:border-sky-700' :
+                                'border-gray-200 dark:border-gray-700'}
               hover:shadow-md group-hover:shadow-md
             `}>
               <div className="flex-shrink-0">
@@ -391,15 +389,15 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
 
     const allTasksList = propTasks || allTasks || [];
     console.log('[UpcomingPage] Searching for task:', openTaskId, 'in', allTasksList.length, 'tasks');
-    
+
     // If tasks haven't loaded yet, don't consume the openTaskId - just wait
     if (allTasksList.length === 0 && loading) {
       console.log('[UpcomingPage] Tasks still loading, will retry when tasks are available...');
       return; // Don't consume the taskId, let it retry when loading completes
     }
-    
+
     const taskToOpen = allTasksList.find(t => t.id === openTaskId);
-    
+
     if (taskToOpen) {
       console.log('[UpcomingPage] Found task, opening popup:', taskToOpen.name);
       setSelectedTask(taskToOpen);
@@ -430,7 +428,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
           console.log('[UpcomingPage] Giving up on finding task:', openTaskId);
           onOpenTaskIdConsumed?.();
         }, 2000);
-        
+
         return () => clearTimeout(timer);
       }
     }
@@ -458,7 +456,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
     if (retryCount < MAX_RETRIES) {
       console.log(`Retrying task load attempt ${retryCount + 1} of ${MAX_RETRIES}`);
       setRetryCount(prev => prev + 1);
-      
+
       retryTimeoutRef.current = setTimeout(() => {
         refreshTasks();
       }, RETRY_DELAY * (retryCount + 1)); // Exponential backoff
@@ -491,29 +489,29 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
     const handleVisibilityChange = () => {
       const isVisible = document.visibilityState === 'visible';
       setIsPageActive(isVisible);
-      
+
       if (isVisible) {
         const now = Date.now();
         const timeSinceLastFocus = now - lastFocusTimeRef.current;
         console.log('Page became visible after', timeSinceLastFocus / 1000, 'seconds');
-        
+
         // Refresh if page was hidden for more than 30 seconds
         if (timeSinceLastFocus > 30000) {
           console.log('Refreshing tasks due to long visibility change');
           refreshTasks();
         }
-        
+
         lastFocusTimeRef.current = now;
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     // Initial load handling
     if (initialRenderRef.current) {
       console.log('Initial render, ensuring tasks are loaded');
       initialRenderRef.current = false;
-      
+
       if (!loading && (!allTasks || allTasks.length === 0)) {
         console.log('No tasks available on mount, triggering load');
         refreshTasks();
@@ -528,13 +526,13 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
   // Manual refresh handler
   const handleManualRefresh = useCallback(() => {
     console.log('Manual refresh triggered');
-      refreshTasks();
+    refreshTasks();
   }, [refreshTasks]);
 
   // Utility function to clean task description
   const cleanTaskDescription = useCallback((description: string): string => {
     if (!description) return '';
-    
+
     // Clean multiple patterns at once for better performance
     const cleanedText = description
       .replace(/\*This task is assigned to section ID: [0-9a-f-]+\*/g, '') // Remove section ID
@@ -543,7 +541,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       .replace(/AS \*\*Attachments:\*\*.*?$/gm, '') // Remove AS attachments format
       .replace(/Attachments:.*?$/gm, '') // Remove other attachment references
       .trim(); // Clean up whitespace
-    
+
     return cleanedText;
   }, []);
 
@@ -555,7 +553,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       /AS \*\*Attachments:\*\*/,
       /Attachments:/
     ];
-    
+
     return attachmentPatterns.some(pattern => pattern.test(description));
   }, []);
 
@@ -578,7 +576,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
   const weekDays = useMemo(() => {
     const start = addDays(selectedDate, -3); // Start 3 days before selected date
     const today = new Date();
-    
+
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(start, i);
       return {
@@ -594,15 +592,15 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
   // Build date-indexed cache for O(1) task lookup - major performance improvement
   const tasksByDate = useMemo(() => {
     if (!tasks || tasks.length === 0) return new Map<string, Task[]>();
-    
+
     const index = new Map<string, Task[]>();
     tasks.forEach(task => {
       if (!task.dueDate) return;
-      
+
       try {
         const taskDate = parseISO(task.dueDate);
         const dateKey = `${taskDate.getFullYear()}-${String(taskDate.getMonth() + 1).padStart(2, '0')}-${String(taskDate.getDate()).padStart(2, '0')}`;
-        
+
         if (!index.has(dateKey)) {
           index.set(dateKey, []);
         }
@@ -611,7 +609,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         // Skip invalid dates
       }
     });
-    
+
     return index;
   }, [tasks]);
 
@@ -634,7 +632,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         icon: <CheckCircle2 className="w-3.5 h-3.5" />
       };
     }
-    
+
     if (isOverdue) {
       return {
         label: 'Overdue',
@@ -709,10 +707,10 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       try {
         // Update the task
         const updatedTask = await updateTask(taskId, { status: newStatus });
-        
+
         // Update local state
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
+        setTasks(prevTasks =>
+          prevTasks.map(task =>
             task.id === taskId ? updatedTask : task
           )
         );
@@ -723,8 +721,8 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         }
       } catch (error) {
         // Revert to original status on error
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
+        setTasks(prevTasks =>
+          prevTasks.map(task =>
             task.id === taskId ? { ...task, status: originalStatus } : task
           )
         );
@@ -751,7 +749,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         const params = new URLSearchParams(window.location.search);
         const dateParam = params.get('selectedDate');
         const currentDateStr = formatDate(selectedDate);
-        
+
         if (dateParam !== currentDateStr) {
           params.set('selectedDate', currentDateStr);
           const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -761,7 +759,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         console.error('Error updating URL parameter:', error);
       }
     };
-    
+
     // Debounce URL updates to avoid excessive history entries
     const timeoutId = setTimeout(updateUrl, 300);
     return () => clearTimeout(timeoutId);
@@ -841,7 +839,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
             </svg>
           </button>
 
-          <button 
+          <button
             className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 active:scale-98"
             onClick={() => setIsMonthlyCalendarOpen(true)}
             aria-label="Open calendar"
@@ -864,52 +862,52 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         {/* Date Boxes - Weekly Calendar */}
         <div className="pb-4">
           <div className="grid grid-cols-7 gap-2 md:gap-3 px-2 md:px-4">
-          {weekDays.map((day) => (
-            <button
-              key={day.day + day.weekDay}
-              onClick={() => setSelectedDate(day.date)}
-              className={`
+            {weekDays.map((day) => (
+              <button
+                key={day.day + day.weekDay}
+                onClick={() => setSelectedDate(day.date)}
+                className={`
                 flex flex-col items-center justify-center
                 h-16 sm:h-20 md:h-24 w-full
                 p-2 md:p-3 rounded-lg
                 border transition-all duration-200
                 ${day.isSelected
-                  ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/20 text-white scale-105'
-                  : day.isToday
-                  ? 'bg-blue-50/50 border-blue-200/60 dark:bg-blue-900/20 dark:border-blue-700/50'
-                  : 'bg-white dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/50'
-                }
+                    ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/20 text-white scale-105'
+                    : day.isToday
+                      ? 'bg-blue-50/50 border-blue-200/60 dark:bg-blue-900/20 dark:border-blue-700/50'
+                      : 'bg-white dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/50'
+                  }
                 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md
                 active:scale-95
               `}
-            >
-              {/* Weekday */}
-              <span className={`
+              >
+                {/* Weekday */}
+                <span className={`
                 text-[10px] sm:text-xs font-semibold tracking-wider uppercase
                 ${day.isSelected
-                  ? 'text-blue-100'
-                  : day.isToday
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400'
-                }
+                    ? 'text-blue-100'
+                    : day.isToday
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }
               `}>
-                {day.weekDay}
-              </span>
+                  {day.weekDay}
+                </span>
 
-              {/* Day Number */}
-              <span className={`
+                {/* Day Number */}
+                <span className={`
                 text-xl sm:text-2xl md:text-3xl font-bold mt-1
                 ${day.isSelected
-                  ? 'text-white'
-                  : day.isToday
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-800 dark:text-gray-200'
-                }
+                    ? 'text-white'
+                    : day.isToday
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-800 dark:text-gray-200'
+                  }
               `}>
-                {day.day}
-              </span>
-            </button>
-          ))}
+                  {day.day}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -920,30 +918,48 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-3 md:gap-4">
             {filteredTasks.map((task) => (
               <TaskCard
-                  key={task.id}
+                key={task.id}
                 task={task}
                 status={getTaskStatus(task)}
                 categoryInfo={getCategoryInfo(task.category)}
                 hasAttachments={hasAttachments(task.description)}
                 cleanTaskDescription={cleanTaskDescription}
-                  onClick={() => {
-                    if (!preventTaskSelection) {
-                      setSelectedTask(task);
-                    }
-                  }}
+                onClick={() => {
+                  if (!preventTaskSelection) {
+                    setSelectedTask(task);
+                  }
+                }}
                 preventTaskSelection={preventTaskSelection}
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 mt-4">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-            </div>
-            <p className="text-lg text-gray-900 dark:text-gray-100 font-medium">No tasks for {format(selectedDate, 'MMMM d')}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {isSameDayOptimized(selectedDate, new Date()) ? "You're all caught up for today!" : "Nothing scheduled for this day"}
-            </p>
+          <div className="text-center py-8 mt-4 min-h-[300px] flex flex-col items-center justify-center">
+            {isSameDayOptimized(selectedDate, new Date()) ? (
+              <>
+                <div className="w-64 h-64 -my-4">
+                  <DotLottieReact
+                    src="https://lottie.host/f3725d03-1114-42e2-9031-be9e4be5d9be/0J1f27i2Kk.lottie"
+                    loop
+                    autoplay
+                  />
+                </div>
+                <p className="text-lg text-gray-900 dark:text-gray-100 font-medium relative z-10">No tasks for {format(selectedDate, 'MMMM d')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 relative z-10">
+                  You're all caught up for today!
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <Calendar className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <p className="text-lg text-gray-900 dark:text-gray-100 font-medium">No tasks for {format(selectedDate, 'MMMM d')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Nothing scheduled for this day
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -981,10 +997,10 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
               setTimeout(() => {
                 setPreventTaskSelection(false);
               }, 1000);
-              
+
               setSelectedDate(date);
               setIsMonthlyCalendarOpen(false);
-              
+
               try {
                 const params = new URLSearchParams(window.location.search);
                 params.set('selectedDate', formatDate(date));

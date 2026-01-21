@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import {
-  Clock,
   Search,
-  ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import { getInitials } from '../../utils/stringUtils';
@@ -341,16 +340,27 @@ export function RoutineView() {
       {/* Class Schedule */}
       <div className="space-y-2">
         {filteredSlots.length === 0 ? (
-          <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-            <Clock className="w-10 h-10 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-              No Classes Scheduled
+          <div className="relative text-center py-10 flex flex-col items-center justify-center min-h-[40vh] sm:min-h-[500px]">
+            {/* Subtle Background Glow to ground the animation */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 sm:w-80 sm:h-80 bg-blue-400/10 dark:bg-blue-900/20 rounded-full blur-3xl -z-10 pointer-events-none" />
+
+            <div className="w-64 h-64 sm:w-96 sm:h-96 -mb-24 sm:-mb-44 -ml-16 transform hover:scale-105 transition-transform duration-500 ease-out flex items-center justify-center">
+              <DotLottieReact
+                src="https://lottie.host/d3268ded-6789-4389-b25a-3e888bf97fea/PEo7lYi2zw.lottie"
+                loop
+                autoplay
+              />
+            </div>
+            <h3 className="relative z-10 text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mb-2 tracking-tight">
+              No Classes Today! 🎉
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              There are no classes for this day
-              {selectedSection && ` in section ${selectedSection}`}
-              {searchTerm && ` matching "${searchTerm}"`}
-            </p>
+
+            {selectedSection && (
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 text-[10px] font-bold uppercase tracking-widest rounded-full">
+                <span>Section</span>
+                <span className="text-gray-600 dark:text-gray-300">{selectedSection}</span>
+              </div>
+            )}
           </div>
         ) : (
           filteredSlots
