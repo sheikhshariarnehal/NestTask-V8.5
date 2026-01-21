@@ -147,83 +147,165 @@ export function RoutineView() {
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
       {/* Header Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl mb-3 p-3 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="mb-4 sm:mb-6">
         {/* Mobile View Header */}
-        <div className="flex flex-col space-y-3 sm:hidden">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">Class Routine</h1>
-            <button
-              onClick={toggleMobileSearch}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            </button>
+        <div className="flex flex-col gap-3 sm:hidden">
+          {/* Top Row: Title + Section + Search */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight">Class Routine</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5 truncate">
+                {currentRoutine.name} • {currentRoutine.semester}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Section Dropdown - Refined Android Chip Style */}
+              {sections.length > 0 && (
+                <div className="relative flex-shrink-0">
+                  <select
+                    value={selectedSection}
+                    onChange={handleSectionChange}
+                    className="h-9 pl-3 pr-7 text-xs font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  >
+                    <option value="">All</option>
+                    {sections.map(section => (
+                      <option key={section} value={section}>{section}</option>
+                    ))}
+                  </select>
+                  <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 rotate-90 pointer-events-none" />
+                </div>
+              )}
+
+              {/* Search Button */}
+              <button
+                onClick={toggleMobileSearch}
+                className={`h-9 w-9 flex items-center justify-center rounded-full border shadow-sm transition-all duration-200 flex-shrink-0 active:scale-95 ${isMobileSearchVisible
+                  ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400'
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}
+                aria-label={isMobileSearchVisible ? "Close search" : "Open search"}
+              >
+                {isMobileSearchVisible ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                    <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                  </svg>
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {currentRoutine.name} - {currentRoutine.semester}
-          </p>
-
-          {/* Mobile Search Input */}
+          {/* Search Bar with Autocomplete */}
           {isMobileSearchVisible && (
-            <div className="overflow-hidden transition-all duration-200 ease-in-out">
+            <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+              <Search className="absolute left-3 top-[11px] w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search courses, teachers, rooms..."
+                placeholder="Search routine..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 autoComplete="off"
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                autoFocus
+                className="w-full h-10 pl-9 pr-9 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white placeholder:text-gray-400 transition-all"
               />
-            </div>
-          )}
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                    <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                  </svg>
+                </button>
+              )}
 
-          {sections.length > 0 && (
-            <select
-              value={selectedSection}
-              onChange={handleSectionChange}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">All Sections</option>
-              {sections.map(section => (
-                <option key={section} value={section}>{section}</option>
-              ))}
-            </select>
+              {/* Section Suggestions */}
+              {searchTerm.length >= 1 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-30">
+                  {sections.filter(s => s.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                    <div className="max-h-48 overflow-y-auto">
+                      {sections
+                        .filter(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map(section => (
+                          <button
+                            key={section}
+                            onClick={() => {
+                              setSelectedSection(section);
+                              setSearchTerm('');
+                              setIsMobileSearchVisible(false);
+                            }}
+                            className={`w-full px-3 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${selectedSection === section ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                              }`}
+                          >
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${selectedSection === section
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                              }`}>
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                                <path d="M8.5 4.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10.9 12.006c.11.542-.348.994-.9.994H2c-.553 0-1.01-.452-.902-.994a5.002 5.002 0 0 1 9.803 0ZM14.002 12h-1.59a2.556 2.556 0 0 0-.04-.29 6.476 6.476 0 0 0-1.167-2.603 3.002 3.002 0 0 1 3.633 1.911c.18.522-.283.982-.836.982ZM12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+                              </svg>
+                            </div>
+                            <span className={`font-medium ${selectedSection === section ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'}`}>
+                              Section {section}
+                            </span>
+                            {selectedSection === section && (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 ml-auto text-blue-600">
+                                <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="px-4 py-4 text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No sections match "{searchTerm}"</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
         {/* Desktop View Header */}
-        <div className="hidden sm:flex sm:items-center sm:justify-between gap-4">
+        <div className="hidden sm:flex sm:items-center sm:justify-between gap-6">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Class Routine</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {currentRoutine.name} - {currentRoutine.semester}
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Class Routine</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+              {currentRoutine.name} • {currentRoutine.semester}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             {sections.length > 0 && (
-              <select
-                value={selectedSection}
-                onChange={handleSectionChange}
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">All Sections</option>
-                {sections.map(section => (
-                  <option key={section} value={section}>{section}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedSection}
+                  onChange={handleSectionChange}
+                  className="h-10 px-4 pr-10 text-sm font-semibold bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600/50 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white appearance-none cursor-pointer transition-all hover:border-gray-300 dark:hover:border-gray-500"
+                >
+                  <option value="">All Sections</option>
+                  {sections.map(section => (
+                    <option key={section} value={section}>{section}</option>
+                  ))}
+                </select>
+                <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-90 pointer-events-none" />
+              </div>
             )}
 
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              autoComplete="off"
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white w-64"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                autoComplete="off"
+                className="h-10 pl-9 pr-4 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white w-64 placeholder:text-gray-400 transition-all hover:border-gray-300 dark:hover:border-gray-600"
+              />
+            </div>
           </div>
         </div>
       </div>

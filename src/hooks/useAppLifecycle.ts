@@ -37,10 +37,20 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
   });
   const lastResumeTimeRef = useRef<number>(Date.now());
   const lastBlurTimeRef = useRef<number>(Date.now());
+  const lastDispatchedResumeRef = useRef<number>(0);
   const isNativePlatform = Capacitor.isNativePlatform();
 
   const dispatchResumeEvent = useCallback(() => {
     if (typeof window === 'undefined') return;
+    
+    // Debounce: don't dispatch resume events within 500ms of each other
+    const now = Date.now();
+    if (now - lastDispatchedResumeRef.current < 500) {
+      console.log('[Lifecycle] Debouncing rapid resume event dispatch');
+      return;
+    }
+    lastDispatchedResumeRef.current = now;
+    
     window.dispatchEvent(new CustomEvent('app-resume'));
   }, []);
 

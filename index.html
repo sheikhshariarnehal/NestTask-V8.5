@@ -45,8 +45,8 @@
     
     <!-- Note: don't modulepreload JSON; browsers enforce JS module MIME types -->
     
-    <!-- Preload critical fonts to prevent FOIT (Flash of Invisible Text) -->
-    <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" onerror="this.remove()" />
+    <!-- Font preload disabled - using system fonts instead for faster loading -->
+    <!-- <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" /> -->
     
     <!-- PWA assets -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.png" />
@@ -144,8 +144,9 @@
       }
     </style>
     
-    <!-- Fonts - Non-render blocking with preload -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <!-- Fonts - Load asynchronously without preload to avoid "preloaded but not used" warnings -->
+    <!-- The Inter font is nice-to-have; system fonts are used as fallback for faster initial paint -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     
     <!-- Theme controller script -->

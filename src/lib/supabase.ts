@@ -359,35 +359,39 @@ setTimeout(() => {
   testConnection().catch(console.error);
 }, 1000);
 
-// Track if we're already reconnecting to prevent duplicate subscriptions
+// Track if we're already reconnecting to prevent duplicate operations
 let isReconnecting = false;
+let lastResumeTime = 0;
 
-// Handle app resume to reconnect realtime and refresh session
+// Handle app resume to refresh session and test connection
+// Note: Supabase realtime has built-in reconnection logic, so we don't manually
+// resubscribe channels (which causes "subscribe multiple times" errors).
+// Instead, we just verify the connection and let the SDK handle channel recovery.
 if (typeof window !== 'undefined') {
   window.addEventListener('app-resume', async () => {
+    // Debounce: ignore resume events within 500ms of each other
+    const now = Date.now();
+    if (now - lastResumeTime < 500) {
+      console.log('[Supabase] Debouncing rapid resume event');
+      return;
+    }
+    lastResumeTime = now;
+    
     if (isReconnecting) {
       console.log('[Supabase] Reconnection already in progress, skipping');
       return;
     }
     
     isReconnecting = true;
-    console.log('[Supabase] App resumed, reconnecting...');
+    console.log('[Supabase] App resumed, checking connection...');
     
     try {
-      // Reconnect realtime channels
-      const channels = supabase.getChannels();
-      for (const channel of channels) {
-        console.log(`[Supabase] Reconnecting channel: ${channel.topic}`);
-        try {
-          await channel.unsubscribe();
-          await channel.subscribe();
-        } catch (error) {
-          console.warn(`[Supabase] Failed to reconnect channel ${channel.topic}:`, error);
-        }
-      }
-      
-      // Test connection
+      // Test connection - the realtime SDK handles channel reconnection automatically
       await testConnection();
+      
+      // Log channel status for debugging
+      const channels = supabase.getChannels();
+      console.log(`[Supabase] Active channels: ${channels.length}`);
     } finally {
       isReconnecting = false;
     }
