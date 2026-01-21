@@ -13,6 +13,15 @@ type PendingRequest<T> = Promise<T>;
 // Map of in-flight requests
 const pendingRequests = new Map<string, PendingRequest<any>>();
 
+// Short-term cache for frequently accessed data (sections, user roles)
+// TTL: 60 seconds - enough to prevent duplicate calls during page load
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+const shortTermCache = new Map<string, CacheEntry<any>>();
+const DEFAULT_CACHE_TTL = 60000; // 60 seconds
+
 // Debug mode for development
 const DEBUG = import.meta.env.DEV;
 
@@ -65,6 +74,40 @@ export async function deduplicate<T>(
 }
 
 /**
+ * Deduplicates and caches async requests.
+ * Use this for data that doesn't change frequently (sections, user profiles).
+ * 
+ * @param key - Unique identifier for the request
+ * @param fetcher - Async function that performs the actual fetch
+ * @param ttl - Time to live in milliseconds (default: 60 seconds)
+ */
+export async function deduplicateWithCache<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  ttl: number = DEFAULT_CACHE_TTL
+): Promise<T> {
+  // Check short-term cache first
+  const cached = shortTermCache.get(key);
+  if (cached && Date.now() - cached.timestamp < ttl) {
+    if (DEBUG) {
+      console.log(`[Dedupe] 💾 Cache hit: ${key}`);
+    }
+    return cached.data;
+  }
+
+  // Use deduplication for the actual request
+  const result = await deduplicate(key, fetcher);
+  
+  // Cache the result
+  shortTermCache.set(key, {
+    data: result,
+    timestamp: Date.now()
+  });
+
+  return result;
+}
+
+/**
  * Clears all pending requests.
  * Useful for cleanup during logout or navigation.
  */
@@ -73,6 +116,25 @@ export function clearPendingRequests(): void {
     console.log(`[Dedupe] 🧹 Clearing ${pendingRequests.size} pending requests`);
   }
   pendingRequests.clear();
+}
+
+/**
+ * Clears the short-term cache.
+ * Call this on logout or when data needs to be refreshed.
+ */
+export function clearCache(): void {
+  if (DEBUG && shortTermCache.size > 0) {
+    console.log(`[Dedupe] 🧹 Clearing ${shortTermCache.size} cached items`);
+  }
+  shortTermCache.clear();
+}
+
+/**
+ * Clears both pending requests and cache.
+ */
+export function clearAll(): void {
+  clearPendingRequests();
+  clearCache();
 }
 
 /**

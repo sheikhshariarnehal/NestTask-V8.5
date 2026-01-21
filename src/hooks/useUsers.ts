@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUsers, deleteUser, promoteUser as promoteUserService, demoteUser as demoteUserService } from '../services/user.service';
 import type { User } from '../types/auth';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
+import { deduplicate } from '../lib/requestDeduplicator';
+
+// Shared cache for users data across all useUsers hook instances
+// This prevents duplicate API calls when multiple components use useUsers
+let sharedUsersCache: { data: User[]; timestamp: number } | null = null;
+let pendingFetch: Promise<User[]> | null = null;
+const USERS_CACHE_TTL = 10000; // 10 seconds
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -14,9 +21,22 @@ export function useUsers() {
     // Prevent concurrent requests
     if (loadingRef.current && !force) return;
     
+    // Check shared cache first (prevents duplicate API calls across components)
+    if (!force && sharedUsersCache && Date.now() - sharedUsersCache.timestamp < USERS_CACHE_TTL) {
+      console.log('[useUsers] Using shared cache');
+      setUsers(sharedUsersCache.data);
+      setLoading(false);
+      return;
+    }
+    
     // For forced refresh (hard refresh), skip throttling
+    // BUT don't clear pending fetch if there's one in progress - just wait for it
     if (force) {
-      console.log('[useUsers] Force refresh - bypassing throttle and cache');
+      console.log('[useUsers] Force refresh requested');
+      // Only clear cache if no pending fetch (to allow deduplication of concurrent force requests)
+      if (!pendingFetch) {
+        sharedUsersCache = null;
+      }
     } else {
       // Throttle requests (minimum 10 seconds between refreshes unless forced)
       const now = Date.now();
@@ -32,7 +52,19 @@ export function useUsers() {
       setError(null); // Clear any previous errors
       
       console.log('[useUsers] Fetching users from database...');
-      const data = await fetchUsers();
+      
+      // Deduplicate concurrent requests using shared promise
+      if (!pendingFetch) {
+        pendingFetch = fetchUsers().finally(() => {
+          pendingFetch = null;
+        });
+      }
+      
+      const data = await pendingFetch;
+      
+      // Update shared cache
+      sharedUsersCache = { data, timestamp: Date.now() };
+      
       setUsers(data);
       lastLoadTimeRef.current = Date.now();
       console.log(`[useUsers] Successfully loaded ${data.length} users`);

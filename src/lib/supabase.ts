@@ -117,6 +117,64 @@ let lastActiveTime = Date.now();
 let visibilityChangeCount = 0;
 let isRefreshingSession = false;
 
+// ============================================
+// Cached Auth User - prevents duplicate auth/v1/user API calls
+// The performance trace showed 2-3 duplicate getUser() calls per page load
+// ============================================
+interface CachedUser {
+  user: any;
+  timestamp: number;
+}
+let cachedAuthUser: CachedUser | null = null;
+let pendingGetUser: Promise<{ data: { user: any }; error: any }> | null = null;
+const AUTH_USER_CACHE_TTL = 30000; // 30 seconds - short enough to catch logouts
+
+/**
+ * Get the current authenticated user with caching and deduplication.
+ * This prevents multiple concurrent calls to auth/v1/user endpoint.
+ * 
+ * Use this instead of supabase.auth.getUser() for better performance.
+ */
+export async function getCachedUser(): Promise<{ data: { user: any }; error: any }> {
+  // Return cached user if still valid
+  if (cachedAuthUser && Date.now() - cachedAuthUser.timestamp < AUTH_USER_CACHE_TTL) {
+    return { data: { user: cachedAuthUser.user }, error: null };
+  }
+
+  // If a request is already in flight, wait for it
+  if (pendingGetUser) {
+    return pendingGetUser;
+  }
+
+  // Make the actual request
+  pendingGetUser = supabase.auth.getUser()
+    .then((result) => {
+      if (result.data.user) {
+        cachedAuthUser = {
+          user: result.data.user,
+          timestamp: Date.now()
+        };
+      } else {
+        cachedAuthUser = null;
+      }
+      return result;
+    })
+    .finally(() => {
+      pendingGetUser = null;
+    });
+
+  return pendingGetUser;
+}
+
+/**
+ * Clear the cached auth user.
+ * Call this on logout or when session changes.
+ */
+export function clearCachedUser(): void {
+  cachedAuthUser = null;
+  pendingGetUser = null;
+}
+
 /**
  * Session refresh handler - called when app becomes visible
  * Ensures session is valid and refreshes if needed

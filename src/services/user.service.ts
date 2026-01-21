@@ -1,22 +1,71 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getCachedUser } from '../lib/supabase';
 import type { User } from '../types/auth';
 import type { UserStats } from '../types/user';
 import { mapDbUserToUser } from './auth.service';
+import { deduplicate, requestKeys } from '../lib/requestDeduplicator';
+
+// Cache for user role/section data to avoid duplicate API calls
+// This cache is short-lived (cleared on page navigation or after 30 seconds)
+interface UserRoleCache {
+  role: string;
+  section_id: string | null;
+  timestamp: number;
+}
+const userRoleCache = new Map<string, UserRoleCache>();
+const USER_ROLE_CACHE_TTL = 30000; // 30 seconds
+
+/**
+ * Get current user's role and section with caching and deduplication.
+ * This eliminates duplicate "users?select=role,section_id" calls.
+ */
+async function getCurrentUserRoleAndSection(userId: string): Promise<{ role: string; section_id: string | null } | null> {
+  // Check cache first
+  const cached = userRoleCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < USER_ROLE_CACHE_TTL) {
+    return { role: cached.role, section_id: cached.section_id };
+  }
+
+  // Use deduplication to prevent concurrent duplicate requests
+  return deduplicate(requestKeys.userRole(userId), async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role, section_id')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    // Cache the result
+    userRoleCache.set(userId, {
+      role: data.role,
+      section_id: data.section_id,
+      timestamp: Date.now()
+    });
+
+    return { role: data.role, section_id: data.section_id };
+  });
+}
+
+/**
+ * Clear the user role cache (call on logout or session change)
+ */
+export function clearUserRoleCache(): void {
+  userRoleCache.clear();
+}
 
 export async function fetchUsers(): Promise<User[]> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Use cached auth user to prevent duplicate auth/v1/user API calls
+    const { data: { user } } = await getCachedUser();
     if (!user) {
       console.warn('No authenticated user found');
       return [];
     }
 
-    // Get the current user's section (for filtering)
-    const { data: currentUserData } = await supabase
-      .from('users')
-      .select('role, section_id')
-      .eq('id', user.id)
-      .single();
+    // Get the current user's section (for filtering) - now with caching and deduplication
+    const currentUserData = await getCurrentUserRoleAndSection(user.id);
     
     let query = supabase
       .from('users')
@@ -46,19 +95,31 @@ export async function fetchUsers(): Promise<User[]> {
       return [];
     }
     
-    // Get section information separately if needed
-    const sectionIds = data?.filter(user => user.section_id).map(user => user.section_id) || [];
+    // Get section information separately if needed - now with deduplication
+    const sectionIds = [...new Set(data?.filter(user => user.section_id).map(user => user.section_id) || [])];
     let sectionNames: Record<string, string> = {};
     
     if (sectionIds.length > 0) {
-      const { data: sections, error: sectionError } = await supabase
-        .from('sections')
-        .select('id, name')
-        .in('id', sectionIds);
+      // Use a cache key based on sorted section IDs to deduplicate identical queries
+      const cacheKey = `sections:${sectionIds.sort().join(',')}`;
+      const { deduplicateWithCache, requestKeys } = await import('../lib/requestDeduplicator');
+      
+      const sections = await deduplicateWithCache(cacheKey, async () => {
+        const { data: sectionsData, error: sectionError } = await supabase
+          .from('sections')
+          .select('id, name')
+          .in('id', sectionIds);
         
-      if (!sectionError && sections) {
+        if (sectionError) {
+          console.error('Error fetching sections:', sectionError);
+          return [];
+        }
+        return sectionsData || [];
+      });
+        
+      if (sections.length > 0) {
         // Create a map of section IDs to section names
-        sectionNames = sections.reduce((acc: Record<string, string>, section) => {
+        sectionNames = sections.reduce((acc: Record<string, string>, section: { id: string; name: string }) => {
           acc[section.id] = section.name;
           return acc;
         }, {});
@@ -85,20 +146,17 @@ export async function fetchUsers(): Promise<User[]> {
 
 export async function deleteUser(userId: string): Promise<void> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Use cached auth user to prevent duplicate API calls
+    const { data: { user } } = await getCachedUser();
     if (!user) {
       throw new Error('Unauthorized: You must be logged in');
     }
 
-    // Get the current user's role and section_id
-    const { data: currentUserData, error: userError } = await supabase
-      .from('users')
-      .select('role, section_id')
-      .eq('id', user.id)
-      .single();
+    // Get the current user's role and section_id - use cached function
+    const currentUserData = await getCurrentUserRoleAndSection(user.id);
 
-    if (userError || !currentUserData) {
-      console.error('Error fetching user role:', userError);
+    if (!currentUserData) {
+      console.error('Error fetching user role');
       throw new Error('Failed to get user role');
     }
 

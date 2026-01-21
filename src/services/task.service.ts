@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getCachedUser } from '../lib/supabase';
 import { sendTaskNotification } from './telegram.service';
 import type { Task, NewTask } from '../types/task';
 import { mapTaskFromDB } from '../utils/taskMapper';
@@ -66,8 +66,8 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), QUERY_TIMEOUT);
     
-    // Get user metadata to determine role
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get user metadata to determine role - use cached version to prevent duplicate calls
+    const { data: { user } } = await getCachedUser();
     
     const userRole = user?.user_metadata?.role;
     const userSectionId = sectionId || user?.user_metadata?.section_id;

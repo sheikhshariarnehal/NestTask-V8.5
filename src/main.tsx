@@ -154,10 +154,23 @@ const router = createBrowserRouter([
             }
           }}
           onSignup={async (credentials: SignupCredentials) => {
+            // Pass all user data to Supabase Auth - this will be stored in raw_user_meta_data
+            // and picked up by the handle_new_user trigger to create the public.users record
             const { error } = await supabase.auth.signUp({
               email: credentials.email,
               password: credentials.password,
-              options: { data: { name: credentials.name } }
+              options: { 
+                data: { 
+                  name: credentials.name,
+                  phone: credentials.phone || '',
+                  studentId: credentials.studentId || '',
+                  departmentId: credentials.departmentId,
+                  batchId: credentials.batchId,
+                  sectionId: credentials.sectionId,
+                  role: 'user'
+                },
+                emailRedirectTo: window.location.origin
+              }
             });
             if (error) throw error;
           }}

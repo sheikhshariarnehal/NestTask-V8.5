@@ -45,6 +45,9 @@
     
     <!-- Note: don't modulepreload JSON; browsers enforce JS module MIME types -->
     
+    <!-- Preload critical fonts to prevent FOIT (Flash of Invisible Text) -->
+    <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" onerror="this.remove()" />
+    
     <!-- PWA assets -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.png" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />

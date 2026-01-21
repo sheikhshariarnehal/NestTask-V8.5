@@ -108,20 +108,19 @@ export async function loginUser({ email, password }: LoginCredentials): Promise<
                           window.location.hostname === 'localhost' ||
                           window.location.hostname === '127.0.0.1';
     
-    // Demo test accounts for easy development login
+    // Demo test accounts for easy development login - ONLY these specific emails bypass auth
+    // These are fake emails that should never be used in production
     const testAccounts = [
-      'test@example.com',
-      'admin@example.com',
-      'demo@nesttask.com',
-      'test@nesttask.com',
-      'user@nesttask.com',
-      'superadmin@nesttask.com',
-      'admin@diu.edu.bd' // Added for routing testing
+      'demo@nesttask.local',      // Local testing only
+      'admin@nesttask.local',     // Local testing only
+      'superadmin@nesttask.local' // Local testing only
     ];
     
+    // WARNING: Never add real email domains to test accounts!
     // In development, accept ANY password for these test accounts - RETURN IMMEDIATELY
     if (isDevelopment && testAccounts.includes(email)) {
       console.log('🔧 [DEV MODE] Using demo login for:', email);
+      console.warn('⚠️ This is a DEV-ONLY mock user - no real data will be saved!');
       
       // Create a mock user and session for development testing
       const mockUser = {

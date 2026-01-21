@@ -267,8 +267,13 @@ export default defineConfig({
       "Access-Control-Allow-Origin": "*",
       "Cross-Origin-Embedder-Policy": "credentialless",
       "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Resource-Policy": "cross-origin"
-    }
+      "Cross-Origin-Resource-Policy": "cross-origin",
+      // Enable compression hints for the browser
+      "Accept-Encoding": "gzip, deflate, br"
+    },
+    // Enable compression for faster dev server responses
+    // Note: Full gzip/brotli compression is only applied in production builds
+    // For dev, browsers handle this via Accept-Encoding
   },
   // Improve preview server performance
   preview: {
