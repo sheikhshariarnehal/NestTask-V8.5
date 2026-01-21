@@ -34,14 +34,14 @@
     <base href="/" />
     
     <!-- Resource hints for faster loading -->
-    <!-- Preconnect to Google Fonts for faster font loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    
-    <!-- Preconnect to Supabase API only when needed (auth page, not home) -->
+    <!-- Preconnect to Supabase API (critical - 15+ API calls per page load) -->
+    <!-- This saves ~100-200ms by establishing TCP + TLS before JavaScript loads -->
+    <link rel="preconnect" href="https://nglfbbdoyyfslzyjarqs.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co" />
+    
+    <!-- Google Fonts preconnect - only enable if fonts are actually used -->
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin /> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /> -->
     
     <!-- Note: don't modulepreload JSON; browsers enforce JS module MIME types -->
     

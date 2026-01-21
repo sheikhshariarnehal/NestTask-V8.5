@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, testConnection } from '../lib/supabase';
 import { dataCache, cacheKeys } from '../lib/dataCache';
+import { deduplicate, requestKeys } from '../lib/requestDeduplicator';
 import { loginUser, signupUser, logoutUser, resetPassword } from '../services/auth.service';
 import { forceCleanReload, updateAuthStatus } from '../utils/auth';
 import type { User, LoginCredentials, SignupCredentials } from '../types/auth';
@@ -272,19 +273,24 @@ export function useAuth() {
       if (cachedUser) {
         fullUserData = cachedUser;
       } else {
-        // Fetch full user data with department/batch/section names using the view
-        const { data, error: userError } = await supabase
-          .from('users_with_full_info')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-          
-        if (userError) {
-          console.error('Error fetching user data:', userError);
-          throw userError;
-        }
-        
-        fullUserData = data;
+        // Fetch full user data with deduplication to prevent duplicate API calls
+        fullUserData = await deduplicate(
+          requestKeys.userWithFullInfo(authUser.id),
+          async () => {
+            const { data, error: userError } = await supabase
+              .from('users_with_full_info')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+              
+            if (userError) {
+              console.error('Error fetching user data:', userError);
+              throw userError;
+            }
+            
+            return data;
+          }
+        );
         
         // Cache the result
         dataCache.set(cacheKey, fullUserData);
@@ -394,13 +400,22 @@ export function useAuth() {
           user.name = cachedData.name;
         } else {
           try {
-            const { data: userData, error: userError } = await supabase
-              .from('users_with_full_info')
-              .select('*')
-              .eq('email', user.email)
-              .single();
+            // Use deduplication to prevent duplicate API calls
+            const userData = await deduplicate(
+              requestKeys.userWithFullInfo(user.email),
+              async () => {
+                const { data, error: userError } = await supabase
+                  .from('users_with_full_info')
+                  .select('*')
+                  .eq('email', user.email)
+                  .single();
+                  
+                if (userError) throw userError;
+                return data;
+              }
+            );
               
-            if (!userError && userData) {
+            if (userData) {
               console.log('Super admin data from database:', userData);
               if (userData.name) user.name = userData.name;
               // Cache it
