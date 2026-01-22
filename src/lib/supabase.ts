@@ -359,55 +359,12 @@ setTimeout(() => {
   testConnection().catch(console.error);
 }, 1000);
 
-// Track if we're already reconnecting to prevent duplicate operations
-let isReconnecting = false;
-let lastResumeTime = 0;
-
-// Handle app resume to refresh session and test connection
-// Note: Supabase realtime has built-in reconnection logic, so we don't manually
-// resubscribe channels (which causes "subscribe multiple times" errors).
-// Instead, we just verify the connection and let the SDK handle channel recovery.
+// Resume handling is now centralized in useAppResumeCoordinator
+// This file only handles network reconnection for the Supabase client
 if (typeof window !== 'undefined') {
-  window.addEventListener('app-resume', async () => {
-    // Debounce: ignore resume events within 500ms of each other
-    const now = Date.now();
-    if (now - lastResumeTime < 500) {
-      console.log('[Supabase] Debouncing rapid resume event');
-      return;
-    }
-    lastResumeTime = now;
-    
-    if (isReconnecting) {
-      console.log('[Supabase] Reconnection already in progress, skipping');
-      return;
-    }
-    
-    isReconnecting = true;
-    console.log('[Supabase] App resumed, checking connection...');
-    
-    try {
-      // Test connection - the realtime SDK handles channel reconnection automatically
-      await testConnection();
-      
-      // Log channel status for debugging
-      const channels = supabase.getChannels();
-      console.log(`[Supabase] Active channels: ${channels.length}`);
-    } finally {
-      isReconnecting = false;
-    }
-  });
-
-  // Handle visibility change
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      console.log('[Supabase] Tab visible, checking connection...');
-      testConnection().catch(console.error);
-    }
-  });
-
-  // Handle online event
+  // Handle online event - test connection when network comes back
   window.addEventListener('online', async () => {
-    console.log('[Supabase] Network online, reconnecting...');
+    console.log('[Supabase] Network online, testing connection...');
     await testConnection();
   });
 }
