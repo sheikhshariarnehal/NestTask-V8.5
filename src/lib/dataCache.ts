@@ -157,9 +157,15 @@ if (typeof window !== 'undefined') {
     dataCache.cleanup();
   }, 5 * 60 * 1000);
 
-  // Clear cache when coordinated resume is ready (session validated)
-  window.addEventListener('app-resume-ready', () => {
-    console.log('[DataCache] Resume ready, clearing cache');
+  // Clear cache on app resume to ensure fresh data
+  window.addEventListener('app-resume', () => {
+    console.log('[DataCache] App resumed, clearing cache');
+    dataCache.clearAll();
+  });
+
+  // Clear cache when session is refreshed
+  window.addEventListener('supabase-session-refreshed', () => {
+    console.log('[DataCache] Session refreshed, clearing cache');
     dataCache.clearAll();
   });
 }

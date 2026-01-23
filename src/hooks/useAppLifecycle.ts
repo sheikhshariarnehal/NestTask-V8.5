@@ -38,35 +38,20 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
   const lastResumeTimeRef = useRef<number>(Date.now());
   const lastBlurTimeRef = useRef<number>(Date.now());
   const lastDispatchedResumeRef = useRef<number>(0);
-  const isResumeInProgressRef = useRef<boolean>(false);
   const isNativePlatform = Capacitor.isNativePlatform();
 
   const dispatchResumeEvent = useCallback(() => {
     if (typeof window === 'undefined') return;
     
-    // Debounce: don't dispatch resume events within 1 second of each other
-    // Increased from 500ms to prevent rapid-fire events after long inactivity
+    // Debounce: don't dispatch resume events within 500ms of each other
     const now = Date.now();
-    if (now - lastDispatchedResumeRef.current < 1000) {
+    if (now - lastDispatchedResumeRef.current < 500) {
       console.log('[Lifecycle] Debouncing rapid resume event dispatch');
       return;
     }
-    
-    // Prevent overlapping resume operations
-    if (isResumeInProgressRef.current) {
-      console.log('[Lifecycle] Resume already in progress, skipping dispatch');
-      return;
-    }
-    
-    isResumeInProgressRef.current = true;
     lastDispatchedResumeRef.current = now;
     
     window.dispatchEvent(new CustomEvent('app-resume'));
-    
-    // Clear the in-progress flag after 3 seconds to allow next resume
-    setTimeout(() => {
-      isResumeInProgressRef.current = false;
-    }, 3000);
   }, []);
 
   // Update callbacks ref when they change
@@ -86,13 +71,12 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
       callbacksRef.current.onAppStateChange?.(true);
     }
 
-    // Only trigger resume if blurred for more than 500ms to avoid rapid focus/blur cycles
     const blurredDuration = Date.now() - lastBlurTimeRef.current;
-    if (blurredDuration > 500) {
+    if (blurredDuration > 250) {
       callbacksRef.current.onResume?.();
       dispatchResumeEvent();
     }
-  }, [dispatchResumeEvent]);
+  }, []);
 
   const handleBlur = useCallback(() => {
     console.log('[Lifecycle] Window blurred');

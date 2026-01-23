@@ -16,7 +16,7 @@ import type { User } from './types/user';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { HomePage } from './pages/HomePage';
-import { useAppResumeCoordinator } from './hooks/useAppResumeCoordinator';
+import { useSupabaseLifecycle } from './hooks/useSupabaseLifecycle';
 import { useBackgroundStateManager } from './hooks/useBackgroundStateManager';
 import { Capacitor } from '@capacitor/core';
 import { getPendingOpenTaskId } from './services/pushNavigationService';
@@ -126,8 +126,8 @@ export default function App() {
   // Always call all hooks first, regardless of any conditions
   const { user, loading: authLoading, error: authError, login, signup, logout, forgotPassword } = useAuth();
 
-  // Centralized resume coordinator - handles session validation and channel cleanup
-  useAppResumeCoordinator();
+  // Critical: keep Supabase session healthy across tab/app backgrounding.
+  useSupabaseLifecycle({ enabled: true });
   
   const { users, loading: usersLoading, deleteUser, refreshUsers } = useUsers();
   

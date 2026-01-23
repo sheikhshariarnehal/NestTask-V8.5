@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUsers, deleteUser, promoteUser as promoteUserService, demoteUser as demoteUserService } from '../services/user.service';
 import type { User } from '../types/auth';
+import { createDebouncedEventHandler } from '../utils/eventDebounce';
 import { deduplicate } from '../lib/requestDeduplicator';
 
 // Shared cache for users data across all useUsers hook instances
@@ -87,8 +88,27 @@ export function useUsers() {
     handleResumeRefreshRef.current = async () => {
       console.log('[useUsers] Resume detected, validating session first...');
       
-      console.log('[useUsers] Resume ready, refreshing users');
-      loadUsers(true);
+      try {
+        // Wait for session validation before refreshing users
+        const sessionValidPromise = new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => resolve(), 2000);
+          const handler = () => {
+            clearTimeout(timeout);
+            window.removeEventListener('supabase-session-validated', handler);
+            resolve();
+          };
+          window.addEventListener('supabase-session-validated', handler, { once: true });
+        });
+        
+        window.dispatchEvent(new CustomEvent('request-session-validation'));
+        await sessionValidPromise;
+        
+        console.log('[useUsers] Session validated, refreshing users');
+        loadUsers(true);
+      } catch (error) {
+        console.error('[useUsers] Session validation failed:', error);
+        loadUsers(true);
+      }
     };
   }, [loadUsers]);
 
@@ -97,11 +117,15 @@ export function useUsers() {
       handleResumeRefreshRef.current?.();
     };
 
-    // Listen to coordinated resume event
-    window.addEventListener('app-resume-ready', handleResumeRefresh);
+    // Debounce to prevent duplicate calls
+    const debouncedRefresh = createDebouncedEventHandler(handleResumeRefresh, 1000);
+
+    window.addEventListener('app-resume', debouncedRefresh);
+    window.addEventListener('supabase-session-refreshed', debouncedRefresh);
 
     return () => {
-      window.removeEventListener('app-resume-ready', handleResumeRefresh);
+      window.removeEventListener('app-resume', debouncedRefresh);
+      window.removeEventListener('supabase-session-refreshed', debouncedRefresh);
     };
   }, []);
 

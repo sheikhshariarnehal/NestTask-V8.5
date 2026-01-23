@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAppLifecycle } from './useAppLifecycle';
 import type { Task } from '../types';
 import type { Announcement } from '../types/announcement';
 
@@ -86,29 +87,20 @@ export function useNotifications(userId: string | undefined) {
   /**
    * Setup Realtime subscriptions
    */
-  const setupSubscriptions = useCallback(async () => {
+  const setupSubscriptions = useCallback(() => {
     if (!userId || isSubscribedRef.current) {
       return;
     }
 
     isSubscribedRef.current = true;
 
-    // Remove any existing channels with the same names to avoid duplicate subscription errors
-    // This is critical after app resume when channels may still exist in Supabase client
-    try {
-      const existingChannels = supabase.getChannels();
-      for (const channel of existingChannels) {
-        if (channel.topic === 'realtime:tasks' || channel.topic === 'realtime:announcements') {
-          console.log(`[Notifications] Removing existing channel: ${channel.topic}`);
-          await supabase.removeChannel(channel);
-        }
-      }
-    } catch (e) {
-      console.warn('[Notifications] Error cleaning up existing channels:', e);
+    // Unsubscribe from any existing subscriptions first
+    if (subscriptionsRef.current.tasks) {
+      subscriptionsRef.current.tasks.unsubscribe();
     }
-
-    // Small delay to ensure channels are fully removed
-    await new Promise(resolve => setTimeout(resolve, 100));
+    if (subscriptionsRef.current.announcements) {
+      subscriptionsRef.current.announcements.unsubscribe();
+    }
 
     const taskSubscription = supabase
       .channel('tasks')
@@ -161,53 +153,42 @@ export function useNotifications(userId: string | undefined) {
   }, [userId]);
 
   /**
-   * Cleanup subscriptions - properly remove channels from Supabase client
+   * Cleanup subscriptions
    */
-  const cleanupSubscriptions = useCallback(async () => {
+  const cleanupSubscriptions = useCallback(() => {
     console.log('[Notifications] Cleaning up subscriptions...');
     isSubscribedRef.current = false;
 
-    // Properly remove channels from Supabase client to avoid "subscribe multiple times" errors
-    try {
-      if (subscriptionsRef.current.tasks) {
-        await supabase.removeChannel(subscriptionsRef.current.tasks);
-        subscriptionsRef.current.tasks = undefined;
-      }
-    } catch (e) {
-      console.warn('[Notifications] Error removing tasks channel:', e);
+    if (subscriptionsRef.current.tasks) {
+      subscriptionsRef.current.tasks.unsubscribe();
+      subscriptionsRef.current.tasks = undefined;
     }
-    
-    try {
-      if (subscriptionsRef.current.announcements) {
-        await supabase.removeChannel(subscriptionsRef.current.announcements);
-        subscriptionsRef.current.announcements = undefined;
-      }
-    } catch (e) {
-      console.warn('[Notifications] Error removing announcements channel:', e);
+    if (subscriptionsRef.current.announcements) {
+      subscriptionsRef.current.announcements.unsubscribe();
+      subscriptionsRef.current.announcements = undefined;
     }
   }, []);
 
   /**
    * Handle app resume - reload data and reconnect subscriptions
-   * Now triggered by coordinated resume (session already validated, channels cleaned by coordinator)
    */
-  const handleResume = useCallback(async () => {
-    if (!userId) return;
-    
-    console.log('[Notifications] Resume ready - setting up subscriptions');
+  const handleResume = useCallback(() => {
+    console.log('[Notifications] App resumed, reloading data and reconnecting...');
+
+    // Cleanup old subscriptions
+    cleanupSubscriptions();
 
     // Reload data
     loadExistingItems();
 
-    // Setup subscriptions (channels already cleaned by coordinator)
-    await setupSubscriptions();
-  }, [userId, loadExistingItems, setupSubscriptions]);
+    // Re-setup subscriptions
+    setupSubscriptions();
+  }, [cleanupSubscriptions, loadExistingItems, setupSubscriptions]);
 
-  // Listen for coordinated resume event (instead of useAppLifecycle)
-  useEffect(() => {
-    window.addEventListener('app-resume-ready', handleResume);
-    return () => window.removeEventListener('app-resume-ready', handleResume);
-  }, [handleResume]);
+  // Use app lifecycle hook to handle resume
+  useAppLifecycle({
+    onResume: handleResume
+  });
 
   // Initial load and subscription setup
   useEffect(() => {
