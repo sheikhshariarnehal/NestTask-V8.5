@@ -110,7 +110,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
 let connectionAttempts = 0;
 let isInitialized = false;
 let connectionPromise: Promise<boolean> | null = null;
-let lastConnectionTime = 0;
+let lastConnectionTime = Date.now(); // Initialize to current time to avoid huge timeSinceLastCheck on first load
 
 // Track connection health
 let lastActiveTime = Date.now();
