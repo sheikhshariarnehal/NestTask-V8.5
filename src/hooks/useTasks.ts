@@ -3,6 +3,7 @@ import { supabase, testConnection } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
+import { debugLog, updateDebugState } from '../lib/debug';
 
 // Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
 const TASK_FETCH_TIMEOUT = 45000;
@@ -151,30 +152,54 @@ export function useTasks(userId: string | undefined) {
         const { data: { user } } = await supabase.auth.getUser();
 
         // Test connection before fetching
+        debugLog('TASKS', 'Testing database connection...');
         isConnected = await testConnection();
         if (!isConnected) {
+          debugLog('TASKS', '❌ Database connection failed');
           throw new Error('Unable to connect to database');
         }
+        debugLog('TASKS', '✅ Database connection OK');
 
         // Check session - if no session, just return without reloading
         // The auth flow will handle redirecting to login if needed
         const { data: session } = await supabase.auth.getSession();
         if (!session.session) {
-          console.log('No session found during task fetch, skipping reload');
+          debugLog('TASKS', '⚠️ No session found during task fetch - session may have expired');
           throw new Error('Session expired - please refresh the page');
+        }
+        
+        // Log session info for debugging stale app issues
+        const expiresAt = session.session.expires_at;
+        if (expiresAt) {
+          const expiresAtMs = expiresAt * 1000;
+          const timeUntilExpiry = expiresAtMs - Date.now();
+          debugLog('TASKS', 'Session check during task fetch', {
+            expiresInMinutes: Math.round(timeUntilExpiry / 60000),
+            isExpired: timeUntilExpiry <= 0,
+          });
+          
+          if (timeUntilExpiry <= 0) {
+            debugLog('TASKS', '🔴 SESSION EXPIRED during task fetch!');
+            updateDebugState({ isSessionValid: false, hardRefreshNeeded: true });
+          }
         }
       }
 
       // Check if the request was aborted
       if (signal.aborted) {
-        console.log('Task loading aborted');
+        debugLog('TASKS', 'Task loading aborted');
         return;
       }
 
       // Batch process tasks in chunks for better performance
       const processTasks = async () => {
         // Pass undefined for sectionId as we don't need to filter manually
+        debugLog('TASKS', 'Fetching tasks from database...');
+        const startTime = Date.now();
         const data = await fetchTasks(userId, undefined);
+        const duration = Date.now() - startTime;
+        debugLog('TASKS', `✅ Fetched ${data.length} tasks in ${duration}ms`);
+        updateDebugState({ lastDataFetch: Date.now() });
         return data;
       };
       
@@ -193,11 +218,12 @@ export function useTasks(userId: string | undefined) {
         lastLoadTimeRef.current = Date.now();
         setRetryCount(0); // Reset retry count on success
         tabSwitchRecoveryRef.current = false; // We've recovered if we were in recovery mode
+        debugLog('TASKS', `State updated with ${data.length} tasks`);
       }
     } catch (err: any) {
       // Only update error state if component is mounted and not aborted
       if (isMountedRef.current && (!abortControllerRef.current || !abortControllerRef.current.signal.aborted)) {
-        console.error('Error fetching tasks:', err);
+        debugLog('TASKS', '❌ Error fetching tasks', { error: err.message });
         
         // Provide a more informative error message for timeouts
         if (err.message === 'Task fetch timeout') {

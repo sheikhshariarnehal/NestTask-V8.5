@@ -24,6 +24,7 @@ import { IonApp, IonContent, IonRefresher, IonRefresherContent, setupIonicReact 
 import type { RefresherEventDetail } from '@ionic/react';
 import { RoutineSkeleton } from './components/routine/RoutineSkeleton';
 import ReloadPrompt from './components/pwa/ReloadPrompt';
+import { debugLog, updateDebugState } from './lib/debug';
 
 // Lazy load Vercel analytics (not needed for native apps)
 const Analytics = !Capacitor.isNativePlatform() 
@@ -524,6 +525,7 @@ export default function App() {
         // Record when we went hidden
         lastHiddenTime = Date.now();
         localStorage.setItem('lastActiveTimestamp', lastHiddenTime.toString());
+        debugLog('APP', 'App went to background/hidden');
         return;
       }
       
@@ -536,10 +538,18 @@ export default function App() {
         
         // Update timestamp
         localStorage.setItem('lastActiveTimestamp', now.toString());
+        updateDebugState({ lastActiveAt: now });
+        
+        debugLog('APP', `App became visible after ${Math.round(hiddenDuration / 1000)}s`, {
+          hiddenMinutes: Math.round(hiddenDuration / 60000),
+          wasInactiveLong,
+          hasUser: !!user?.id,
+        });
         
         // Only refresh if we have a user and were away for a while
         if (user?.id && wasInactiveLong) {
-          console.log(`Page visible after ${Math.round(hiddenDuration / 1000)}s - refreshing data`);
+          debugLog('APP', '🔄 Refreshing data after long inactivity...');
+          updateDebugState({ lastDataFetch: now });
           
           // Simple refresh without aggressive connection checking
           // This prevents the blank screen issue
@@ -548,7 +558,7 @@ export default function App() {
           }, 100);
         } else if (user?.id) {
           // For short inactivity, just log without refreshing
-          console.log('Page visible - short inactivity, no refresh needed');
+          debugLog('APP', 'Short inactivity - no data refresh needed');
         }
       }
     };
