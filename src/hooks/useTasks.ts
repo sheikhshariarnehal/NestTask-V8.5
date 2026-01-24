@@ -56,74 +56,6 @@ export function useTasks(userId: string | undefined) {
     userIdRef.current = userId;
   }, [userId]);
 
-  // Track page visibility to prevent blank screens and recover from stuck states
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        wasHiddenRef.current = true;
-        lastVisibilityChangeRef.current = Date.now();
-      } else if (document.visibilityState === 'visible') {
-        // Mark that we came back from hidden
-        const hiddenDuration = Date.now() - lastVisibilityChangeRef.current;
-        lastVisibilityChangeRef.current = Date.now();
-        
-        // CRITICAL: Reset stuck loading state when app becomes visible
-        // This prevents the app from being stuck on loading after minimize/restore
-        if (loadingRef.current) {
-          console.log('[useTasks] Resetting stuck loading state after visibility change');
-          loadingRef.current = false;
-          if (isMountedRef.current) {
-            setLoading(false);
-          }
-        }
-        
-        // Check if cache is stale and force refresh if needed
-        // This fixes the issue where cold-opening the app after a long time shows no tasks
-        const userId = userIdRef.current;
-        if (userId) {
-          const cachedEntry = tasksCache.get(userId);
-          const cacheAge = cachedEntry ? Date.now() - cachedEntry.timestamp : Infinity;
-          const isCacheStale = cacheAge > CACHE_EXPIRY_MS;
-          
-          // Force refresh if:
-          // 1. Cache is stale (older than 5 minutes)
-          // 2. Hidden for more than 30 seconds (potential stale data)
-          // 3. No tasks loaded yet but we have a user
-          const shouldForceRefresh = isCacheStale || hiddenDuration > 30000;
-          
-          if (shouldForceRefresh) {
-            console.log(`[useTasks] Visibility change: cache stale (${Math.round(cacheAge/1000)}s) or long hidden (${Math.round(hiddenDuration/1000)}s), forcing refresh`);
-            // Clear the cache and trigger a fresh load
-            tasksCache.delete(userId);
-            // Use setTimeout to avoid blocking the visibility change handler
-            setTimeout(() => {
-              if (isMountedRef.current && userIdRef.current) {
-                loadTasks({ force: true });
-              }
-            }, 100);
-          }
-        }
-        
-        // Only mark as recent tab switch if hidden for less than 30 seconds
-        // This prevents showing loading state immediately after tab switch
-        if (hiddenDuration < 30000) {
-          wasHiddenRef.current = true;
-          // Clear the flag after a short delay
-          setTimeout(() => {
-            wasHiddenRef.current = false;
-          }, 1000);
-        } else {
-          wasHiddenRef.current = false;
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [loadTasks]);
-
   const loadTasks = useCallback(async (options: { force?: boolean } = {}) => {
     if (!userId) return;
     
@@ -326,6 +258,73 @@ export function useTasks(userId: string | undefined) {
       }
     }
   }, [userId, retryCount]);
+
+  // Track page visibility to prevent blank screens and recover from stuck states
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        wasHiddenRef.current = true;
+        lastVisibilityChangeRef.current = Date.now();
+      } else if (document.visibilityState === 'visible') {
+        // Mark that we came back from hidden
+        const hiddenDuration = Date.now() - lastVisibilityChangeRef.current;
+        lastVisibilityChangeRef.current = Date.now();
+        
+        // CRITICAL: Reset stuck loading state when app becomes visible
+        // This prevents the app from being stuck on loading after minimize/restore
+        if (loadingRef.current) {
+          console.log('[useTasks] Resetting stuck loading state after visibility change');
+          loadingRef.current = false;
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
+        }
+        
+        // Check if cache is stale and force refresh if needed
+        // This fixes the issue where cold-opening the app after a long time shows no tasks
+        const currentUserId = userIdRef.current;
+        if (currentUserId) {
+          const cachedEntry = tasksCache.get(currentUserId);
+          const cacheAge = cachedEntry ? Date.now() - cachedEntry.timestamp : Infinity;
+          const isCacheStale = cacheAge > CACHE_EXPIRY_MS;
+          
+          // Force refresh if:
+          // 1. Cache is stale (older than 5 minutes)
+          // 2. Hidden for more than 30 seconds (potential stale data)
+          const shouldForceRefresh = isCacheStale || hiddenDuration > 30000;
+          
+          if (shouldForceRefresh) {
+            console.log(`[useTasks] Visibility change: cache stale (${Math.round(cacheAge/1000)}s) or long hidden (${Math.round(hiddenDuration/1000)}s), forcing refresh`);
+            // Clear the cache and trigger a fresh load
+            tasksCache.delete(currentUserId);
+            // Use setTimeout to avoid blocking the visibility change handler
+            setTimeout(() => {
+              if (isMountedRef.current && userIdRef.current) {
+                loadTasks({ force: true });
+              }
+            }, 100);
+          }
+        }
+        
+        // Only mark as recent tab switch if hidden for less than 30 seconds
+        // This prevents showing loading state immediately after tab switch
+        if (hiddenDuration < 30000) {
+          wasHiddenRef.current = true;
+          // Clear the flag after a short delay
+          setTimeout(() => {
+            wasHiddenRef.current = false;
+          }, 1000);
+        } else {
+          wasHiddenRef.current = false;
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [loadTasks]);
 
   // Refresh tasks when the app resumes or network reconnects.
   // This covers cases where the WebView stays "visible" while Capacitor is backgrounded.
