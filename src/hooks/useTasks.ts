@@ -85,9 +85,18 @@ export function useTasks(userId: string | undefined) {
       return;
     }
     
+    // CRITICAL: Auto-detect stale data on cold open
+    // If last load was more than 5 minutes ago, force a fresh fetch
+    const now = Date.now();
+    const timeSinceLastLoad = now - lastLoadTimeRef.current;
+    if (!options.force && timeSinceLastLoad > CACHE_EXPIRY_MS) {
+      console.log(`[useTasks] Auto-forcing refresh - last load was ${Math.round(timeSinceLastLoad/1000)}s ago`);
+      options.force = true;
+      tasksCache.delete(userId);
+    }
+    
     // Implement throttling - don't reload if last load was less than 3 seconds ago
     // but reduce to 1 second if we're in tab switch recovery mode
-    const now = Date.now();
     const throttleTime = tabSwitchRecoveryRef.current ? 1000 : 3000;
     if (!options.force && now - lastLoadTimeRef.current < throttleTime) {
       console.log('Task loading throttled - too soon since last load');
@@ -422,6 +431,17 @@ export function useTasks(userId: string | undefined) {
 
     // Set mounted ref
     isMountedRef.current = true;
+    
+    // CRITICAL: Check cache age on mount - clear if stale
+    // This prevents cold opens from showing stale/no data
+    const cachedEntry = tasksCache.get(userId);
+    if (cachedEntry) {
+      const cacheAge = Date.now() - cachedEntry.timestamp;
+      if (cacheAge > CACHE_EXPIRY_MS) {
+        console.log(`[useTasks] Clearing stale cache on mount (age: ${Math.round(cacheAge/1000)}s)`);
+        tasksCache.delete(userId);
+      }
+    }
     
     // Initial load - show loading immediately, then fetch.
     // This makes initial skeletons (e.g., Home task cards) reliably visible.
