@@ -46,6 +46,10 @@ export function useTasks(userId: string | undefined) {
   const lastVisibilityChangeRef = useRef(Date.now());
   // Throttle resume-triggered refreshes
   const lastResumeRefreshRef = useRef<number>(0);
+  // Track when loading started for stuck state detection
+  const loadingStartTimeRef = useRef<number | null>(null);
+  // Track stuck state detection timer
+  const stuckStateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update ref when userId changes
   useEffect(() => {
@@ -73,6 +77,33 @@ export function useTasks(userId: string | undefined) {
           }
         }
         
+        // Check if cache is stale and force refresh if needed
+        // This fixes the issue where cold-opening the app after a long time shows no tasks
+        const userId = userIdRef.current;
+        if (userId) {
+          const cachedEntry = tasksCache.get(userId);
+          const cacheAge = cachedEntry ? Date.now() - cachedEntry.timestamp : Infinity;
+          const isCacheStale = cacheAge > CACHE_EXPIRY_MS;
+          
+          // Force refresh if:
+          // 1. Cache is stale (older than 5 minutes)
+          // 2. Hidden for more than 30 seconds (potential stale data)
+          // 3. No tasks loaded yet but we have a user
+          const shouldForceRefresh = isCacheStale || hiddenDuration > 30000;
+          
+          if (shouldForceRefresh) {
+            console.log(`[useTasks] Visibility change: cache stale (${Math.round(cacheAge/1000)}s) or long hidden (${Math.round(hiddenDuration/1000)}s), forcing refresh`);
+            // Clear the cache and trigger a fresh load
+            tasksCache.delete(userId);
+            // Use setTimeout to avoid blocking the visibility change handler
+            setTimeout(() => {
+              if (isMountedRef.current && userIdRef.current) {
+                loadTasks({ force: true });
+              }
+            }, 100);
+          }
+        }
+        
         // Only mark as recent tab switch if hidden for less than 30 seconds
         // This prevents showing loading state immediately after tab switch
         if (hiddenDuration < 30000) {
@@ -91,7 +122,7 @@ export function useTasks(userId: string | undefined) {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [loadTasks]);
 
   const loadTasks = useCallback(async (options: { force?: boolean } = {}) => {
     if (!userId) return;
@@ -141,6 +172,32 @@ export function useTasks(userId: string | undefined) {
         setLoading(true);
       }
       loadingRef.current = true;
+      loadingStartTimeRef.current = Date.now();
+      
+      // Clear any existing stuck state timer
+      if (stuckStateTimerRef.current) {
+        clearTimeout(stuckStateTimerRef.current);
+      }
+      
+      // Set up stuck state detection - if loading takes more than 10s, force recovery
+      stuckStateTimerRef.current = setTimeout(() => {
+        if (loadingRef.current && isMountedRef.current) {
+          console.warn('[useTasks] Stuck state detected after 10s, auto-recovering');
+          loadingRef.current = false;
+          setLoading(false);
+          // Clear cache and retry
+          if (userIdRef.current) {
+            tasksCache.delete(userIdRef.current);
+          }
+          // Trigger a fresh load after a short delay
+          setTimeout(() => {
+            if (isMountedRef.current && userIdRef.current) {
+              loadTasks({ force: true });
+            }
+          }, 500);
+        }
+      }, 10000);
+      
       if (isMountedRef.current) {
         setError(null);
       }
@@ -255,6 +312,13 @@ export function useTasks(userId: string | undefined) {
         }
       }
     } finally {
+      // Clear stuck state timer
+      if (stuckStateTimerRef.current) {
+        clearTimeout(stuckStateTimerRef.current);
+        stuckStateTimerRef.current = null;
+      }
+      loadingStartTimeRef.current = null;
+      
       // Immediately reset loading state - no delay needed
       loadingRef.current = false;
       if (isMountedRef.current) {
@@ -320,13 +384,33 @@ export function useTasks(userId: string | undefined) {
     // Create debounced handler to prevent duplicate calls within 3-second window
     const debouncedRefresh = createDebouncedEventHandler(handleResumeRefresh, 1000);
 
+    // Handle resume from long background specifically
+    const handleBackgroundResume = (event: Event) => {
+      const customEvent = event as CustomEvent<{ duration: number; durationSeconds: number; requiresRefresh: boolean }>;
+      const { durationSeconds, requiresRefresh } = customEvent.detail;
+      
+      if (requiresRefresh && userIdRef.current) {
+        console.log(`[useTasks] App resumed from ${durationSeconds}s background, forcing data refresh`);
+        // Clear cache since data is definitely stale
+        tasksCache.delete(userIdRef.current);
+        // Force refresh with a small delay to let session validation complete
+        setTimeout(() => {
+          if (isMountedRef.current && userIdRef.current) {
+            loadTasks({ force: true });
+          }
+        }, 300);
+      }
+    };
+
     // Only listen to critical events - removed redundant ones to prevent duplicate refreshes
     window.addEventListener('app-resume', debouncedRefresh);
     window.addEventListener('supabase-session-refreshed', debouncedRefresh);
+    window.addEventListener('app-resumed-from-background', handleBackgroundResume);
 
     return () => {
       window.removeEventListener('app-resume', debouncedRefresh);
       window.removeEventListener('supabase-session-refreshed', debouncedRefresh);
+      window.removeEventListener('app-resumed-from-background', handleBackgroundResume);
     };
   }, [loadTasks]);
 
@@ -356,6 +440,12 @@ export function useTasks(userId: string | undefined) {
       // Abort any in-progress request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
+      }
+      
+      // Clear stuck state timer
+      if (stuckStateTimerRef.current) {
+        clearTimeout(stuckStateTimerRef.current);
+        stuckStateTimerRef.current = null;
       }
     };
   }, [userId, loadTasks]);
