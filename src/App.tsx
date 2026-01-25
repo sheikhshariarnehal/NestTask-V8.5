@@ -197,6 +197,9 @@ export default function App() {
     refreshTasks,
   } = useTasks(user?.id);
 
+  // Declare state before using it in effects to avoid TDZ errors
+  const [hasCompletedInitialTasksLoad, setHasCompletedInitialTasksLoad] = useState(false);
+
   // Track completion of the initial task fetch for the current session.
   // Allows Home to show a skeleton even if fetching resolves very quickly.
   useEffect(() => {
@@ -257,7 +260,6 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationOpenTaskId, setNotificationOpenTaskId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
-  const [hasCompletedInitialTasksLoad, setHasCompletedInitialTasksLoad] = useState(false);
   const [isResumingFromBackground, setIsResumingFromBackground] = useState(false);
 
   // Pull-to-refresh handler optimized for performance and auth preservation
