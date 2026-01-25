@@ -192,12 +192,20 @@ export function useTasks(userId: string | undefined) {
       const processTasks = async () => {
         // Pass undefined for sectionId as we don't need to filter manually
         debugLog('TASKS', 'Fetching tasks from database...');
+        console.log('[useTasks] Starting fetchTasks call for userId:', userId);
         const startTime = Date.now();
-        const data = await fetchTasks(userId, undefined);
-        const duration = Date.now() - startTime;
-        debugLog('TASKS', `✅ Fetched ${data.length} tasks in ${duration}ms`);
-        updateDebugState({ lastDataFetch: Date.now() });
-        return data;
+        
+        try {
+          const data = await fetchTasks(userId, undefined);
+          const duration = Date.now() - startTime;
+          console.log(`[useTasks] ✅ fetchTasks completed: ${data.length} tasks in ${duration}ms`);
+          debugLog('TASKS', `✅ Fetched ${data.length} tasks in ${duration}ms`);
+          updateDebugState({ lastDataFetch: Date.now() });
+          return data;
+        } catch (error: any) {
+          console.error('[useTasks] ❌ fetchTasks error:', error);
+          throw error;
+        }
       };
       
       // Use Promise.race to implement timeout with increased timeout value
@@ -207,8 +215,11 @@ export function useTasks(userId: string | undefined) {
       
       const data = await Promise.race([processTasks(), timeoutPromise]);
       
+      console.log('[useTasks] Race completed, data received:', data?.length || 0, 'tasks');
+      
       // Only update state if component is mounted and request not aborted
       if (isMountedRef.current && !signal.aborted) {
+        console.log('[useTasks] Updating state with', data.length, 'tasks');
         setTasks(data);
         
         setError(null);
@@ -216,6 +227,9 @@ export function useTasks(userId: string | undefined) {
         setRetryCount(0); // Reset retry count on success
         tabSwitchRecoveryRef.current = false; // We've recovered if we were in recovery mode
         debugLog('TASKS', `State updated with ${data.length} tasks`);
+        console.log('[useTasks] ✅ State update complete');
+      } else {
+        console.log('[useTasks] ⚠️ Skipping state update - mounted:', isMountedRef.current, 'aborted:', signal.aborted);
       }
     } catch (err: any) {
       // Only update error state if component is mounted and not aborted
@@ -253,9 +267,13 @@ export function useTasks(userId: string | undefined) {
       }
     } finally {
       // Immediately reset loading state - no delay needed
+      console.log('[useTasks] Finally block - resetting loading state');
       loadingRef.current = false;
       if (isMountedRef.current) {
         setLoading(false);
+        console.log('[useTasks] ✅ Loading state set to false');
+      } else {
+        console.log('[useTasks] ⚠️ Component unmounted, skipping loading state update');
       }
     }
   }, [userId, retryCount]);
