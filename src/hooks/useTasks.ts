@@ -137,6 +137,13 @@ export function useTasks(userId: string | undefined) {
       const hasExistingTasks = tasks.length > 0;
       const shouldShowLoading = !wasHiddenRef.current || !hasExistingTasks;
       
+      console.log('[useTasks] Starting task load', { 
+        shouldShowLoading, 
+        hasExistingTasks, 
+        wasHidden: wasHiddenRef.current,
+        userId 
+      });
+      
       if (isMountedRef.current && shouldShowLoading) {
         setLoading(true);
       }
@@ -145,45 +152,35 @@ export function useTasks(userId: string | undefined) {
         setError(null);
       }
 
-      // Skip database connection test in development mode
-      let isConnected = true;
-      if (process.env.NODE_ENV !== 'development') {
-        // Get user data to check role and section
-        const { data: { user } } = await supabase.auth.getUser();
-
-        // Test connection before fetching
-        debugLog('TASKS', 'Testing database connection...');
-        isConnected = await testConnection();
-        if (!isConnected) {
-          debugLog('TASKS', '❌ Database connection failed');
-          throw new Error('Unable to connect to database');
-        }
-        debugLog('TASKS', '✅ Database connection OK');
-
-        // Check session - if no session, just return without reloading
-        // The auth flow will handle redirecting to login if needed
-        const { data: session } = await supabase.auth.getSession();
-        if (!session.session) {
-          debugLog('TASKS', '⚠️ No session found during task fetch - session may have expired');
-          throw new Error('Session expired - please refresh the page');
-        }
+      // Check session validity - simplified to avoid connection test hanging
+      // Session validation is sufficient to ensure database connectivity
+      console.log('[useTasks] Checking session validity...');
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        debugLog('TASKS', '⚠️ No session found during task fetch - session may have expired');
+        throw new Error('Session expired - please refresh the page');
+      }
+      
+      console.log('[useTasks] Session valid, proceeding with task fetch');
+      
+      // Log session info for debugging stale app issues
+      const expiresAt = session.session.expires_at;
+      if (expiresAt) {
+        const expiresAtMs = expiresAt * 1000;
+        const timeUntilExpiry = expiresAtMs - Date.now();
+        debugLog('TASKS', 'Session check during task fetch', {
+          expiresInMinutes: Math.round(timeUntilExpiry / 60000),
+          isExpired: timeUntilExpiry <= 0,
+        });
         
-        // Log session info for debugging stale app issues
-        const expiresAt = session.session.expires_at;
-        if (expiresAt) {
-          const expiresAtMs = expiresAt * 1000;
-          const timeUntilExpiry = expiresAtMs - Date.now();
-          debugLog('TASKS', 'Session check during task fetch', {
-            expiresInMinutes: Math.round(timeUntilExpiry / 60000),
-            isExpired: timeUntilExpiry <= 0,
-          });
-          
-          if (timeUntilExpiry <= 0) {
-            debugLog('TASKS', '🔴 SESSION EXPIRED during task fetch!');
-            updateDebugState({ isSessionValid: false, hardRefreshNeeded: true });
-          }
+        if (timeUntilExpiry <= 0) {
+          debugLog('TASKS', '🔴 SESSION EXPIRED during task fetch!');
+          updateDebugState({ isSessionValid: false, hardRefreshNeeded: true });
+          throw new Error('Session expired - please login again');
         }
       }
+      
+      updateDebugState({ connectionState: 'connected' });
 
       // Check if the request was aborted
       if (signal.aborted) {

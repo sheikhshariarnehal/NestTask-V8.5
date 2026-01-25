@@ -205,10 +205,21 @@ export default function App() {
       return;
     }
 
+    // Safety timeout: if loading takes more than 30 seconds, force completion
+    const safetyTimeout = setTimeout(() => {
+      if (!hasCompletedInitialTasksLoad && tasksLoading) {
+        console.warn('[App] Force completing initial load after 30s timeout');
+        setHasCompletedInitialTasksLoad(true);
+      }
+    }, 30000);
+
     if (!tasksLoading) {
       setHasCompletedInitialTasksLoad(true);
+      clearTimeout(safetyTimeout);
     }
-  }, [user?.id, tasksLoading]);
+    
+    return () => clearTimeout(safetyTimeout);
+  }, [user?.id, tasksLoading, hasCompletedInitialTasksLoad]);
   
   // Create handler functions for admin dashboard
   const handleDeleteUser = useCallback((userId: string) => {

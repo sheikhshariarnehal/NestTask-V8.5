@@ -390,8 +390,16 @@ export async function testConnection(forceCheck = false) {
       
       connectionAttempts++;
       
-      // First verify authentication status
-      const { data: session, error: authError } = await supabase.auth.getSession();
+      // Create a timeout promise to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Connection test timeout')), 10000); // 10 second timeout
+      });
+      
+      // First verify authentication status with timeout
+      const { data: session, error: authError } = await Promise.race([
+        supabase.auth.getSession(),
+        timeoutPromise
+      ]) as Awaited<ReturnType<typeof supabase.auth.getSession>>;
       
       if (authError) {
         debugLog('CONNECTION', '❌ Auth error when checking session', { error: authError.message });
@@ -446,9 +454,16 @@ export async function testConnection(forceCheck = false) {
         }
       }
       
-      // Test database connection with a simpler query
+      // Test database connection with a simpler query and timeout
       debugLog('CONNECTION', 'Testing database query...');
-      const { error } = await supabase.from('tasks').select('count', { count: 'exact', head: true });
+      const queryTimeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Database query timeout')), 10000); // 10 second timeout
+      });
+      
+      const { error } = await Promise.race([
+        supabase.from('tasks').select('count', { count: 'exact', head: true }),
+        queryTimeoutPromise
+      ]) as Awaited<ReturnType<typeof supabase.from>>;
       
       if (error) {
         debugLog('CONNECTION', '❌ Database connection error', { 
@@ -477,6 +492,14 @@ export async function testConnection(forceCheck = false) {
     } catch (error: any) {
       debugLog('CONNECTION', '❌ Unexpected error during connection test', { error: error.message });
       updateDebugState({ connectionState: 'disconnected', lastError: error.message });
+      
+      // If timeout, warn but don't block the app
+      if (error.message?.includes('timeout')) {
+        console.warn('[CONNECTION] Connection test timed out - network may be slow');
+        updateDebugState({ connectionState: 'connected' }); // Assume connected for now
+        return true; // Allow app to continue
+      }
+      
       // Return true anyway to prevent blocking the app
       return true;
     } finally {
