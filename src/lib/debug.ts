@@ -82,14 +82,8 @@ export function debugLog(category: string, message: string, data?: any) {
     debugLogs.splice(0, debugLogs.length - MAX_LOGS);
   }
   
-  // In production, always log important categories (TASKS, SESSION, VISIBILITY, NETWORK)
-  // to help diagnose issues. For other categories, require debug mode.
-  const importantCategories = ['TASKS', 'SESSION', 'VISIBILITY', 'NETWORK', 'CONNECTION', 'APP'];
-  const shouldLog = isDebugMode() || 
-                    localStorage.getItem('nesttask_verbose') === 'true' ||
-                    importantCategories.includes(category);
-  
-  if (shouldLog) {
+  // Always log to console in debug mode or if verbose
+  if (isDebugMode() || localStorage.getItem('nesttask_verbose') === 'true') {
     const prefix = `[${category}]`;
     if (data) {
       console.log(prefix, message, data);
