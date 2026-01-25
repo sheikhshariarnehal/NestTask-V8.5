@@ -18,18 +18,9 @@ const tasksCache = new Map<string, TasksCacheEntry>();
 // Cache expiry time (5 minutes)
 const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 
-// Stale threshold for cold open detection (2 minutes - if data is older than this, force refresh)
-const STALE_THRESHOLD_MS = 2 * 60 * 1000;
-
-// Very stale threshold (10 minutes - definitely need fresh data)
-const VERY_STALE_THRESHOLD_MS = 10 * 60 * 1000;
-
 // Maximum number of retries for task fetching
 const MAX_RETRIES_TIMEOUT = 5;
 const MAX_RETRIES_OTHER = 3;
-
-// Track the last successful data fetch time globally (persists across component remounts)
-let lastGlobalFetchTime = 0;
 
 export function useTasks(userId: string | undefined) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -55,12 +46,6 @@ export function useTasks(userId: string | undefined) {
   const lastVisibilityChangeRef = useRef(Date.now());
   // Throttle resume-triggered refreshes
   const lastResumeRefreshRef = useRef<number>(0);
-  // Track stuck state detection timeout
-  const stuckStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Track if this is a cold start (first mount after app was closed for a while)
-  const isColdStartRef = useRef(true);
-  // Track data freshness
-  const dataFetchedAtRef = useRef<number>(0);
 
   // Update ref when userId changes
   useEffect(() => {
@@ -75,9 +60,8 @@ export function useTasks(userId: string | undefined) {
         lastVisibilityChangeRef.current = Date.now();
       } else if (document.visibilityState === 'visible') {
         // Mark that we came back from hidden
-        const now = Date.now();
-        const hiddenDuration = now - lastVisibilityChangeRef.current;
-        lastVisibilityChangeRef.current = now;
+        const hiddenDuration = Date.now() - lastVisibilityChangeRef.current;
+        lastVisibilityChangeRef.current = Date.now();
         
         // CRITICAL: Reset stuck loading state when app becomes visible
         // This prevents the app from being stuck on loading after minimize/restore
@@ -89,27 +73,9 @@ export function useTasks(userId: string | undefined) {
           }
         }
         
-        // Check if data is stale and needs refresh
-        const dataAge = now - dataFetchedAtRef.current;
-        const isDataStale = dataAge > STALE_THRESHOLD_MS;
-        const isDataVeryStale = dataAge > VERY_STALE_THRESHOLD_MS;
-        
-        // If hidden for a long time OR data is very stale, force refresh
-        if (hiddenDuration > STALE_THRESHOLD_MS || isDataVeryStale) {
-          console.log(`[useTasks] App visible after ${Math.round(hiddenDuration / 1000)}s hidden, data age: ${Math.round(dataAge / 1000)}s - forcing refresh`);
-          // Clear cache to ensure fresh data
-          if (userIdRef.current) {
-            tasksCache.delete(userIdRef.current);
-          }
-          // Trigger refresh after a small delay to let the UI stabilize
-          setTimeout(() => {
-            if (isMountedRef.current && userIdRef.current) {
-              loadTasks({ force: true });
-            }
-          }, 100);
-          wasHiddenRef.current = false;
-        } else if (hiddenDuration < 30000 && !isDataStale) {
-          // Only mark as recent tab switch if hidden for less than 30 seconds and data is fresh
+        // Only mark as recent tab switch if hidden for less than 30 seconds
+        // This prevents showing loading state immediately after tab switch
+        if (hiddenDuration < 30000) {
           wasHiddenRef.current = true;
           // Clear the flag after a short delay
           setTimeout(() => {
@@ -125,7 +91,7 @@ export function useTasks(userId: string | undefined) {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [loadTasks]);
+  }, []);
 
   const loadTasks = useCallback(async (options: { force?: boolean } = {}) => {
     if (!userId) return;
@@ -138,27 +104,6 @@ export function useTasks(userId: string | undefined) {
     // Create a new abort controller
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
-    
-    // Check for cold start - if last global fetch was too long ago, force refresh
-    const now = Date.now();
-    const timeSinceLastGlobalFetch = now - lastGlobalFetchTime;
-    const isColdStart = isColdStartRef.current || timeSinceLastGlobalFetch > VERY_STALE_THRESHOLD_MS;
-    
-    if (isColdStart && !options.force) {
-      console.log(`[useTasks] Cold start detected (last fetch: ${Math.round(timeSinceLastGlobalFetch / 1000)}s ago) - forcing refresh`);
-      options = { force: true };
-      isColdStartRef.current = false;
-    }
-    
-    // Check if cached data is stale
-    const cachedData = tasksCache.get(userId);
-    if (cachedData && !options.force) {
-      const cacheAge = now - cachedData.timestamp;
-      if (cacheAge > CACHE_EXPIRY_MS) {
-        console.log(`[useTasks] Cache expired (age: ${Math.round(cacheAge / 1000)}s) - forcing refresh`);
-        options = { force: true };
-      }
-    }
     
     // If force is true, clear cache for hard refresh
     if (options.force) {
@@ -199,28 +144,6 @@ export function useTasks(userId: string | undefined) {
       if (isMountedRef.current) {
         setError(null);
       }
-      
-      // Clear any existing stuck state timeout
-      if (stuckStateTimeoutRef.current) {
-        clearTimeout(stuckStateTimeoutRef.current);
-      }
-      
-      // Set up stuck state detection - if loading takes more than 10s, auto-recover
-      stuckStateTimeoutRef.current = setTimeout(() => {
-        if (loadingRef.current && isMountedRef.current) {
-          console.log('[useTasks] Stuck state detected after 10s, auto-recovering');
-          loadingRef.current = false;
-          setLoading(false);
-          // Try to use cached data if available, or show error
-          const cached = tasksCache.get(userId);
-          if (cached && cached.tasks.length > 0) {
-            console.log('[useTasks] Using cached data after stuck recovery');
-            setTasks(cached.tasks);
-          } else {
-            setError('Loading timed out. Pull down to refresh.');
-          }
-        }
-      }, 10000);
 
       // Skip database connection test in development mode
       let isConnected = true;
@@ -289,19 +212,12 @@ export function useTasks(userId: string | undefined) {
       
       // Only update state if component is mounted and request not aborted
       if (isMountedRef.current && !signal.aborted) {
-        const fetchTime = Date.now();
         setTasks(data);
         
-        // Update cache with fresh data
-        tasksCache.set(userId, { tasks: data, timestamp: fetchTime });
-        
         setError(null);
-        lastLoadTimeRef.current = fetchTime;
-        dataFetchedAtRef.current = fetchTime;
-        lastGlobalFetchTime = fetchTime; // Update global fetch time for cold start detection
+        lastLoadTimeRef.current = Date.now();
         setRetryCount(0); // Reset retry count on success
         tabSwitchRecoveryRef.current = false; // We've recovered if we were in recovery mode
-        isColdStartRef.current = false; // No longer a cold start
         debugLog('TASKS', `State updated with ${data.length} tasks`);
       }
     } catch (err: any) {
@@ -339,18 +255,13 @@ export function useTasks(userId: string | undefined) {
         }
       }
     } finally {
-      // Clear stuck state timeout
-      if (stuckStateTimeoutRef.current) {
-        clearTimeout(stuckStateTimeoutRef.current);
-        stuckStateTimeoutRef.current = null;
-      }
       // Immediately reset loading state - no delay needed
       loadingRef.current = false;
       if (isMountedRef.current) {
         setLoading(false);
       }
     }
-  }, [userId, retryCount, tasks.length]);
+  }, [userId, retryCount]);
 
   // Refresh tasks when the app resumes or network reconnects.
   // This covers cases where the WebView stays "visible" while Capacitor is backgrounded.
@@ -445,12 +356,6 @@ export function useTasks(userId: string | undefined) {
       // Abort any in-progress request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
-      }
-      
-      // Clear stuck state timeout
-      if (stuckStateTimeoutRef.current) {
-        clearTimeout(stuckStateTimeoutRef.current);
-        stuckStateTimeoutRef.current = null;
       }
     };
   }, [userId, loadTasks]);
