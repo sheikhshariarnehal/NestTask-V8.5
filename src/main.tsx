@@ -62,21 +62,29 @@ const SuperAdminPage = lazy(() => import(/* webpackChunkName: "admin-super" */ '
 // Lazy-load profile page
 const ProfilePage = lazy(() => import(/* webpackChunkName: "profile" */ './pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
 
-// Ensure environment variables are properly loaded in production
-if (import.meta.env.PROD) {
-  console.log('[Debug] Running in production mode - checking environment variables');
-  // Check if we need to add environment variables to window for runtime access
-  const runtimeEnv = window as unknown as {
-    ENV_SUPABASE_URL?: string;
-    ENV_SUPABASE_ANON_KEY?: string;
-  };
+// Ensure environment variables are properly loaded - log in all environments
+console.log(`[Debug] Running in ${import.meta.env.PROD ? 'production' : 'development'} mode - checking environment variables`);
 
+// Check if we need to add environment variables to window for runtime access
+const runtimeEnv = window as unknown as {
+  ENV_SUPABASE_URL?: string;
+  ENV_SUPABASE_ANON_KEY?: string;
+};
+
+if (import.meta.env.PROD) {
   if (!import.meta.env.VITE_SUPABASE_URL && !runtimeEnv.ENV_SUPABASE_URL) {
     console.error('[Error] Missing Supabase URL in production environment');
   }
   if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !runtimeEnv.ENV_SUPABASE_ANON_KEY) {
     console.error('[Error] Missing Supabase Anon Key in production environment');
   }
+}
+
+// Enable verbose debugging via URL parameter (?debug=true)
+if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug')) {
+  localStorage.setItem('nesttask_debug', 'true');
+  localStorage.setItem('nesttask_verbose', 'true');
+  console.log('[Debug] Verbose debugging enabled via URL parameter');
 }
 
 // Lazy load Analytics and SpeedInsights only in production for web

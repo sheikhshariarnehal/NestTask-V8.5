@@ -14,7 +14,8 @@ const isDebugMode = () => {
   if (typeof window === 'undefined') return false;
   return (
     localStorage.getItem('nesttask_debug') === 'true' ||
-    new URLSearchParams(window.location.search).has('debug')
+    new URLSearchParams(window.location.search).has('debug') ||
+    new URLSearchParams(window.location.search).get('debug') === 'true'
   );
 };
 
@@ -241,6 +242,28 @@ if (typeof window !== 'undefined') {
     debugMode: isDebugMode(),
     timestamp: new Date().toISOString(),
   });
+  
+  // Show helpful message in console if debug mode is not enabled
+  if (!isDebugMode()) {
+    console.log(
+      '%c🐛 NestTask Debug Utility',
+      'font-size: 14px; font-weight: bold; color: #0284c7;',
+      '\n\nEnable full debugging by adding ?debug=true to the URL',
+      '\nOr run: window.__nestDebug.enableDebug()',
+      '\n\nAvailable commands:',
+      '\n  • window.__nestDebug.getStatus()   - Get app status',
+      '\n  • window.__nestDebug.getLogs()     - View all logs',
+      '\n  • window.__nestDebug.diagnose()    - Run diagnostics',
+      '\n  • window.__nestDebug.enableVerbose() - Enable verbose mode',
+      '\n\nSee Doc/PRODUCTION_DEBUGGING_GUIDE.md for full documentation'
+    );
+  } else {
+    console.log(
+      '%c🐛 Debug Mode Enabled',
+      'font-size: 14px; font-weight: bold; color: #10b981; background: #d1fae5; padding: 4px 8px; border-radius: 4px;',
+      '\n\nVerbose logging is active. Run window.__nestDebug.diagnose() for full diagnostics.'
+    );
+  }
 }
 
 export { appState, isDebugMode };
