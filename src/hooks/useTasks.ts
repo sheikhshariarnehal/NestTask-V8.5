@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase, testConnection } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
@@ -284,8 +284,8 @@ export function useTasks(userId: string | undefined) {
     const handleResumeRefresh = async () => {
       const now = Date.now();
       
-      // Increase throttle to 3 seconds to prevent rapid-fire refreshes
-      if (now - lastResumeRefreshRef.current < 3000) {
+      // Increase throttle to 5 seconds to prevent rapid-fire refreshes and loops
+      if (now - lastResumeRefreshRef.current < 5000) {
         console.log('[useTasks] Resume refresh throttled');
         return;
       }
@@ -303,7 +303,7 @@ export function useTasks(userId: string | undefined) {
           const timeout = setTimeout(() => {
             console.log('[useTasks] Session validation timeout, proceeding anyway');
             resolve();
-          }, 2000); // 2s timeout
+          }, 5000); // 5s timeout - increased to prevent premature timeout
           
           const handler = () => {
             clearTimeout(timeout);

@@ -392,7 +392,7 @@ export async function testConnection(forceCheck = false) {
       
       // Create a timeout promise to prevent hanging
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Connection test timeout')), 10000); // 10 second timeout
+        setTimeout(() => reject(new Error('Connection test timeout')), 5000); // 5 second timeout (reduced from 10s)
       });
       
       // First verify authentication status with timeout
@@ -457,7 +457,7 @@ export async function testConnection(forceCheck = false) {
       // Test database connection with a simpler query and timeout
       debugLog('CONNECTION', 'Testing database query...');
       const queryTimeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Database query timeout')), 10000); // 10 second timeout
+        setTimeout(() => reject(new Error('Database query timeout')), 5000); // 5 second timeout (reduced from 10s)
       });
       
       const { error } = await Promise.race([
@@ -543,16 +543,20 @@ if (typeof window !== 'undefined') {
     isReconnecting = true;
     console.log('[Supabase] App resumed, checking connection...');
     
-    try {
-      // Test connection - the realtime SDK handles channel reconnection automatically
-      await testConnection();
-      
+    // Test connection in background - don't block on this
+    // The realtime SDK handles channel reconnection automatically
+    testConnection().then(() => {
       // Log channel status for debugging
       const channels = supabase.getChannels();
       console.log(`[Supabase] Active channels: ${channels.length}`);
-    } finally {
+    }).catch((err) => {
+      console.warn('[Supabase] Background connection test failed:', err.message);
+    }).finally(() => {
       isReconnecting = false;
-    }
+    });
+    
+    // Don't wait for connection test to complete
+    isReconnecting = false;
   });
 
   // Handle visibility change

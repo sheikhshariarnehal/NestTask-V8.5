@@ -43,9 +43,9 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
   const dispatchResumeEvent = useCallback(() => {
     if (typeof window === 'undefined') return;
     
-    // Debounce: don't dispatch resume events within 500ms of each other
+    // Debounce: don't dispatch resume events within 2000ms of each other to prevent loops
     const now = Date.now();
-    if (now - lastDispatchedResumeRef.current < 500) {
+    if (now - lastDispatchedResumeRef.current < 2000) {
       console.log('[Lifecycle] Debouncing rapid resume event dispatch');
       return;
     }
@@ -71,12 +71,16 @@ export function useAppLifecycle(callbacks: AppLifecycleCallbacks = {}) {
       callbacksRef.current.onAppStateChange?.(true);
     }
 
+    // Increased threshold from 250ms to 2000ms to prevent rapid blur/focus cycles
+    // This prevents triggering resume on quick window switches
     const blurredDuration = Date.now() - lastBlurTimeRef.current;
-    if (blurredDuration > 250) {
+    if (blurredDuration > 2000) {
       callbacksRef.current.onResume?.();
       dispatchResumeEvent();
+    } else {
+      console.log('[Lifecycle] Focus ignored - blur duration too short:', blurredDuration, 'ms');
     }
-  }, []);
+  }, [dispatchResumeEvent]);
 
   const handleBlur = useCallback(() => {
     console.log('[Lifecycle] Window blurred');
