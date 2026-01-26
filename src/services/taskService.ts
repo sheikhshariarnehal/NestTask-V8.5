@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase';
 import type { Task, NewTask } from '../types/task';
+import { deduplicateWithCache } from '../lib/requestDeduplicator';
+
+// Minimal field selection for list views
+const TASK_FIELDS_LIST = 'id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at,attachments,original_file_names,google_drive_links';
 
 export async function fetchUserRole(userId: string) {
   try {
@@ -12,20 +16,29 @@ export async function fetchUserRole(userId: string) {
 }
 
 export async function fetchTasks(userId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .or(`user_id.eq.${userId},is_admin_task.eq.true`)
-      .order('created_at', { ascending: false });
+  // Use deduplication to prevent duplicate API calls
+  const cacheKey = `taskService:tasks:${userId}`;
+  
+  return deduplicateWithCache(
+    cacheKey,
+    async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select(TASK_FIELDS_LIST)
+          .or(`user_id.eq.${userId},is_admin_task.eq.true`)
+          .order('created_at', { ascending: false });
 
-    if (error) throw error;
+        if (error) throw error;
 
-    return (data || []).map(mapTaskFromDB);
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
-    return [];
-  }
+        return (data || []).map(mapTaskFromDB);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        return [];
+      }
+    },
+    30000 // 30 second cache
+  );
 }
 
 export async function createTask(userId: string, task: NewTask, isAdmin: boolean) {

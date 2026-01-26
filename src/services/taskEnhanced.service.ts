@@ -268,7 +268,10 @@ async function fetchTasksFromSupabase(
   // Apply pagination
   query = query.range(from, to);
 
-  const execQuery = withAbortSignal(query, abortSignal) as any;
+  // Only apply abort signal if provided and not already aborted
+  const execQuery = (abortSignal && !abortSignal.aborted) 
+    ? withAbortSignal(query, abortSignal) as any
+    : query;
   const { data, error, count } = await execQuery;
 
   if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
@@ -280,6 +283,75 @@ async function fetchTasksFromSupabase(
     pageSize,
     hasMore: count ? count > to + 1 : false,
   };
+}
+
+// ==================== OPTIMIZED LEAN QUERIES ====================
+
+/**
+ * Minimal fields for list views - optimized for performance
+ * Only fetches essential display fields, reducing data transfer by ~50%
+ */
+const TASK_FIELDS_MINIMAL = `
+  id, name, description, due_date, status, category,
+  is_admin_task, user_id, section_id, created_at,
+  attachments, original_file_names, google_drive_links
+` as const;
+
+/**
+ * Fetch tasks with minimal fields for list views
+ * Use this for home page and task lists where full details aren't needed
+ */
+export async function fetchTasksMinimal(
+  userId: string,
+  options: {
+    limit?: number;
+    sectionId?: string;
+    includeAdminTasks?: boolean;
+  } = {}
+): Promise<EnhancedTask[]> {
+  const { limit = 50, sectionId, includeAdminTasks = true } = options;
+
+  let query = supabase
+    .from('tasks')
+    .select(TASK_FIELDS_MINIMAL)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  // Build filter condition
+  if (includeAdminTasks) {
+    query = query.or(`user_id.eq.${userId},is_admin_task.eq.true`);
+  } else {
+    query = query.eq('user_id', userId);
+  }
+
+  if (sectionId) {
+    query = query.eq('section_id', sectionId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
+
+  return (data || []).map(transformTaskFromDB);
+}
+
+/**
+ * Fetch single task with full details
+ * Use only when viewing task detail modal/page
+ */
+export async function fetchTaskDetails(taskId: string): Promise<EnhancedTask | null> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Not found
+    throw new Error(`Failed to fetch task: ${error.message}`);
+  }
+
+  return data ? transformTaskFromDB(data) : null;
 }
 
 /**

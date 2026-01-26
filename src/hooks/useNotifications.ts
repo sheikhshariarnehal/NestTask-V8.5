@@ -35,16 +35,22 @@ export function useNotifications(userId: string | undefined) {
   const loadExistingItems = useCallback(async () => {
     if (!userId) return;
 
+    // Minimal field selection for notifications - only fetch what's needed
+    const TASK_NOTIFICATION_FIELDS = 'id,name,is_admin_task,created_at';
+    const ANNOUNCEMENT_FIELDS = 'id,title,content,created_at';
+
     const [{ data: tasks }, { data: announcements }] = await Promise.all([
       supabase
         .from('tasks')
-        .select('*')
+        .select(TASK_NOTIFICATION_FIELDS)
         .or(`user_id.eq.${userId},is_admin_task.eq.true`)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(50), // Limit to recent tasks for notifications
       supabase
         .from('announcements')
-        .select('*')
+        .select(ANNOUNCEMENT_FIELDS)
         .order('created_at', { ascending: false })
+        .limit(20) // Limit announcements
     ]);
 
     const newNotifications: Notification[] = [];

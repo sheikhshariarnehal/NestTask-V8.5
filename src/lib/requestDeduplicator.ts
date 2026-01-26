@@ -13,6 +13,46 @@ type PendingRequest<T> = Promise<T>;
 // Map of in-flight requests
 const pendingRequests = new Map<string, PendingRequest<any>>();
 
+/**
+ * Normalizes cache key by sorting object keys for consistent matching.
+ * This prevents duplicate requests with same params in different order.
+ */
+export function normalizeCacheKey(key: string | object): string {
+  if (typeof key === 'string') {
+    // Try to parse as JSON and normalize
+    try {
+      const parsed = JSON.parse(key);
+      return JSON.stringify(sortObjectKeys(parsed));
+    } catch {
+      // If not valid JSON, extract and sort query params if it's a URL-like string
+      if (key.includes('?') || key.includes('&')) {
+        const parts = key.split(/[?&]/).sort();
+        return parts.join('&');
+      }
+      return key;
+    }
+  }
+  return JSON.stringify(sortObjectKeys(key));
+}
+
+/**
+ * Recursively sorts object keys for consistent serialization
+ */
+function sortObjectKeys(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys);
+  }
+  return Object.keys(obj)
+    .sort()
+    .reduce((acc, key) => {
+      acc[key] = sortObjectKeys(obj[key]);
+      return acc;
+    }, {} as any);
+}
+
 // Short-term cache for frequently accessed data (sections, user roles)
 // TTL: 60 seconds - enough to prevent duplicate calls during page load
 interface CacheEntry<T> {

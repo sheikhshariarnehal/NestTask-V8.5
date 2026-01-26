@@ -39,6 +39,10 @@
     <link rel="preconnect" href="https://nglfbbdoyyfslzyjarqs.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co" />
     
+    <!-- Preload critical API endpoints for faster initial data fetch -->
+    <link rel="preload" as="fetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co/auth/v1/user" crossorigin="anonymous" />
+    <link rel="preload" as="fetch" href="https://nglfbbdoyyfslzyjarqs.supabase.co/rest/v1/tasks" crossorigin="anonymous" />
+    
     <!-- Google Fonts preconnect - only enable if fonts are actually used -->
     <!-- <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin /> -->
     <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /> -->

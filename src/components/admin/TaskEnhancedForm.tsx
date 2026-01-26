@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, memo, useTransition, useDeferredValue, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Upload, Link as LinkIcon, AlertCircle, RefreshCw, FileText, Trash2, CheckCircle } from 'lucide-react';
 import type { EnhancedTask, CreateTaskInput, UpdateTaskInput, TaskPriority } from '../../types/taskEnhanced';
@@ -33,21 +33,23 @@ const TaskEnhancedFormComponent = ({
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController>();
   const savingRef = useRef(false);
+  const [isPending, startTransition] = useTransition();
   
-  const [formData, setFormData] = useState({
+  // Lazy state initialization to avoid computation on every render
+  const [formData, setFormData] = useState(() => ({
     name: task?.name || '',
     description: task?.description || '',
     category: task?.category || 'assignment' as TaskCategory,
     dueDate: task?.dueDate || '',
     priority: task?.priority || 'medium' as TaskPriority,
     googleDriveLinks: task?.googleDriveLinks?.join('\n') || '',
-  });
+  }));
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(() => 
     task?.attachments?.map(url => ({
       url,
       name: url.split('/').pop()?.split('_').slice(0, -2).join('_') || 'file',
@@ -56,7 +58,22 @@ const TaskEnhancedFormComponent = ({
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savingStartTimeRef = useRef<number | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  
+  // Deferred values for non-critical updates
+  const deferredFormData = useDeferredValue(formData);
+  const deferredUploadProgress = useDeferredValue(uploadProgress);
 
+  // Memoize computed values
+  const canUploadMore = useMemo(() => uploadedFiles.length < 10, [uploadedFiles.length]);
+  const hasFiles = useMemo(() => uploadedFiles.length > 0, [uploadedFiles.length]);
+  const isFormValid = useMemo(() => 
+    formData.name.trim().length > 0 && 
+    formData.description.trim().length > 0 && 
+    formData.dueDate.length > 0,
+    [formData.name, formData.description, formData.dueDate]
+  );
+  
   // Track component mount state and reset saving state on unmount
   useEffect(() => {
     isMountedRef.current = true;
@@ -157,8 +174,11 @@ const TaskEnhancedFormComponent = ({
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileId = `${file.name}-${Date.now()}`;
         progressMap[fileId] = 0;
-        setUploadProgress({ ...progressMap });
-
+        
+        // Batch progress updates to reduce re-renders
+        let lastUpdateTime = Date.now();
+        const minUpdateInterval = 50; // Update UI max every 50ms
+        
         try {
           const result = await uploadTaskAttachment(
             file,
@@ -166,7 +186,14 @@ const TaskEnhancedFormComponent = ({
             (progress) => {
               if (isMountedRef.current) {
                 progressMap[fileId] = progress;
-                setUploadProgress({ ...progressMap });
+                const now = Date.now();
+                // Throttle progress updates
+                if (progress === 100 || now - lastUpdateTime >= minUpdateInterval) {
+                  startTransition(() => {
+                    setUploadProgress({ ...progressMap });
+                  });
+                  lastUpdateTime = now;
+                }
               }
             }
           );
@@ -203,14 +230,83 @@ const TaskEnhancedFormComponent = ({
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = useCallback((bytes: number): string => {
     if (bytes === 0) return 'Unknown size';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
+  }, []);
+  
+  // Debounced input handler for better performance
+  const handleInputChange = useCallback((field: keyof typeof formData, value: string) => {
+    // Clear existing timeout
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // For short fields, update immediately
+    if (field === 'category' || field === 'priority' || field === 'dueDate') {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      return;
+    }
+    
+    // For text fields, debounce the update
+    debounceTimerRef.current = setTimeout(() => {
+      startTransition(() => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+      });
+    }, 150);
+  }, []);
 
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+  
+  // Memoized file list component for better performance
+  const FileList = useMemo(() => {
+    if (uploadedFiles.length === 0) return null;
+    
+    return (
+      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {uploadedFiles.map((file, index) => (
+          <div
+            key={`${file.name}-${index}`}
+            className="group flex items-center gap-2 bg-white dark:bg-gray-700/50 px-2 py-2 rounded-md border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
+          >
+            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+              <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                {file.name}
+              </p>
+              {file.size > 0 && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {formatFileSize(file.size)}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => handleRemoveFile(index)}
+              disabled={saving}
+              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Remove file"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }, [uploadedFiles, saving, formatFileSize, handleRemoveFile]);
+  
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -360,8 +456,9 @@ const TaskEnhancedFormComponent = ({
             <input
               type="text"
               required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              defaultValue={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              onBlur={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none shadow-sm placeholder:text-gray-400"
               placeholder="Enter a clear and concise task name"
             />
@@ -377,7 +474,7 @@ const TaskEnhancedFormComponent = ({
                 <select
                   required
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value as TaskCategory })}
+                  onChange={(e) => handleInputChange('category', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none shadow-sm appearance-none"
                 >
                   <option value="assignment">📝 Assignment</option>
@@ -409,7 +506,7 @@ const TaskEnhancedFormComponent = ({
                 <select
                   required
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
+                  onChange={(e) => handleInputChange('priority', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none shadow-sm appearance-none"
                 >
                   <option value="low">🟢 Low Priority</option>
@@ -431,7 +528,7 @@ const TaskEnhancedFormComponent = ({
                 type="date"
                 required
                 value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                onChange={(e) => handleInputChange('dueDate', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none shadow-sm"
               />
             </div>
@@ -444,8 +541,9 @@ const TaskEnhancedFormComponent = ({
             </label>
             <textarea
               required
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              defaultValue={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              onBlur={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none shadow-sm resize-none placeholder:text-gray-400"
               placeholder="Provide detailed information about the task..."
@@ -469,7 +567,7 @@ const TaskEnhancedFormComponent = ({
                 type="file"
                 multiple
                 onChange={handleFileUpload}
-                disabled={uploading || uploadedFiles.length >= 10}
+                disabled={uploading || !canUploadMore}
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.svg,.zip,.rar,.7z,.mp4,.mp3,.wav"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
               />
@@ -491,9 +589,9 @@ const TaskEnhancedFormComponent = ({
             </div>
             
             {/* Upload Progress */}
-            {uploading && Object.keys(uploadProgress).length > 0 && (
+            {uploading && Object.keys(deferredUploadProgress).length > 0 && (
               <div className="mt-2 space-y-2">
-                {Object.entries(uploadProgress).map(([fileId, progress]) => (
+                {Object.entries(deferredUploadProgress).map(([fileId, progress]) => (
                   <div key={fileId} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-600 dark:text-gray-400 truncate flex-1">
@@ -514,40 +612,8 @@ const TaskEnhancedFormComponent = ({
               </div>
             )}
             
-            {/* Uploaded Files List */}
-            {uploadedFiles.length > 0 && (
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {uploadedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="group flex items-center gap-2 bg-white dark:bg-gray-700/50 px-2 py-2 rounded-md border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
-                  >
-                    <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                      <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                        {file.name}
-                      </p>
-                      {file.size > 0 && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatFileSize(file.size)}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile(index)}
-                      disabled={saving}
-                      className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Remove file"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Uploaded Files List - Memoized for performance */}
+            {FileList}
           </div>
 
           {/* Google Drive Links */}
@@ -559,8 +625,9 @@ const TaskEnhancedFormComponent = ({
               </span>
             </label>
             <textarea
-              value={formData.googleDriveLinks}
-              onChange={(e) => setFormData({ ...formData, googleDriveLinks: e.target.value })}
+              defaultValue={formData.googleDriveLinks}
+              onChange={(e) => handleInputChange('googleDriveLinks', e.target.value)}
+              onBlur={(e) => setFormData(prev => ({ ...prev, googleDriveLinks: e.target.value }))}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none shadow-sm resize-none placeholder:text-gray-400 font-mono"
               placeholder="https://drive.google.com/file/d/..."
@@ -589,12 +656,12 @@ const TaskEnhancedFormComponent = ({
             <button
               onClick={(e) => handleSubmit(e as any)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 flex items-center gap-1.5 text-sm"
-              disabled={saving || uploading}
+              disabled={saving || uploading || isPending || !isFormValid}
             >
-              {saving ? (
+              {saving || isPending ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Saving...
+                  {isPending ? 'Processing...' : 'Saving...'}
                 </>
               ) : (
                 isEditing ? 'Update Task' : 'Create Task'

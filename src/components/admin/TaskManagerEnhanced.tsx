@@ -113,6 +113,8 @@ const TaskManagerEnhancedComponent = ({
       }
       setError(null);
 
+      // When using deduplication, don't pass abort signal to avoid conflicts
+      // The deduplicator manages its own request lifecycle
       const response = await requestDeduplicator.deduplicate(cacheKey, () => 
         fetchTasksEnhanced(userId, {
           page,
@@ -120,13 +122,13 @@ const TaskManagerEnhancedComponent = ({
           filters,
           sort,
           sectionId,
-          abortSignal: abortController.signal,
+          // Don't pass abortSignal through deduplicator to prevent race conditions
           bypassCache: refresh, // Bypass cache on manual refresh
         })
       );
 
       // Only update state if component is still mounted and request wasn't cancelled
-      if (isMountedRef.current && !abortController.signal.aborted) {
+      if (isMountedRef.current && abortController && !abortController.signal.aborted) {
         setTasks(response.tasks);
         setTotal(response.total);
         setError(null);
@@ -140,7 +142,7 @@ const TaskManagerEnhancedComponent = ({
       // Only set error if not cancelled and component is mounted
       if (
         isMountedRef.current &&
-        !abortController.signal.aborted &&
+        abortController && !abortController.signal.aborted &&
         err?.name !== 'AbortError' &&
         err?.message !== 'Operation cancelled'
       ) {
@@ -149,7 +151,7 @@ const TaskManagerEnhancedComponent = ({
         console.error('Error loading tasks:', err);
       }
     } finally {
-      if (isMountedRef.current && !abortController.signal.aborted) {
+      if (isMountedRef.current && abortController && !abortController.signal.aborted) {
         setLoading(false);
       }
       // Clear the ref if this was our controller
