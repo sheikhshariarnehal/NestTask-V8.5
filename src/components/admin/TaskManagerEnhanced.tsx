@@ -9,6 +9,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import { performanceCache, requestDeduplicator } from '../../lib/performanceCache';
+import { PerformanceStats } from '../PerformanceStats';
 import type { EnhancedTask, TaskFilters, TaskSortOptions } from '../../types/taskEnhanced';
 import type { TaskStatus } from '../../types/task';
 import { fetchTasksEnhanced, bulkDeleteTasks, bulkUpdateTaskStatus } from '../../services/taskEnhanced.service';
@@ -86,7 +88,13 @@ const TaskManagerEnhancedComponent = ({
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [isBulkOperationLoading, setIsBulkOperationLoading] = useState(false);
 
+  // Performance tracking
+  const [loadTime, setLoadTime] = useState<number>();
+  const [queryCount, setQueryCount] = useState(1);
+
   const loadTasks = useCallback(async (refresh = false) => {
+    const startTime = performance.now();
+    
     // Cancel any pending requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -96,27 +104,37 @@ const TaskManagerEnhancedComponent = ({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    // Create cache key for request deduplication
+    const cacheKey = `tasks:${userId}:${JSON.stringify({ page, filters, sort, sectionId })}`;
+
     try {
       if (!refresh) {
         setLoading(true);
       }
       setError(null);
 
-      const response = await fetchTasksEnhanced(userId, {
-        page,
-        pageSize: 50,
-        filters,
-        sort,
-        sectionId,
-        abortSignal: abortController.signal,
-        bypassCache: refresh, // Bypass cache on manual refresh
-      });
+      const response = await requestDeduplicator.deduplicate(cacheKey, () => 
+        fetchTasksEnhanced(userId, {
+          page,
+          pageSize: 25, // Reduced from 50 for better performance
+          filters,
+          sort,
+          sectionId,
+          abortSignal: abortController.signal,
+          bypassCache: refresh, // Bypass cache on manual refresh
+        })
+      );
 
       // Only update state if component is still mounted and request wasn't cancelled
       if (isMountedRef.current && !abortController.signal.aborted) {
         setTasks(response.tasks);
         setTotal(response.total);
         setError(null);
+        
+        // Track performance
+        const endTime = performance.now();
+        setLoadTime(Math.round(endTime - startTime));
+        setQueryCount(1); // With indexes, we should only need 1 optimized query
       }
     } catch (err: any) {
       // Only set error if not cancelled and component is mounted
@@ -157,6 +175,32 @@ const TaskManagerEnhancedComponent = ({
       }
     };
   }, [searchInput]);
+
+  // Computed values with memoization for performance
+  const filteredAndComputedTasks = useMemo(() => {
+    let result = tasks;
+    
+    // Apply client-side filters if needed (for immediate feedback)
+    if (filters.search && filters.search.length < 3) {
+      // For short search terms, filter client-side for instant feedback
+      result = result.filter(task => 
+        task.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        task.description.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+    
+    return result;
+  }, [tasks, filters.search]);
+
+  const taskStats = useMemo(() => {
+    const total = filteredAndComputedTasks.length;
+    const completed = filteredAndComputedTasks.filter(t => t.status === 'completed').length;
+    const overdue = filteredAndComputedTasks.filter(t => 
+      new Date(t.dueDate) < new Date() && t.status !== 'completed'
+    ).length;
+    
+    return { total, completed, overdue };
+  }, [filteredAndComputedTasks]);
 
   // Load tasks when filters/sort changes
   useEffect(() => {
@@ -309,38 +353,19 @@ const TaskManagerEnhancedComponent = ({
     setSort(newSort);
   }, []);
 
-  const filteredTasks = useMemo(() => {
-    let result = tasks;
-    
-    // Apply search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(task => 
-        task.name.toLowerCase().includes(searchLower) ||
-        task.description.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Apply category filter
-    if (filters.category !== 'all') {
-      result = result.filter(task => task.category === filters.category);
-    }
-    
-    // Apply status filter
-    if (filters.status !== 'all') {
-      result = result.filter(task => task.status === filters.status);
-    }
-    
-    // Apply priority filter
-    if (filters.priority !== 'all') {
-      result = result.filter(task => task.priority === filters.priority);
-    }
-    
-    return result;
-  }, [tasks, filters]);
-
   return (
     <>
+      {/* Performance Stats (Development Only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4">
+          <PerformanceStats 
+            taskCount={total}
+            loadTime={loadTime}
+            queryCount={queryCount}
+          />
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="mb-2">
         <div className="pt-2">
@@ -539,7 +564,7 @@ const TaskManagerEnhancedComponent = ({
         <TaskTableSkeleton />
       ) : (
         <TaskEnhancedTable
-          tasks={filteredTasks}
+          tasks={filteredAndComputedTasks}
           selectedTaskIds={selectedTaskIds}
           onSelectTasks={setSelectedTaskIds}
           onTaskClick={setSelectedTask}

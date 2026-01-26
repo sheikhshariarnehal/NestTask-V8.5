@@ -149,7 +149,7 @@ export async function fetchTasksEnhanced(
     bypassCache?: boolean;
   } = {}
 ): Promise<PaginatedTasksResponse> {
-  const { page = 1, pageSize = 50, filters = {}, sort, sectionId, abortSignal, bypassCache = false } = options;
+  const { page = 1, pageSize = 25, filters = {}, sort, sectionId, abortSignal, bypassCache = false } = options;
   
   // Generate cache key based on all parameters
   const filterKey = JSON.stringify({ filters, sort, sectionId, page, pageSize });
@@ -193,7 +193,24 @@ async function fetchTasksFromSupabase(
 
   let query = supabase
     .from('tasks')
-    .select('*', { count: 'exact' });
+    .select(`
+      id,
+      name,
+      description,
+      category,
+      due_date,
+      status,
+      priority,
+      tags,
+      created_at,
+      updated_at,
+      user_id,
+      section_id,
+      is_admin_task,
+      assigned_to,
+      assigned_by,
+      attachments
+    `, { count: 'exact' });
 
   // Apply section filter
   if (sectionId) {

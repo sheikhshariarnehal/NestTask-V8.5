@@ -5,25 +5,9 @@ import {
   BarChart, PieChartIcon, LineChart, ArrowUpRight,
   FileText, CheckSquare, XCircle, Filter
 } from 'lucide-react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, 
-  CategoryScale, LinearScale, BarElement, Title, 
-  PointElement, LineElement } from 'chart.js';
-import { Pie, Bar, Line } from 'react-chartjs-2';
 import { CSVLink } from 'react-csv';
 import type { Task } from '../../../types';
-
-// Register ChartJS components
-ChartJS.register(
-  ArcElement, 
-  Tooltip, 
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  PointElement,
-  LineElement
-);
+import { Pie, Bar, chartOptions as defaultChartOptions } from './ChartComponents';
 
 // Helper function to check if a task is overdue
 function isOverdue(dueDate: string): boolean {
@@ -34,29 +18,8 @@ function isOverdue(dueDate: string): boolean {
   return taskDate < today;
 }
 
-// Define chart options outside component to prevent recreation
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-      labels: {
-        padding: 10,
-        usePointStyle: true,
-        boxWidth: 8,
-      },
-    },
-    tooltip: {
-      padding: 10,
-      backgroundColor: 'rgba(17, 24, 39, 0.9)',
-      titleColor: 'rgba(255, 255, 255, 0.9)',
-      bodyColor: 'rgba(255, 255, 255, 0.9)',
-      displayColors: true,
-      boxPadding: 4
-    }
-  },
-};
+// Use optimized chart options from ChartComponents
+const chartOptions = defaultChartOptions;
 
 // Define color maps outside component to prevent recreation
 const categoryColorMap = [

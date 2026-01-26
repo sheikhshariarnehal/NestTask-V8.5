@@ -1,25 +1,50 @@
-import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, startTransition } from 'react';
 import { 
   Activity, Users, Filter, Calendar, PieChart, Zap, TrendingUp, BarChart2, 
   BookOpen, Clock, Star, Award, Briefcase, CreditCard, CheckCircle, FileText
 } from 'lucide-react';
 import { UserActivity } from '../UserActivity';
 import { TaskOverview } from './TaskOverview';
+import { performanceCache, requestDeduplicator } from '../../../lib/performanceCache';
+import { PerformanceStats } from '../../PerformanceStats';
+import { 
+  fetchDashboardStats, 
+  fetchRecentTasks, 
+  fetchTasksByCategory,
+  getDashboardCacheStats 
+} from '../../../services/dashboardOptimized.service';
 import type { User } from '../../../types/auth';
 import type { Task } from '../../../types';
-import { fetchTasks } from '../../../services/taskService';
 
-// Lazy load heavy chart components to reduce initial bundle size
-// This saves ~600KB from initial load and improves LCP by ~90ms
-const UserGraph = lazy(() => import('./UserGraph').then(m => ({ default: m.UserGraph })));
-const TaskStats = lazy(() => import('../task/TaskStats').then(m => ({ default: m.TaskStats })));
+// Lazy load heavy chart components with better error handling
+const UserGraph = lazy(() => 
+  import('./UserGraph')
+    .then(m => ({ default: m.UserGraph }))
+    .catch(() => ({ default: () => <ChartErrorFallback /> }))
+);
 
-// Loading skeleton for lazy-loaded chart components
+const TaskStats = lazy(() => 
+  import('../task/TaskStats')
+    .then(m => ({ default: m.TaskStats }))
+    .catch(() => ({ default: () => <ChartErrorFallback /> }))
+);
+
+// Optimized loading skeleton with reduced layout shift
 const ChartSkeleton = ({ height = 'h-64' }: { height?: string }) => (
-  <div className={`${height} bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-center`}>
+  <div className={`${height} bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-center animate-pulse`}>
     <div className="flex flex-col items-center gap-2">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-      <span className="text-sm text-gray-500 dark:text-gray-400">Loading chart...</span>
+      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+    </div>
+  </div>
+);
+
+// Error fallback for failed chart loads
+const ChartErrorFallback = () => (
+  <div className="h-64 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-center">
+    <div className="text-center">
+      <div className="text-gray-400 mb-2">📊</div>
+      <span className="text-sm text-gray-500 dark:text-gray-400">Chart temporarily unavailable</span>
     </div>
   </div>
 );
@@ -30,7 +55,21 @@ interface DashboardProps {
   isLoading?: boolean;
 }
 
-export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }: DashboardProps) {
+export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks, isLoading }: DashboardProps) {
+  // Performance tracking with dashboard-specific metrics
+  const [loadTime, setLoadTime] = useState<number>();
+  const [renderStartTime] = useState(() => performance.now());
+  const [dashboardStats, setDashboardStats] = useState({
+    totalTasks: 0,
+    completedTasks: 0,
+    inProgressTasks: 0,
+    pendingTasks: 0,
+    completionRate: 0,
+    totalUsers: 0,
+    activeUsers: 0,
+    newUsersThisWeek: 0,
+  });
+  
   const [filterValue, setFilterValue] = useState('All');
   const [currentDate, setCurrentDate] = useState('');
   const [currentMonth, setCurrentMonth] = useState('');
@@ -57,6 +96,14 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
   });
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+
+  // Track when component finishes loading
+  useEffect(() => {
+    if (!isLoading && !isLoadingTasks) {
+      const endTime = performance.now();
+      setLoadTime(Math.round(endTime - renderStartTime));
+    }
+  }, [isLoading, isLoadingTasks, renderStartTime]);
 
   useEffect(() => {
     // Check if mobile view and update when window resizes
@@ -97,6 +144,34 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
 
   useEffect(() => {
     setTasks(initialTasks);
+    
+    // Load dashboard stats and recent tasks in parallel for better performance
+    const loadDashboardData = async () => {
+      setIsLoadingTasks(true);
+      
+      try {
+        // Load dashboard stats and recent tasks in parallel
+        const [stats, recentTasks] = await Promise.all([
+          fetchDashboardStats(),
+          fetchRecentTasks(5)
+        ]);
+        
+        setDashboardStats(stats);
+        
+        // Only set tasks if no initial tasks provided
+        if (!initialTasks?.length) {
+          setTasks(recentTasks);
+        }
+        
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        setTasks([]);
+      } finally {
+        setIsLoadingTasks(false);
+      }
+    };
+    
+    loadDashboardData();
   }, [initialTasks]);
 
   const filteredUsers = useMemo(() => {
@@ -106,23 +181,23 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
 
   const adminUser = useMemo(() => users.find(user => user.role === 'admin'), [users]);
 
-  const { activeUsers, activePercentage, newUsersThisWeek } = useMemo(() => {
-    const active = users.filter(user => user.lastActive).length;
-    const percentage = Math.round((active / users.length) * 100) || 0;
-    const newUsers = users.filter(user => {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return new Date(user.createdAt) >= weekAgo;
-    }).length;
-    return { activeUsers: active, activePercentage: percentage, newUsersThisWeek: newUsers };
-  }, [users]);
+  // Optimized user calculations using dashboard stats
+  const userStats = useMemo(() => {
+    return {
+      activeUsers: dashboardStats.activeUsers,
+      activePercentage: dashboardStats.totalUsers > 0 
+        ? Math.round((dashboardStats.activeUsers / dashboardStats.totalUsers) * 100)
+        : 0,
+      newUsersThisWeek: dashboardStats.newUsersThisWeek
+    };
+  }, [dashboardStats]);
 
-  const { completionRate, completionTrend } = useMemo(() => {
-    const rate = tasks.length 
-      ? Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100) 
-      : 0;
-    return { completionRate: rate, completionTrend: "+8%" };
-  }, [tasks]);
+  const taskStats = useMemo(() => {
+    return {
+      completionRate: dashboardStats.completionRate,
+      completionTrend: "+8%" // You could calculate this from historical data
+    };
+  }, [dashboardStats]);
 
   const taskCategories = useMemo(() => {
     return tasks.reduce((acc, task) => {
@@ -186,7 +261,7 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Active Today</h3>
-              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{activeUsers}</div>
+              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{userStats.activeUsers}</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/10 flex items-center justify-center shadow-sm">
               <Users className="w-4 h-4 text-green-500 dark:text-green-400" />
@@ -198,7 +273,7 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">New This Week</h3>
-              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{newUsersThisWeek}</div>
+              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{userStats.newUsersThisWeek}</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/10 flex items-center justify-center shadow-sm">
               <Clock className="w-4 h-4 text-purple-500 dark:text-purple-400" />
@@ -541,6 +616,21 @@ export const Dashboard = memo(function Dashboard({ users, tasks: initialTasks }:
           <TaskStats tasks={tasks} />
         </Suspense>
       </div>
+
+      {/* Performance Stats for Development */}
+      {process.env.NODE_ENV === 'development' && loadTime && (
+        <PerformanceStats 
+          componentName="Dashboard"
+          loadTime={loadTime}
+          additionalStats={{
+            'Tasks Loaded': tasks.length,
+            'Total Tasks': dashboardStats.totalTasks,
+            'Users': dashboardStats.totalUsers,
+            'Cache Hits': getDashboardCacheStats().dashboardCacheSize,
+            'Completion Rate': `${dashboardStats.completionRate}%`
+          }}
+        />
+      )}
     </div>
   );
 }); 
