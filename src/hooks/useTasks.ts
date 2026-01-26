@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, testConnection } from '../lib/supabase';
 import { fetchTasks, createTask, updateTask, deleteTask } from '../services/task.service';
 import type { Task, NewTask } from '../types/task';
 import { createDebouncedEventHandler } from '../utils/eventDebounce';
-import { debugLog, updateDebugState } from '../lib/debug';
 
 // Task fetch timeout in milliseconds (increased from 20 seconds to 45 seconds)
 const TASK_FETCH_TIMEOUT = 45000;
@@ -137,13 +136,6 @@ export function useTasks(userId: string | undefined) {
       const hasExistingTasks = tasks.length > 0;
       const shouldShowLoading = !wasHiddenRef.current || !hasExistingTasks;
       
-      console.log('[useTasks] Starting task load', { 
-        shouldShowLoading, 
-        hasExistingTasks, 
-        wasHidden: wasHiddenRef.current,
-        userId 
-      });
-      
       if (isMountedRef.current && shouldShowLoading) {
         setLoading(true);
       }
@@ -152,60 +144,38 @@ export function useTasks(userId: string | undefined) {
         setError(null);
       }
 
-      // Check session validity - simplified to avoid connection test hanging
-      // Session validation is sufficient to ensure database connectivity
-      console.log('[useTasks] Checking session validity...');
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        debugLog('TASKS', '⚠️ No session found during task fetch - session may have expired');
-        throw new Error('Session expired - please refresh the page');
-      }
-      
-      console.log('[useTasks] Session valid, proceeding with task fetch');
-      
-      // Log session info for debugging stale app issues
-      const expiresAt = session.session.expires_at;
-      if (expiresAt) {
-        const expiresAtMs = expiresAt * 1000;
-        const timeUntilExpiry = expiresAtMs - Date.now();
-        debugLog('TASKS', 'Session check during task fetch', {
-          expiresInMinutes: Math.round(timeUntilExpiry / 60000),
-          isExpired: timeUntilExpiry <= 0,
-        });
-        
-        if (timeUntilExpiry <= 0) {
-          debugLog('TASKS', '🔴 SESSION EXPIRED during task fetch!');
-          updateDebugState({ isSessionValid: false, hardRefreshNeeded: true });
-          throw new Error('Session expired - please login again');
+      // Skip database connection test in development mode
+      let isConnected = true;
+      if (process.env.NODE_ENV !== 'development') {
+        // Get user data to check role and section
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Test connection before fetching
+        isConnected = await testConnection();
+        if (!isConnected) {
+          throw new Error('Unable to connect to database');
+        }
+
+        // Check session - if no session, just return without reloading
+        // The auth flow will handle redirecting to login if needed
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) {
+          console.log('No session found during task fetch, skipping reload');
+          throw new Error('Session expired - please refresh the page');
         }
       }
-      
-      updateDebugState({ connectionState: 'connected' });
 
       // Check if the request was aborted
       if (signal.aborted) {
-        debugLog('TASKS', 'Task loading aborted');
+        console.log('Task loading aborted');
         return;
       }
 
       // Batch process tasks in chunks for better performance
       const processTasks = async () => {
         // Pass undefined for sectionId as we don't need to filter manually
-        debugLog('TASKS', 'Fetching tasks from database...');
-        console.log('[useTasks] Starting fetchTasks call for userId:', userId);
-        const startTime = Date.now();
-        
-        try {
-          const data = await fetchTasks(userId, undefined);
-          const duration = Date.now() - startTime;
-          console.log(`[useTasks] ✅ fetchTasks completed: ${data.length} tasks in ${duration}ms`);
-          debugLog('TASKS', `✅ Fetched ${data.length} tasks in ${duration}ms`);
-          updateDebugState({ lastDataFetch: Date.now() });
-          return data;
-        } catch (error: any) {
-          console.error('[useTasks] ❌ fetchTasks error:', error);
-          throw error;
-        }
+        const data = await fetchTasks(userId, undefined);
+        return data;
       };
       
       // Use Promise.race to implement timeout with increased timeout value
@@ -215,26 +185,19 @@ export function useTasks(userId: string | undefined) {
       
       const data = await Promise.race([processTasks(), timeoutPromise]);
       
-      console.log('[useTasks] Race completed, data received:', data?.length || 0, 'tasks');
-      
       // Only update state if component is mounted and request not aborted
       if (isMountedRef.current && !signal.aborted) {
-        console.log('[useTasks] Updating state with', data.length, 'tasks');
         setTasks(data);
         
         setError(null);
         lastLoadTimeRef.current = Date.now();
         setRetryCount(0); // Reset retry count on success
         tabSwitchRecoveryRef.current = false; // We've recovered if we were in recovery mode
-        debugLog('TASKS', `State updated with ${data.length} tasks`);
-        console.log('[useTasks] ✅ State update complete');
-      } else {
-        console.log('[useTasks] ⚠️ Skipping state update - mounted:', isMountedRef.current, 'aborted:', signal.aborted);
       }
     } catch (err: any) {
       // Only update error state if component is mounted and not aborted
       if (isMountedRef.current && (!abortControllerRef.current || !abortControllerRef.current.signal.aborted)) {
-        debugLog('TASKS', '❌ Error fetching tasks', { error: err.message });
+        console.error('Error fetching tasks:', err);
         
         // Provide a more informative error message for timeouts
         if (err.message === 'Task fetch timeout') {
@@ -267,13 +230,9 @@ export function useTasks(userId: string | undefined) {
       }
     } finally {
       // Immediately reset loading state - no delay needed
-      console.log('[useTasks] Finally block - resetting loading state');
       loadingRef.current = false;
       if (isMountedRef.current) {
         setLoading(false);
-        console.log('[useTasks] ✅ Loading state set to false');
-      } else {
-        console.log('[useTasks] ⚠️ Component unmounted, skipping loading state update');
       }
     }
   }, [userId, retryCount]);
@@ -284,8 +243,8 @@ export function useTasks(userId: string | undefined) {
     const handleResumeRefresh = async () => {
       const now = Date.now();
       
-      // Increase throttle to 5 seconds to prevent rapid-fire refreshes and loops
-      if (now - lastResumeRefreshRef.current < 5000) {
+      // Increase throttle to 3 seconds to prevent rapid-fire refreshes
+      if (now - lastResumeRefreshRef.current < 3000) {
         console.log('[useTasks] Resume refresh throttled');
         return;
       }
@@ -303,7 +262,7 @@ export function useTasks(userId: string | undefined) {
           const timeout = setTimeout(() => {
             console.log('[useTasks] Session validation timeout, proceeding anyway');
             resolve();
-          }, 5000); // 5s timeout - increased to prevent premature timeout
+          }, 2000); // 2s timeout
           
           const handler = () => {
             clearTimeout(timeout);

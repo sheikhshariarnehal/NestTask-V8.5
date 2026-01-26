@@ -12,6 +12,7 @@ export function mapTaskFromDB(dbTask: any): Task {
     isAdminTask: dbTask.is_admin_task,
     sectionId: dbTask.section_id || null,
     googleDriveLinks: dbTask.google_drive_links || [],
-    attachments: dbTask.attachments || []
+    attachments: dbTask.attachments || [],
+    originalFileNames: dbTask.original_file_names || []
   };
 }

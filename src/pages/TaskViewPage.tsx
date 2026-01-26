@@ -79,6 +79,9 @@ export function TaskViewPage() {
             createdAt: data.created_at,
             updatedAt: data.updated_at,
             isAdminTask: data.is_admin_task || false,
+            googleDriveLinks: data.google_drive_links || [],
+            attachments: data.attachments || [],
+            originalFileNames: data.original_file_names || []
           };
           setTask(transformedTask);
         }

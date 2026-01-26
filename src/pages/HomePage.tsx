@@ -107,10 +107,8 @@ export const HomePage: React.FC<HomePageProps> = memo(({
   // Keep the task skeleton perceptible even on fast connections.
   const [showTaskSkeleton, setShowTaskSkeleton] = useState(() => tasksLoading || !hasCompletedInitialTasksLoad);
   const skeletonStartRef = useRef<number | null>(null);
-  const maxLoadTimeoutRef = useRef<number | undefined>(undefined);
 
   const MIN_SKELETON_MS = 500;
-  const MAX_LOADING_TIME = 30000; // 30 seconds maximum loading time
 
   useEffect(() => {
     let hideTimer: number | undefined;
@@ -120,13 +118,6 @@ export const HomePage: React.FC<HomePageProps> = memo(({
     if (consideredLoading) {
       if (skeletonStartRef.current == null) {
         skeletonStartRef.current = Date.now();
-        
-        // Set a maximum timeout to force hide skeleton if loading takes too long
-        maxLoadTimeoutRef.current = window.setTimeout(() => {
-          console.warn('[HomePage] Maximum loading time exceeded, forcing skeleton hide');
-          setShowTaskSkeleton(false);
-          skeletonStartRef.current = null;
-        }, MAX_LOADING_TIME);
       }
       setShowTaskSkeleton(true);
       return () => {
@@ -135,12 +126,6 @@ export const HomePage: React.FC<HomePageProps> = memo(({
     }
 
     if (!tasksLoading && showTaskSkeleton) {
-      // Clear the maximum timeout since loading completed
-      if (maxLoadTimeoutRef.current) {
-        window.clearTimeout(maxLoadTimeoutRef.current);
-        maxLoadTimeoutRef.current = undefined;
-      }
-      
       const startedAt = skeletonStartRef.current ?? Date.now();
       const elapsed = Date.now() - startedAt;
       const remaining = Math.max(MIN_SKELETON_MS - elapsed, 0);
@@ -155,10 +140,6 @@ export const HomePage: React.FC<HomePageProps> = memo(({
 
     return () => {
       if (hideTimer) window.clearTimeout(hideTimer);
-      if (maxLoadTimeoutRef.current) {
-        window.clearTimeout(maxLoadTimeoutRef.current);
-        maxLoadTimeoutRef.current = undefined;
-      }
     };
   }, [tasksLoading, hasCompletedInitialTasksLoad, showTaskSkeleton]);
 

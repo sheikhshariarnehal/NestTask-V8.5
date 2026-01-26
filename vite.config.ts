@@ -147,7 +147,7 @@ export default defineConfig({
         enabled: true,
         type: 'module',
         navigateFallback: 'index.html',
-        suppressWarnings: false // Show workbox warnings for debugging
+        suppressWarnings: true
       }
     })] : []),
     // Disable compression for Capacitor builds to avoid duplicate resources

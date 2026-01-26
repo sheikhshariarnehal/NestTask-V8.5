@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, testConnection } from '../lib/supabase';
 import { dataCache, cacheKeys } from '../lib/dataCache';
 import { deduplicate, requestKeys } from '../lib/requestDeduplicator';
 import { loginUser, signupUser, logoutUser, resetPassword } from '../services/auth.service';
@@ -86,9 +86,25 @@ export function useAuth() {
       }
 
       // Online: proceed with normal authentication check
-      // NOTE: Removed blocking testConnection() call - session check is sufficient
-      // and doesn't cause startup delays. Connection will be verified asynchronously.
+      const isConnected = await testConnection();
       
+      if (!isConnected) {
+        console.warn('Database connection test failed');
+        // Try cached user as fallback
+        const cachedUser = localStorage.getItem('nesttask_cached_user');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+            console.log('Using cached user due to connection issues');
+            setLoading(false);
+            return;
+          } catch (err) {
+            console.error('Failed to parse cached user:', err);
+          }
+        }
+      }
+
       // Try to get the session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       

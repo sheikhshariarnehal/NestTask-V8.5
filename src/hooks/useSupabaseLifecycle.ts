@@ -40,10 +40,10 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
       return true;
     }
 
-    // Don't validate too frequently (throttle to once per 10 seconds unless forced)
+    // Don't validate too frequently (throttle to once per 5 seconds unless forced)
     const now = Date.now();
     const timeSinceLastValidation = now - lastValidationRef.current;
-    if (!force && timeSinceLastValidation < 10000) {
+    if (!force && timeSinceLastValidation < 5000) {
       console.log('[Supabase Lifecycle] Validation throttled');
       return true;
     }
@@ -193,8 +193,12 @@ export function useSupabaseLifecycle(options: SupabaseLifecycleOptions = {}) {
   // Use app lifecycle hook to trigger session validation on resume
   useAppLifecycle({
     onResume: handleResume,
-    // NOTE: Don't add onVisibilityChange here - it's redundant with onResume
-    // and causes duplicate validations
+    onVisibilityChange: (isVisible) => {
+      if (isVisible) {
+        // Validate session when tab becomes visible
+        validateSession(false);
+      }
+    },
     onNetworkChange: (isOnline) => {
       if (isOnline) {
         // Validate session when network reconnects

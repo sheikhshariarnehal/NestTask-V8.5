@@ -91,10 +91,7 @@ export function useUsers() {
       try {
         // Wait for session validation before refreshing users
         const sessionValidPromise = new Promise<void>((resolve) => {
-          const timeout = setTimeout(() => {
-            console.log('[useUsers] Session validation timeout, proceeding anyway');
-            resolve();
-          }, 5000); // 5s timeout - increased to prevent premature timeout
+          const timeout = setTimeout(() => resolve(), 2000);
           const handler = () => {
             clearTimeout(timeout);
             window.removeEventListener('supabase-session-validated', handler);

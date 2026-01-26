@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
-import { debugLog, updateDebugState } from './debug';
 
 // Export initialization error if any
 export const getSupabaseInitError = () => {
@@ -111,7 +110,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 
 let connectionAttempts = 0;
 let isInitialized = false;
 let connectionPromise: Promise<boolean> | null = null;
-let lastConnectionTime = Date.now(); // Initialize to current time to avoid huge timeSinceLastCheck on first load
+let lastConnectionTime = 0;
 
 // Track connection health
 let lastActiveTime = Date.now();
@@ -182,107 +181,44 @@ export function clearCachedUser(): void {
  */
 async function refreshSessionOnResume() {
   if (isRefreshingSession) {
-    debugLog('SESSION', 'Session refresh already in progress, skipping');
+    console.log('[Supabase] Session refresh already in progress');
     return;
   }
 
   isRefreshingSession = true;
-  debugLog('SESSION', 'Starting session refresh on resume...');
   
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
-      debugLog('SESSION', '❌ Failed to get session', { error: error.message });
-      updateDebugState({ lastError: error.message, isSessionValid: false });
+      console.warn('[Supabase] Failed to get session:', error.message);
       return;
     }
     
     if (!session) {
-      debugLog('SESSION', 'No active session (user not logged in)');
-      updateDebugState({ isSessionValid: false, sessionExpiresAt: null });
+      console.log('[Supabase] No active session to refresh');
       return;
     }
     
     // Check if session is expired or about to expire
     const expiresAt = session.expires_at;
     if (expiresAt) {
-      const expiresAtMs = expiresAt * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expiresAtMs - now;
+      const timeUntilExpiry = (expiresAt * 1000) - Date.now();
       const fiveMinutes = 5 * 60 * 1000;
       
-      updateDebugState({ 
-        sessionExpiresAt: expiresAtMs,
-        lastSessionCheck: now,
-      });
-      
-      debugLog('SESSION', 'Session status', {
-        expiresAt: new Date(expiresAtMs).toISOString(),
-        expiresInMinutes: Math.round(timeUntilExpiry / 60000),
-        isExpired: timeUntilExpiry <= 0,
-      });
-      
-      // Session already expired!
-      if (timeUntilExpiry <= 0) {
-        debugLog('SESSION', '🔴 SESSION EXPIRED! Attempting refresh...');
-        updateDebugState({ isSessionValid: false, hardRefreshNeeded: true });
-        
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError) {
-          debugLog('SESSION', '❌ Session refresh FAILED - user needs to re-login', { 
-            error: refreshError.message 
-          });
-          updateDebugState({ lastError: refreshError.message });
-          // Sign out and redirect to login
-          await supabase.auth.signOut();
-          window.location.reload();
-          return;
-        }
-        
-        if (refreshData.session) {
-          const newExpiresAt = refreshData.session.expires_at! * 1000;
-          debugLog('SESSION', '✅ Session refreshed after expiry', {
-            newExpiresAt: new Date(newExpiresAt).toISOString(),
-          });
-          updateDebugState({ 
-            sessionExpiresAt: newExpiresAt, 
-            isSessionValid: true,
-            hardRefreshNeeded: false,
-          });
-        }
-        return;
-      }
-      
-      // Session expiring soon
       if (timeUntilExpiry <= fiveMinutes) {
-        debugLog('SESSION', '🟡 Session expiring soon, refreshing proactively...');
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        console.log('[Supabase] Session expiring soon, refreshing...');
+        const { error: refreshError } = await supabase.auth.refreshSession();
         
         if (refreshError) {
-          debugLog('SESSION', '❌ Proactive session refresh failed', { error: refreshError.message });
-          updateDebugState({ lastError: refreshError.message });
-        } else if (refreshData.session) {
-          const newExpiresAt = refreshData.session.expires_at! * 1000;
-          debugLog('SESSION', '✅ Session refreshed proactively', {
-            newExpiresAt: new Date(newExpiresAt).toISOString(),
-          });
-          updateDebugState({ 
-            sessionExpiresAt: newExpiresAt, 
-            isSessionValid: true 
-          });
+          console.error('[Supabase] Session refresh failed:', refreshError.message);
+        } else {
+          console.log('[Supabase] Session refreshed successfully');
         }
-      } else {
-        debugLog('SESSION', '✅ Session is valid', {
-          expiresInMinutes: Math.round(timeUntilExpiry / 60000),
-        });
-        updateDebugState({ isSessionValid: true });
       }
     }
-  } catch (err: any) {
-    debugLog('SESSION', '❌ Error during session refresh', { error: err.message });
-    updateDebugState({ lastError: err.message });
+  } catch (err) {
+    console.error('[Supabase] Error during session refresh:', err);
   } finally {
     isRefreshingSession = false;
   }
@@ -295,28 +231,19 @@ if (typeof document !== 'undefined') {
       const now = Date.now();
       const inactiveTime = now - lastActiveTime;
       
-      visibilityChangeCount++;
-      updateDebugState({ 
-        visibilityChanges: visibilityChangeCount,
-        lastActiveAt: now,
-      });
-      
-      debugLog('VISIBILITY', `Tab became visible after ${Math.round(inactiveTime/1000)}s`, {
-        inactiveMinutes: Math.round(inactiveTime / 60000),
-        visibilityChanges: visibilityChangeCount,
-      });
+      console.log(`[Supabase] Tab visible after ${Math.round(inactiveTime/1000)}s`);
       
       // Refresh session when returning to tab
       await refreshSessionOnResume();
       
       // Reset connection state if inactive for more than 2 minutes
       if (inactiveTime > 2 * 60 * 1000) {
-        debugLog('CONNECTION', `Resetting connection state after ${Math.round(inactiveTime/1000)}s inactivity`);
+        console.log(`[Supabase] Resetting connection state after ${Math.round(inactiveTime/1000)}s inactivity`);
         connectionPromise = null;
         isInitialized = false;
-        updateDebugState({ connectionState: 'disconnected' });
       }
       
+      visibilityChangeCount++;
       lastActiveTime = now;
       
       // Dispatch custom event to notify app components to refresh data
@@ -326,15 +253,9 @@ if (typeof document !== 'undefined') {
   
   // Listen for online/offline events
   window.addEventListener('online', async () => {
-    debugLog('NETWORK', 'Network reconnected, validating session...');
-    updateDebugState({ networkReconnects: (updateDebugState as any).networkReconnects + 1 });
+    console.log('[Supabase] Network reconnected, validating session...');
     await refreshSessionOnResume();
     window.dispatchEvent(new CustomEvent('supabase-network-reconnect'));
-  });
-  
-  window.addEventListener('offline', () => {
-    debugLog('NETWORK', '⚠️ Network disconnected');
-    updateDebugState({ connectionState: 'disconnected' });
   });
 }
 
@@ -342,12 +263,11 @@ if (typeof document !== 'undefined') {
 export async function testConnection(forceCheck = false) {
   // Update last active time
   lastActiveTime = Date.now();
-  updateDebugState({ lastActiveAt: lastActiveTime, connectionState: 'checking' });
   
   // In development mode, return true to bypass connection checks
   // This is a temporary workaround for local development
   if (import.meta.env.DEV) {
-    debugLog('CONNECTION', '[DEV MODE] Bypassing database connection check');
+    console.log('[DEV MODE] Bypassing database connection check');
     
     // Check if environment variables are properly set
     if (!supabaseUrl || supabaseUrl === 'https://your-project-id.supabase.co') {
@@ -360,7 +280,6 @@ export async function testConnection(forceCheck = false) {
       console.info('Please set VITE_SUPABASE_ANON_KEY in your .env file');
     }
     
-    updateDebugState({ connectionState: 'connected' });
     return true;
   }
   
@@ -368,138 +287,61 @@ export async function testConnection(forceCheck = false) {
   const timeSinceLastCheck = Date.now() - lastConnectionTime;
   if (timeSinceLastCheck > 5 * 60 * 1000) { // 5 minutes
     forceCheck = true;
-    debugLog('CONNECTION', `Force connection check after ${Math.round(timeSinceLastCheck/1000)}s of inactivity`);
+    console.log(`Force connection check after ${Math.round(timeSinceLastCheck/1000)}s`);
   }
   
-  if (isInitialized && !forceCheck) {
-    updateDebugState({ connectionState: 'connected' });
-    return true;
-  }
+  if (isInitialized && !forceCheck) return true;
   if (connectionPromise) return connectionPromise;
   
   connectionPromise = (async () => {
     try {
-      debugLog('CONNECTION', `Testing database connection (attempt ${connectionAttempts + 1})`);
+      console.log(`Testing database connection (attempt ${connectionAttempts + 1})`);
       
       if (connectionAttempts >= 3) {
-        debugLog('CONNECTION', '⚠️ Max connection attempts reached, using fallback mode');
+        console.warn('Max connection attempts reached, using fallback mode');
         // Return true anyway to prevent app from being stuck in retry loop
-        updateDebugState({ connectionState: 'connected' });
         return true;
       }
       
       connectionAttempts++;
       
-      // Create a timeout promise to prevent hanging
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Connection test timeout')), 5000); // 5 second timeout (reduced from 10s)
-      });
-      
-      // First verify authentication status with timeout
-      const { data: session, error: authError } = await Promise.race([
-        supabase.auth.getSession(),
-        timeoutPromise
-      ]) as Awaited<ReturnType<typeof supabase.auth.getSession>>;
+      // First verify authentication status
+      const { data: session, error: authError } = await supabase.auth.getSession();
       
       if (authError) {
-        debugLog('CONNECTION', '❌ Auth error when checking session', { error: authError.message });
-        updateDebugState({ connectionState: 'disconnected', lastError: authError.message });
+        console.error('Auth error when checking session:', authError.message);
         return false;
       }
       
       if (!session.session) {
-        debugLog('CONNECTION', 'No active session found - user needs to login');
-        updateDebugState({ connectionState: 'connected', isSessionValid: false });
+        console.warn('No active session found - this is expected for first-time visitors');
         // Return true anyway so the user can see the login page
         return true;
       }
       
-      // Log session details
-      const expiresAt = session.session.expires_at;
-      if (expiresAt) {
-        const expiresAtMs = expiresAt * 1000;
-        const timeUntilExpiry = expiresAtMs - Date.now();
-        debugLog('CONNECTION', 'Session found', {
-          expiresAt: new Date(expiresAtMs).toISOString(),
-          expiresInMinutes: Math.round(timeUntilExpiry / 60000),
-          isExpired: timeUntilExpiry <= 0,
-          userId: session.session.user?.id?.substring(0, 8) + '...',
-        });
-        updateDebugState({ 
-          sessionExpiresAt: expiresAtMs, 
-          isSessionValid: timeUntilExpiry > 0,
-          lastSessionCheck: Date.now(),
-        });
-        
-        // If session expired, try to refresh it
-        if (timeUntilExpiry <= 0) {
-          debugLog('CONNECTION', '🔴 Session expired during connection test, attempting refresh...');
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError) {
-            debugLog('CONNECTION', '❌ Failed to refresh expired session', { error: refreshError.message });
-            updateDebugState({ lastError: refreshError.message, hardRefreshNeeded: true });
-            await supabase.auth.signOut();
-            return false;
-          }
-          
-          if (refreshData.session) {
-            debugLog('CONNECTION', '✅ Refreshed expired session successfully');
-            updateDebugState({ 
-              sessionExpiresAt: refreshData.session.expires_at! * 1000,
-              isSessionValid: true,
-              hardRefreshNeeded: false,
-            });
-          }
-        }
-      }
-      
-      // Test database connection with a simpler query and timeout
-      debugLog('CONNECTION', 'Testing database query...');
-      const queryTimeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Database query timeout')), 5000); // 5 second timeout (reduced from 10s)
-      });
-      
-      const { error } = await Promise.race([
-        supabase.from('tasks').select('count', { count: 'exact', head: true }),
-        queryTimeoutPromise
-      ]) as Awaited<ReturnType<typeof supabase.from>>;
+      // Test database connection with a simpler query
+      const { error } = await supabase.from('tasks').select('count', { count: 'exact', head: true });
       
       if (error) {
-        debugLog('CONNECTION', '❌ Database connection error', { 
-          message: error.message, 
-          code: error.code 
-        });
+        console.error('Database connection error:', error.message, error.code);
         
         if (error.code === 'PGRST301' || error.message.includes('JWT')) {
-          debugLog('CONNECTION', '🔴 JWT token invalid, signing out user');
-          updateDebugState({ connectionState: 'disconnected', isSessionValid: false, hardRefreshNeeded: true });
+          console.warn('JWT token invalid, signing out');
           await supabase.auth.signOut();
           return false;
         }
         
         // Allow continuing anyway after logging the error
-        debugLog('CONNECTION', '⚠️ Continuing despite database error');
-        updateDebugState({ connectionState: 'connected', lastError: error.message });
+        console.warn('Continuing despite database error');
         return true;
       }
       
-      debugLog('CONNECTION', '✅ Database connection successful');
+      console.log('Database connection successful');
       isInitialized = true;
       lastConnectionTime = Date.now();
-      updateDebugState({ connectionState: 'connected' });
       return true;
     } catch (error: any) {
-      debugLog('CONNECTION', '❌ Unexpected error during connection test', { error: error.message });
-      updateDebugState({ connectionState: 'disconnected', lastError: error.message });
-      
-      // If timeout, warn but don't block the app
-      if (error.message?.includes('timeout')) {
-        console.warn('[CONNECTION] Connection test timed out - network may be slow');
-        updateDebugState({ connectionState: 'connected' }); // Assume connected for now
-        return true; // Allow app to continue
-      }
-      
+      console.error('Unexpected error during connection test:', error.message);
       // Return true anyway to prevent blocking the app
       return true;
     } finally {
@@ -543,20 +385,16 @@ if (typeof window !== 'undefined') {
     isReconnecting = true;
     console.log('[Supabase] App resumed, checking connection...');
     
-    // Test connection in background - don't block on this
-    // The realtime SDK handles channel reconnection automatically
-    testConnection().then(() => {
+    try {
+      // Test connection - the realtime SDK handles channel reconnection automatically
+      await testConnection();
+      
       // Log channel status for debugging
       const channels = supabase.getChannels();
       console.log(`[Supabase] Active channels: ${channels.length}`);
-    }).catch((err) => {
-      console.warn('[Supabase] Background connection test failed:', err.message);
-    }).finally(() => {
+    } finally {
       isReconnecting = false;
-    });
-    
-    // Don't wait for connection test to complete
-    isReconnecting = false;
+    }
   });
 
   // Handle visibility change

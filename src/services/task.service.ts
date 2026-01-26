@@ -23,7 +23,7 @@ export const fetchTasksForDateRange = async (
     // Optimized query: select only needed fields and filter by date range
     const { data, error } = await supabase
       .from('tasks')
-      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at')
+      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at,attachments,original_file_names,google_drive_links')
       .gte('due_date', startDateStr)
       .lte('due_date', endDateStr)
       .order('due_date', { ascending: true });
@@ -51,7 +51,7 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     if (process.env.NODE_ENV === 'development') {
       let query = supabase
         .from('tasks')
-        .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at');
+        .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at,attachments,original_file_names,google_drive_links');
       query = query.order('created_at', { ascending: false });
       const { data, error } = await query;
       
@@ -75,7 +75,7 @@ export const fetchTasks = async (userId: string, sectionId?: string | null): Pro
     // Start query builder with optimized field selection - no filters needed as RLS handles permissions
     let query = supabase
       .from('tasks')
-      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at');
+      .select('id,name,description,due_date,status,category,is_admin_task,user_id,section_id,created_at,attachments,original_file_names,google_drive_links');
 
     // We only need to order the results, the Row Level Security policy 
     // will handle filtering based on user_id, is_admin_task, and section_id

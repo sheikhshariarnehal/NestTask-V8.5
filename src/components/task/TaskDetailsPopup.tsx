@@ -368,41 +368,41 @@ ${regularDescription}
             </div>
           )}
 
-          {/* Attached Files - Clean Professional Design */}
+          {/* Attached Files - Compact Clean Design */}
           {(fileSection.length > 0 || dbAttachments.length > 0) && (
-            <div className="mb-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                  <Paperclip className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <div className="mb-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className="p-1 bg-purple-50 dark:bg-purple-900/30 rounded-md">
+                  <Paperclip className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xs font-semibold text-gray-900 dark:text-white">
                   Attached Files
                 </h3>
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
                   {dbAttachments.length + fileSection.length}
                 </span>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-1.5">
                 {/* Render database attachments first */}
                 {dbAttachments.map((attachment, index) => (
                   <div 
                     key={`db-${index}`} 
-                    className="group flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-white to-purple-50/30 dark:from-gray-800 dark:to-purple-900/10 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-md transition-all"
+                    className="group flex items-center justify-between px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/60 hover:border-purple-300 dark:hover:border-purple-500/40 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-all duration-200"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:scale-110 transition-transform">
-                        <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className="p-1 bg-purple-100 dark:bg-purple-900/40 rounded-md shrink-0">
+                        <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
                         {attachment.name}
                       </span>
                     </div>
                     <button
                       onClick={() => handleDownload(attachment.url, attachment.name)}
-                      className="p-2.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all touch-manipulation flex-shrink-0 group-hover:scale-110"
+                      className="p-1.5 rounded-md text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all shrink-0"
                       aria-label={`Download ${attachment.name}`}
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -415,22 +415,22 @@ ${regularDescription}
                   return (
                     <div 
                       key={`desc-${index}`} 
-                      className="group flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-white to-purple-50/30 dark:from-gray-800 dark:to-purple-900/10 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-md transition-all"
+                      className="group flex items-center justify-between px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/60 hover:border-purple-300 dark:hover:border-purple-500/40 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-all duration-200"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:scale-110 transition-transform">
-                          <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="p-1 bg-purple-100 dark:bg-purple-900/40 rounded-md shrink-0">
+                          <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
                           {fileInfo.filename}
                         </span>
                       </div>
                       <button
                         onClick={() => handleDownload(fileInfo.url, fileInfo.filename)}
-                        className="p-2.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all touch-manipulation flex-shrink-0 group-hover:scale-110"
+                        className="p-1.5 rounded-md text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all shrink-0"
                         aria-label={`Download ${fileInfo.filename}`}
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   );
