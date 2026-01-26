@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const TELEGRAM_BOT_TOKEN = "7112452317:AAEJ-M2dAS1hEPgs4Gb5GbEz-cD8ilfHQIQ";
-const TELEGRAM_CHAT_ID = "-1001759460874";
+const TELEGRAM_CHAT_ID = "-1002414480229";
 
 // Target: CSE Department + Batch 63 + Section G
 const TARGET_DEPARTMENT_ID = "82cc95f6-a4c2-474d-8c6a-1272fc0dd19e";
@@ -25,6 +25,7 @@ interface TaskPayload {
     created_at: string;
     tags?: string[];
     google_drive_links?: string[];
+    attachments?: string[];
   };
   schema: string;
   old_record: null | Record<string, unknown>;
@@ -88,21 +89,34 @@ function formatTaskMessage(task: TaskPayload["record"]): string {
     message += `\n<b>\ud83c\udff7\ufe0f Tags:</b> ${task.tags.map(t => `#${t}`).join(" ")}\n`;
   }
 
-  if (task.google_drive_links && task.google_drive_links.length > 0) {
-    message += `\n`;
+  // Handle both Google Drive links and Supabase attachments
+  const hasGoogleDriveLinks = task.google_drive_links && task.google_drive_links.length > 0;
+  const hasAttachments = task.attachments && task.attachments.length > 0;
+  
+  if (hasGoogleDriveLinks || hasAttachments) {
+    message += `\n<b>📎 Attachments:</b>\n`;
     
-    // Add clickable links for each attachment
-    task.google_drive_links.forEach((link, index) => {
-      // Extract a friendly name from the link or use a default
-      const linkName = getLinkDisplayName(link, index + 1);
-      message += `  • <a href="${link}">${linkName}</a>\n`;
-    });
+    // Add Google Drive links
+    if (hasGoogleDriveLinks) {
+      task.google_drive_links!.forEach((link, index) => {
+        const linkName = getGoogleDriveLinkDisplayName(link, index + 1);
+        message += `  • <a href="${link}">${linkName}</a>\n`;
+      });
+    }
+    
+    // Add Supabase attachments
+    if (hasAttachments) {
+      task.attachments!.forEach((attachmentUrl, index) => {
+        const fileName = getAttachmentFileName(attachmentUrl, index + 1);
+        message += `  • <a href="${attachmentUrl}">${fileName}</a>\n`;
+      });
+    }
   }
 
   return message;
 }
 
-function getLinkDisplayName(link: string, index: number): string {
+function getGoogleDriveLinkDisplayName(link: string, index: number): string {
   try {
     // Try to determine the type of Google Drive link
     if (link.includes("/folders/")) {
@@ -123,6 +137,40 @@ function getLinkDisplayName(link: string, index: number): string {
   } catch {
     return `🔗 Attachment ${index}`;
   }
+}
+
+function getAttachmentFileName(attachmentUrl: string, index: number): string {
+  try {
+    // Extract filename from Supabase storage URL
+    // URL format: https://project.supabase.co/storage/v1/object/public/bucket/path/filename
+    const urlParts = attachmentUrl.split('/');
+    const encodedFilename = urlParts[urlParts.length - 1];
+    
+    if (encodedFilename) {
+      // Decode URL encoding and clean up timestamp/hash patterns
+      let filename = decodeURIComponent(encodedFilename);
+      
+      // Remove timestamp-hash pattern (e.g., "1766884177681-0fvpnc.pdf" -> "Attachment_1.pdf")
+      const timestampHashMatch = filename.match(/^(\d+)-([a-z0-9]+)\.(\w+)$/i);
+      if (timestampHashMatch) {
+        const extension = timestampHashMatch[3];
+        return `📄 File_${index}.${extension}`;
+      }
+      
+      // Clean other timestamp patterns
+      const cleanMatch = filename.match(/^(.+?)(?:_\d{13}_[a-z0-9]+)?(\.[^.]+)$/i);
+      if (cleanMatch) {
+        return `📄 ${cleanMatch[1]}${cleanMatch[2]}`;
+      }
+      
+      // Return filename with file emoji
+      return `📄 ${filename}`;
+    }
+  } catch (error) {
+    console.error('Error parsing attachment filename:', error);
+  }
+  
+  return `📎 File_${index}`;
 }
 
 Deno.serve(async (req: Request) => {
