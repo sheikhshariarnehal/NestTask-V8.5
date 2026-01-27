@@ -65,29 +65,18 @@ const categoryColorMap: Record<string, string> = {
   'default': 'text-gray-600 dark:text-gray-400'
 };
 
-// Predefined status color variables to avoid recalculations
-const statusColors = {
-  completed: 'bg-green-500',
-  overdue: 'bg-red-500', 
-  default: 'bg-sky-500'
-};
-
-const statusStyleMap = {
-  completed: {
-    textColor: 'text-green-600 dark:text-green-400',
-    bgColor: statusColors.completed,
-    cardStyle: 'md:border-green-200 md:dark:border-green-900/80 bg-green-50 dark:bg-gray-800 md:bg-white md:dark:bg-gray-800'
-  },
-  overdue: {
-    textColor: 'text-red-600 dark:text-red-400',
-    bgColor: statusColors.overdue,
-    cardStyle: 'md:border-red-200 md:dark:border-red-900/80 bg-red-50 dark:bg-gray-800 md:bg-white md:dark:bg-gray-800'
-  },
-  default: {
-    textColor: 'text-sky-600 dark:text-sky-400',
-    bgColor: statusColors.default,
-    cardStyle: 'md:border-sky-100 md:dark:border-sky-800/30 md:hover:border-sky-200 md:dark:hover:border-sky-700/50'
-  }
+const categoryBgMap: Record<string, string> = {
+  'quiz': 'bg-blue-50 dark:bg-blue-900/20',
+  'assignment': 'bg-orange-50 dark:bg-orange-900/20',
+  'presentation': 'bg-red-50 dark:bg-red-900/20',
+  'project': 'bg-indigo-50 dark:bg-indigo-900/20',
+  'lab-report': 'bg-green-50 dark:bg-green-900/20',
+  'lab-final': 'bg-purple-50 dark:bg-purple-900/20',
+  'lab-performance': 'bg-pink-50 dark:bg-pink-900/20',
+  'documents': 'bg-yellow-50 dark:bg-yellow-900/20',
+  'blc': 'bg-cyan-50 dark:bg-cyan-900/20',
+  'groups': 'bg-teal-50 dark:bg-teal-900/20',
+  'default': 'bg-gray-100 dark:bg-gray-800'
 };
 
 // Helper functions for efficient category handling
@@ -96,20 +85,10 @@ const getCategoryColor = (category: string) => {
   return categoryColorMap[key] || categoryColorMap.default;
 };
 
-// Optimized lightweight status indicator dot component
-const StatusDot = memo(({ status, overdue }: { status: string; overdue: boolean }) => {
-  // Determine status class efficiently
-  let statusClass = 'status-dot-default';
-  
-  if (status === 'completed') {
-    statusClass = 'status-dot-completed';
-  } else if (overdue) {
-    statusClass = 'status-dot-overdue';
-  }
-  
-  // Single optimized class with CSS-based animation
-  return <span className={`status-dot ${statusClass}`} />;
-});
+const getCategoryBg = (category: string) => {
+  const key = category.toLowerCase();
+  return categoryBgMap[key] || categoryBgMap.default;
+};
 
 // Create a lightweight icon component
 const CategoryIcon = memo(({ category, className = "w-3.5 h-3.5" }: { category: string; className?: string }) => {
@@ -151,14 +130,11 @@ export const TaskCard = memo(({
   const overdue = isOverdue(task.dueDate);
   const formattedCategory = task.category.replace(/-/g, ' ');
   const categoryColor = getCategoryColor(task.category);
+  const categoryBg = getCategoryBg(task.category);
   
-  // Get status styles from our map for consistent rendering
-  const statusStyle = useMemo(() => {
-    if (task.status === 'completed') return statusStyleMap.completed;
-    if (overdue) return statusStyleMap.overdue;
-    return statusStyleMap.default;
-  }, [task.status, overdue]);
-  
+  // Return simplified status text color
+  const statusTextColor = overdue && task.status !== 'completed' ? 'text-red-500' : 'text-gray-500 dark:text-gray-400';
+
   // These are more expensive, so we memoize them
   const cleanedDescription = useMemo(() => 
     task.description ? cleanDescription(task.description) : '', 
@@ -191,104 +167,74 @@ export const TaskCard = memo(({
       onClick={() => onSelect(task)}
       className={`task-card-base ${
         task.status === 'completed' ? 'task-card-completed' :
-        overdue ? 'task-card-overdue' : ''
-      } motion-safe:animate-fade-in`}
+        overdue ? 'task-card-overdue' : 'task-card-default'
+      } motion-safe:animate-fade-in group hover:bg-gray-50/50 dark:hover:bg-gray-800/50`}
       style={{ 
         animationDelay,
         animationDuration: '500ms'
       }}
     >
-      {/* Task Content */}
-      <div className="space-y-2">
-        {/* Title and Tag Row */}
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-base md:text-sm font-semibold
-            text-gray-900 dark:text-gray-100
-            leading-snug
-            line-clamp-2
-            break-words flex-1"
-          >
-            {task.name}
-          </h3>
+      <div className="flex flex-col h-full gap-1.5">
+        {/* Top: Content (Title & Description) */}
+        <div className="space-y-0.5 flex-1 min-h-0">
+          <div className="flex justify-between items-start gap-1">
+            <h3 className="text-[13px] leading-tight font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 md:line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {task.name}
+            </h3>
+            
+             {/* Show overdue indicator explicitly at top right */}
+             {overdue && task.status !== 'completed' && (
+                <span className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
+                  Overdue
+                </span>
+             )}
+          </div>
 
-          {/* Small Tag - Right Aligned */}
-          <span className={`inline-flex items-center gap-1
-            px-1.5 py-0.5
-            rounded-md text-[10px] font-bold uppercase tracking-wider
-            bg-gray-50 dark:bg-gray-700/50
-            border border-gray-200 dark:border-gray-600/50
-            flex-shrink-0 mt-0.5
-            ${categoryColor}`}
-          >
-            <CategoryIcon category={task.category} className="w-2.5 h-2.5 hidden md:inline-block" />
-            <span className="truncate max-w-[70px] md:max-w-[90px]">
-              {formattedCategory}
-            </span>
-          </span>
-        </div>
-
-        {/* Always show description - responsive line clamping */}
-        {cleanedDescription && (
-          <p className="text-sm
-            text-gray-600 dark:text-gray-400
-            leading-relaxed
-            line-clamp-2 md:line-clamp-1
-            break-words"
-          >
-            {parsedLinks.length > 0 ?
-              parsedLinks.map((part, i) =>
-                part.type === 'link' ? (
-                  <a
-                    key={i}
-                    href={part.content}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-sky-600 dark:text-sky-400
-                      hover:text-sky-700 dark:hover:text-sky-300
-                      underline underline-offset-2
-                      transition-colors"
-                  >
-                    {part.content}
-                  </a>
-                ) : (
-                  <span key={i}>{part.content}</span>
+          {/* Clean Description */}
+          {cleanedDescription && (
+            <div className="text-[11px] text-gray-500 dark:text-gray-500 leading-relaxed line-clamp-2 break-words">
+               {parsedLinks.length > 0 ?
+                parsedLinks.map((part, i) =>
+                  part.type === 'link' ? (
+                    <a
+                      key={i}
+                      href={part.content}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-blue-600 dark:text-blue-400 hover:underline px-0.5"
+                    >
+                      link
+                    </a>
+                  ) : (
+                    <span key={i}>{part.content}</span>
+                  )
                 )
-              )
-            : cleanedDescription
-            }
-          </p>
-        )}
-      </div>
-
-      {/* Footer - Status and Due Date */}
-      <div className="flex items-center justify-between
-        mt-3 pt-3
-        border-t border-gray-100 dark:border-gray-700/50
-        gap-3"
-      >
-        {/* Status indicator - Left side */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <StatusDot status={task.status} overdue={overdue} />
-          <span className={`text-xs font-medium truncate ${statusStyle.textColor}`}>
-            {task.status === 'completed' ? 'Completed' : overdue ? 'Overdue' : 'In Progress'}
-          </span>
+              : cleanedDescription
+              }
+            </div>
+          )}
         </div>
 
-        {/* Due date display - Right side */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <Calendar className={`w-3.5 h-3.5 ${statusStyle.textColor}`} />
-          <span className={`text-xs font-medium whitespace-nowrap ${statusStyle.textColor}`}>
-            {formattedDate}
+        {/* Bottom: Meta (Category & Date) */}
+        <div className="flex items-center justify-between pt-1.5 mt-auto border-t border-gray-50 dark:border-gray-800/50">
+           {/* Category Badge */}
+           <span className={`inline-flex items-center gap-1 
+             px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider
+             ${categoryBg} ${categoryColor}
+             transition-colors duration-200`}
+           >
+            <CategoryIcon category={task.category} className="w-2.5 h-2.5" />
+            <span className="truncate max-w-[90px]">{formattedCategory}</span>
           </span>
+          
+           {/* Due Date */}
+           <div className={`flex items-center gap-1 text-[9px] font-medium ${statusTextColor}`}>
+             <Calendar className="w-2.5 h-2.5 opacity-70" />
+             <span>{formattedDate}</span>
+           </div>
         </div>
       </div>
-
-      {/* Touch feedback overlay */}
-      <div className="md:hidden absolute inset-0 rounded-2xl pointer-events-none
-        bg-gray-900/0 active:bg-gray-900/5 dark:active:bg-gray-900/20
-        transition-colors duration-150"
-      />
     </div>
   );
 }, (prevProps, nextProps) => {

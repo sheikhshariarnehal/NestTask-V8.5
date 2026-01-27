@@ -239,12 +239,12 @@ const TaskCard = memo(({
         ${task.status === 'completed' ? 'opacity-80' : ''}
       `}
     >
-      <div className="p-4 flex-grow flex flex-col">
+      <div className="px-3 py-3 xs:px-3 xs:py-3 sm:p-4 flex-grow flex flex-col">
         {/* Header Section */}
-        <div className="flex items-start mb-2 sm:mb-3">
-          <div className="flex items-start gap-2 min-w-0 flex-1">
+        <div className="flex items-start mb-2">
+          <div className="flex items-start gap-1.5 min-w-0 flex-1">
             <h3 className={`
-              text-sm sm:text-base font-semibold leading-tight flex-1
+              text-xs xs:text-sm sm:text-base font-semibold leading-tight flex-1 line-clamp-2
               ${task.status === 'completed'
                 ? 'text-gray-500 dark:text-gray-400 line-through'
                 : isOverdue
@@ -255,8 +255,8 @@ const TaskCard = memo(({
               {task.name}
             </h3>
             {hasAttachments && (
-              <div className="flex-shrink-0 p-0.5 mt-0.5">
-                <Paperclip className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 dark:text-gray-400" />
+              <div className="flex-shrink-0 mt-0.5">
+                <Paperclip className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 text-gray-500 dark:text-gray-400" />
               </div>
             )}
           </div>
@@ -264,7 +264,7 @@ const TaskCard = memo(({
 
         {/* Description */}
         <p className={`
-          text-[11px] xs:text-xs sm:text-sm leading-relaxed line-clamp-2 xs:line-clamp-3 sm:line-clamp-2 mb-3 sm:mb-4 flex-grow
+          text-[10px] xs:text-xs sm:text-sm leading-relaxed line-clamp-2 mb-2 flex-grow
           ${task.status === 'completed'
             ? 'text-gray-500 dark:text-gray-400'
             : isOverdue
@@ -276,36 +276,36 @@ const TaskCard = memo(({
         </p>
 
         {/* Footer Section */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700/50">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700/50 gap-1">
           {/* Due Date */}
-          <div className="flex items-center gap-1 sm:gap-1.5">
+          <div className="flex items-center gap-0.5 xs:gap-1">
             <Calendar className={`
-              w-3 h-3 sm:w-3.5 sm:h-3.5
+              w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5
               ${isOverdue && !task.status
                 ? 'text-red-500 dark:text-red-400'
                 : 'text-gray-500 dark:text-gray-400'
               }`}
             />
             <span className={`
-              text-[10px] sm:text-xs font-medium
+              text-[9px] xs:text-[10px] sm:text-xs font-medium truncate
               ${isOverdue && !task.status
                 ? 'text-red-500 dark:text-red-400'
                 : 'text-gray-500 dark:text-gray-400'
               }`
             }>
-              Due: {format(dueDate, 'MMM d')}
+              {format(dueDate, 'MMM d')}
             </span>
           </div>
 
           {/* Status Badge and Category Tag */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1">
             {/* Status Badge - only show for Completed or Overdue */}
             {(task.status === 'completed' || isOverdue) && (
               <span className={`
-                inline-flex items-center gap-1
-                px-1.5 sm:px-2 py-0.5
-                text-[9px] sm:text-[10px] font-medium
-                rounded-full
+                inline-flex items-center gap-0.5 xs:gap-1
+                px-1 xs:px-1.5 py-0.5
+                text-[8px] xs:text-[9px] sm:text-[10px] font-medium
+                rounded-full flex-shrink-0
                 ${task.status === 'completed'
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
@@ -313,16 +313,16 @@ const TaskCard = memo(({
                 ${isOverdue && task.status !== 'completed' ? 'animate-pulse' : ''}
               `}>
                 {status.icon}
-                <span>{status.label}</span>
+                <span className="hidden xs:inline">{status.label}</span>
               </span>
             )}
 
             {/* Category Tag */}
             <span className={`
-              inline-flex items-center gap-1 sm:gap-1.5
-              px-2 sm:px-2.5 py-0.5
-              text-[9px] sm:text-[10px] font-medium tracking-wide
-              rounded-md border
+              inline-flex items-center gap-0.5 xs:gap-1
+              px-1.5 xs:px-2 py-0.5
+              text-[8px] xs:text-[9px] sm:text-[10px] font-medium tracking-wide
+              rounded-md border flex-shrink-0 min-w-fit
               ${categoryInfo.color.replace('bg-', 'bg-opacity-75 bg-').replace('text-', 'text-opacity-90 text-')}
               transition-all duration-200
               shadow-sm
@@ -342,7 +342,7 @@ const TaskCard = memo(({
               <div className="flex-shrink-0">
                 {categoryInfo.icon}
               </div>
-              <span className="capitalize whitespace-nowrap">
+              <span className="capitalize whitespace-nowrap hidden xs:inline">
                 {task.category.replace('-', ' ')}
               </span>
             </span>
@@ -826,9 +826,9 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       )}
 
       {/* Calendar Strip */}
-      <div className="max-w-full md:max-w-5xl mx-auto px-2 md:px-6 mb-6">
+      <div className="max-w-full md:max-w-5xl mx-auto px-2 md:px-6 mb-2 xs:mb-3 sm:mb-4">
         {/* Date Navigation */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2 xs:mb-3">
           <button
             onClick={() => setSelectedDate(addDays(selectedDate, -7))}
             className="p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50/80 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors duration-150 active:scale-95"
@@ -860,7 +860,7 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
         </div>
 
         {/* Date Boxes - Weekly Calendar */}
-        <div className="pb-4">
+        <div className="pb-2 xs:pb-3">
           <div className="grid grid-cols-7 gap-2 md:gap-3 px-2 md:px-4">
             {weekDays.map((day) => (
               <button
@@ -913,9 +913,9 @@ export function UpcomingPage({ tasks: propTasks, openTaskId, onOpenTaskIdConsume
       </div>
 
       {/* Tasks List with Enhanced Cards */}
-      <div className="px-3 xs:px-4 md:max-w-4xl lg:max-w-5xl md:mx-auto pb-8">
+      <div className="px-2 xs:px-3 sm:px-4 md:max-w-4xl lg:max-w-5xl md:mx-auto pb-6 md:pb-8">
         {filteredTasks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-3 md:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-2.5 sm:gap-3 md:gap-4">
             {filteredTasks.map((task) => (
               <TaskCard
                 key={task.id}

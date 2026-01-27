@@ -78,8 +78,8 @@ export const TaskList = memo(({ tasks = [], onDeleteTask, showDeleteButton = fal
       <div className="w-full max-w-7xl mx-auto">
         {/* Mobile-optimized container with improved spacing */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
-          gap-2 xs:gap-3 md:gap-4 lg:gap-6
-          px-1 xs:px-2 md:px-0
+          gap-3 md:gap-4 lg:gap-6
+          px-0 md:px-0
           pb-4 md:pb-0">
           {visibleTasks.map((task, index) => (
             <TaskCard

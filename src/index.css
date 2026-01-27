@@ -165,64 +165,58 @@ button {
   background: white;
   border-radius: 1rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  border: 1px solid rgb(243 244 246);
-  padding: 0.75rem;
-  min-height: 110px;
-  cursor: pointer;
-  transition: box-shadow 0.2s ease;
-  /* Performance optimizations */
-  contain: layout style paint;
+  border: 1px solid rgb(229 231 235);
+  /* Top padding reduced to balance with text line-height */
+  padding: 0.35rem 0.625rem 0.625rem 0.625rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  contain: content;
   content-visibility: auto;
 }
 
-.task-card-base:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  will-change: box-shadow;
+.task-card-base:active {
+  transform: scale(0.98);
 }
 
-/* Dark mode */
 .dark .task-card-base {
   background: rgb(31 41 55);
-  border-color: rgba(55, 65, 81, 0.5);
+  border-color: rgb(55 65 81);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* Status variants */
+/* Status variants - Prominent left border string */
 .task-card-overdue {
-  background: rgb(254 242 242);
-  border-color: rgb(254 202 202);
+  border-left: 5px solid rgb(239 68 68);
 }
 
 .dark .task-card-overdue {
-  background: rgb(31 41 55);
-  border-color: rgba(153, 27, 27, 0.8);
+  border-left-color: rgb(248 113 113);
 }
 
 .task-card-completed {
-  background: rgb(240 253 244);
-  border-color: rgb(187 247 208);
+  border-left: 5px solid rgb(34 197 94);
 }
 
 .dark .task-card-completed {
-  background: rgb(31 41 55);
-  border-color: rgba(21, 128, 61, 0.8);
+  border-left-color: rgb(74 222 128);
 }
 
-/* Responsive padding */
+.task-card-default {
+  border-left: 5px solid rgb(14 165 233);
+}
+
+.dark .task-card-default {
+  border-left-color: rgb(56 189 248);
+}
+
+/* Responsive adjustments */
 @media (min-width: 768px) {
   .task-card-base {
     padding: 1rem;
-    border-radius: 0.5rem;
-    min-height: auto;
   }
-}
-
-@media (min-width: 1024px) {
-  .task-card-base {
-    padding: 1.25rem;
-  }
+  
   .task-card-base:hover {
     transform: translateY(-2px);
-    will-change: transform, box-shadow;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
   }
 }
 
