@@ -77,60 +77,88 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:focus-visible:ring-blue-400/50 active:scale-95 transition-transform"
+        className="
+          relative flex items-center justify-center 
+          w-10 h-10 sm:w-11 sm:h-11
+          rounded-full
+          transition-all duration-200 ease-out
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900
+          active:scale-95
+          hover:ring-2 hover:ring-blue-400/30 dark:hover:ring-blue-500/30
+        "
+        style={{
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+        }}
         aria-label="Open profile menu"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
       >
         {user?.avatar && !imageError ? (
           <img 
             src={avatarUrl || user.avatar} 
             alt={user.name} 
             onError={() => setImageError(true)}
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700 shadow-lg"
           />
         ) : (
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-xs sm:text-sm font-semibold shadow-sm border-2 border-white dark:border-gray-800 ring-1 ring-gray-200 dark:ring-gray-700">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white text-base sm:text-lg font-bold shadow-lg ring-2 ring-gray-200 dark:ring-gray-700">
             {userInitial}
           </div>
         )}
+        {/* Online indicator with pulse animation */}
+        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-[2.5px] border-white dark:border-gray-900 shadow-md">
+          <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
+        </span>
       </button>
 
       {isOpen && (
         <>
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-10 bg-transparent"
             onClick={() => setIsOpen(false)}
+            aria-hidden="true"
           />
-          <div className="
-            absolute right-0 sm:-right-2 md:right-0 
-            mt-2 
-            w-[calc(100vw-2rem)] xs:w-[280px] sm:w-[300px] md:w-[320px] 
-            max-h-[calc(100vh-80px)] overflow-y-auto
-            bg-white dark:bg-gray-800 
-            rounded-xl shadow-xl 
-            ring-1 ring-black/5 dark:ring-white/5 
-            z-20 
-            animate-scale-in origin-top-right 
-            divide-y divide-gray-100 dark:divide-gray-700
-          ">
+          <div 
+            className="
+              absolute right-0 left-auto
+              mt-3
+              w-[calc(100vw-1.5rem)] xs:w-[300px] sm:w-[320px] md:w-[340px] 
+              max-h-[calc(100vh-120px)] overflow-y-auto
+              bg-white dark:bg-gray-800 
+              rounded-2xl shadow-2xl shadow-gray-900/10 dark:shadow-gray-900/40
+              ring-1 ring-gray-200/50 dark:ring-gray-700/50 
+              z-20 
+              animate-scale-in origin-top-right
+            "
+            style={{
+              maxWidth: 'calc(100vw - 1.5rem)',
+            }}
+            role="menu"
+            aria-orientation="vertical"
+          >
             {/* Profile Section */}
-            <div className="p-3 xs:p-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="p-4 sm:p-5 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/80 dark:to-gray-800/50 rounded-t-2xl">
               <div className="flex items-center gap-4">
                 {user?.avatar && !imageError ? (
                   <img 
                     src={avatarUrl || user.avatar} 
                     alt={user.name} 
                     onError={() => setImageError(true)}
-                    className="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white dark:border-gray-800 ring-1 ring-gray-200 dark:ring-gray-700"
+                    className="w-14 h-14 rounded-2xl object-cover shadow-lg border-2 border-white dark:border-gray-700 ring-1 ring-gray-200/50 dark:ring-gray-600/50"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-sm text-xl font-bold border-2 border-white dark:border-gray-800 ring-1 ring-gray-200 dark:ring-gray-700">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg text-xl font-bold border-2 border-white dark:border-gray-700">
                     {userInitial}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 dark:text-white truncate">{user?.name || 'User'}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || 'user@example.com'}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                  <h3 className="font-semibold text-base text-gray-900 dark:text-white truncate">{user?.name || 'User'}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">{user?.email || 'user@example.com'}</p>
+                  <span className="inline-flex items-center mt-2 px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 capitalize shadow-sm">
                     {user?.role || 'user'}
                   </span>
                 </div>
@@ -138,74 +166,98 @@ export function ProfileMenu({ onLogout }: ProfileMenuProps) {
               
               {/* Department, Batch, Section info */}
               {(departmentName || batchName || sectionName) && (
-                <div className="mt-3.5 pt-3.5 border-t border-gray-100 dark:border-gray-700 space-y-2.5">
+                <div className="mt-4 pt-4 border-t border-gray-200/60 dark:border-gray-700/60 space-y-2.5">
                   {departmentName && (
-                    <div className="flex items-center gap-2.5 text-xs">
-                      <div className="p-1 rounded-md bg-blue-50 dark:bg-blue-900/20">
-                        <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
+                        <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300">{departmentName}</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium truncate">{departmentName}</span>
                     </div>
                   )}
                   
                   {batchName && (
-                    <div className="flex items-center gap-2.5 text-xs">
-                      <div className="p-1 rounded-md bg-blue-50 dark:bg-blue-900/20">
-                        <Layers className="w-3.5 h-3.5 text-blue-500" />
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex-shrink-0">
+                        <Layers className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300">{batchName}</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium truncate">{batchName}</span>
                     </div>
                   )}
                   
                   {sectionName && (
-                    <div className="flex items-center gap-2.5 text-xs">
-                      <div className="p-1 rounded-md bg-blue-50 dark:bg-blue-900/20">  
-                        <Users className="w-3.5 h-3.5 text-blue-500" />
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 flex-shrink-0">  
+                        <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300">{sectionName}</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium truncate">{sectionName}</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Menu Items */}
-            <div className="p-2">
+            {/* Menu Items - Enhanced touch targets */}
+            <div className="p-2 sm:p-3 border-t border-gray-100 dark:border-gray-700/50">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={item.onClick}
-                  className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
+                  className="
+                    w-full flex items-center gap-3 p-3 sm:p-3.5 
+                    rounded-xl 
+                    hover:bg-gray-100 dark:hover:bg-gray-700/60 
+                    active:scale-[0.98] active:bg-gray-100 dark:active:bg-gray-700
+                    transition-all duration-150 
+                    group
+                  "
+                  style={{
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                  role="menuitem"
                 >
-                  <div className="p-1.5 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    <item.icon className="w-3.5 h-3.5" />
+                  <div className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors shadow-sm">
+                    <item.icon className="w-4 h-4" />
                   </div>
-                  <div className="flex-grow text-left">
-                    <div className="font-medium text-sm text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <div className="flex-grow text-left min-w-0">
+                    <div className="font-medium text-sm sm:text-base text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                       {item.label}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{item.description}</div>
+                    <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{item.description}</div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors opacity-70 group-hover:opacity-100" />
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all group-hover:translate-x-0.5 flex-shrink-0" />
                 </button>
               ))}
             </div>
 
-            {/* Logout Section */}
-            <div className="p-2">
+            {/* Logout Section - Enhanced */}
+            <div className="p-2 sm:p-3 border-t border-gray-100 dark:border-gray-700/50 rounded-b-2xl">
               <button
                 onClick={() => {
                   setIsOpen(false);
                   onLogout();
                 }}
-                className="w-full flex items-center gap-2.5 p-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
+                className="
+                  w-full flex items-center gap-3 p-3 sm:p-3.5 
+                  text-red-600 dark:text-red-400 
+                  hover:bg-red-50 dark:hover:bg-red-900/20 
+                  active:scale-[0.98] active:bg-red-100 dark:active:bg-red-900/30
+                  rounded-xl transition-all duration-150 
+                  group
+                "
+                style={{
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+                role="menuitem"
               >
-                <div className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 transition-colors">
-                  <LogOut className="w-3.5 h-3.5" />
+                <div className="p-2 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors shadow-sm flex-shrink-0">
+                  <LogOut className="w-4 h-4" />
                 </div>
-                <div className="flex-grow text-left">
-                  <div className="font-medium text-sm">Logout</div>
-                  <div className="text-xs text-red-500 dark:text-red-400">End your session</div>
+                <div className="flex-grow text-left min-w-0">
+                  <div className="font-medium text-sm sm:text-base truncate">Sign Out</div>
+                  <div className="text-xs sm:text-sm text-red-500/80 dark:text-red-400/80 truncate">End your session securely</div>
                 </div>
               </button>
             </div>

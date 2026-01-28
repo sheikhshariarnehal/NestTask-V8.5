@@ -226,10 +226,10 @@ export const HomePage: React.FC<HomePageProps> = memo(({
   const handleClearFilter = useCallback(() => setStatFilter('all'), [setStatFilter]);
 
   return (
-    <div className="space-y-5 pb-6 animate-fadeIn">
+    <div className="space-y-3 pb-6 animate-fadeIn">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-5 sm:p-6 text-white shadow-lg animate-slideUp">
-        <h1 className="text-xl sm:text-2xl font-bold mb-1">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-5 text-white shadow-lg animate-slideUp">
+        <h1 className="text-xl sm:text-2xl font-bold mb-0.5">
           Welcome back, {user?.name?.split(' ')[0] || 'User'}!
         </h1>
         <p className="text-blue-100 text-sm sm:text-base">

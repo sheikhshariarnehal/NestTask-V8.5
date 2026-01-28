@@ -181,13 +181,6 @@ export const TaskCard = memo(({
             <h3 className="text-[13px] leading-tight font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 md:line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {task.name}
             </h3>
-            
-             {/* Show overdue indicator explicitly at top right */}
-             {overdue && task.status !== 'completed' && (
-                <span className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
-                  Overdue
-                </span>
-             )}
           </div>
 
           {/* Clean Description */}

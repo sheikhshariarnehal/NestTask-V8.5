@@ -1,6 +1,6 @@
 import { Home, Calendar, Search, BookOpen, FileText, Clock } from 'lucide-react';
 import { NavPage } from '../types/navigation';
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface BottomNavigationProps {
   activePage: NavPage;
@@ -9,7 +9,7 @@ interface BottomNavigationProps {
   todayTaskCount?: number;
 }
 
-// Optimized navigation item with minimal rendering
+// Optimized navigation item with minimal rendering - Enhanced for mobile
 const BottomNavigationItem = React.memo(({ 
   id, 
   icon: Icon, 
@@ -34,32 +34,37 @@ const BottomNavigationItem = React.memo(({
       aria-current={isActive ? 'page' : undefined}
       className={`
         relative flex flex-col items-center justify-center w-full
-        px-1 py-1 transition-colors duration-100
+        px-1 py-2 
+        transition-all duration-150 ease-out
+        active:scale-95 active:opacity-80
         ${
           isActive
             ? 'text-blue-600 dark:text-blue-400'
-            : 'text-gray-700 dark:text-gray-300'
+            : 'text-gray-500 dark:text-gray-400'
         }`}
       style={{
         contain: 'layout style paint',
         touchAction: 'manipulation',
-        WebkitTapHighlightColor: 'transparent'
+        WebkitTapHighlightColor: 'transparent',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
       }}
     >
-      <div className="relative">
+      <div className="relative flex items-center justify-center">
         <Icon 
-          className="w-5 h-5 transition-none"
-          strokeWidth={isActive ? 2.5 : 1.8}
+          className={`w-[22px] h-[22px] transition-transform duration-150 ${isActive ? 'scale-110' : ''}`}
+          strokeWidth={isActive ? 2.25 : 1.75}
+          style={{ willChange: isActive ? 'transform' : 'auto' }}
         />
         
         {badge !== undefined && badge > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 text-[9px] font-medium text-white bg-red-500 rounded-full flex items-center justify-center">
+          <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full flex items-center justify-center shadow-sm ring-2 ring-white dark:ring-gray-900">
             {badge > 99 ? '99+' : badge}
           </span>
         )}
       </div>
       
-      <span className={`text-[10px] mt-0.5 ${isActive ? 'font-medium' : 'font-normal opacity-70'}`}>
+      <span className={`text-[11px] mt-1 tracking-tight ${isActive ? 'font-semibold' : 'font-medium opacity-80'}`}>
         {label}
       </span>
     </button>
@@ -69,7 +74,7 @@ const BottomNavigationItem = React.memo(({
 BottomNavigationItem.displayName = 'BottomNavigationItem';
 
 export function BottomNavigation({ activePage, onPageChange, hasUnreadNotifications, todayTaskCount = 0 }: BottomNavigationProps) {
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
   
   // Pre-define nav items once to avoid recreating the array on each render
   const navItems = useMemo(() => [
@@ -103,20 +108,20 @@ export function BottomNavigation({ activePage, onPageChange, hasUnreadNotificati
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activePage, onPageChange, navItems]);
 
-  // Optimized touch handlers with passive event handling
+  // Optimized touch handlers - using ref to avoid re-renders
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
+    touchStartXRef.current = e.touches[0].clientX;
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX === null) return;
+    if (touchStartXRef.current === null) return;
     
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
+    const diff = touchStartXRef.current - touchEndX;
     
     // Require more significant swipe (70px)
     if (Math.abs(diff) < 70) {
-      setTouchStartX(null);
+      touchStartXRef.current = null;
       return;
     }
     
@@ -129,28 +134,36 @@ export function BottomNavigation({ activePage, onPageChange, hasUnreadNotificati
       onPageChange(navItems[activeIndex - 1].id);
     }
     
-    setTouchStartX(null);
-  }, [touchStartX, activeIndex, onPageChange, navItems]);
+    touchStartXRef.current = null;
+  }, [activeIndex, onPageChange, navItems]);
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 border-t border-gray-200 dark:border-gray-800 shadow-[0_-1px_3px_rgba(0,0,0,0.05)] backdrop-blur-sm"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg shadow-gray-900/10 dark:shadow-gray-900/40"
       style={{ 
         paddingBottom: 'env(safe-area-inset-bottom)',
-        transform: 'translateZ(0)',
-        contain: 'layout style paint'
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+        transform: 'translate3d(0, 0, 0)',
+        contain: 'layout style paint',
+        willChange: 'transform'
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      role="navigation"
+      aria-label="Main navigation"
     >
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-4 h-[50px]">
-          {/* Active indicator line - optimized with transform only */}
-          <div className="absolute top-0 h-0.5 bg-blue-500 dark:bg-blue-400 transition-transform duration-150 ease-out" 
+      <div className="max-w-lg mx-auto px-2">
+        <div className="grid grid-cols-4 h-[56px] relative">
+          {/* Active indicator line - smoother animation */}
+          <div 
+            className="absolute top-0 h-[3px] bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 rounded-full transition-transform duration-200 ease-out" 
             style={{
-              width: `${100 / navItems.length}%`,
-              transform: `translateX(${(100 * activeIndex)}%)`,
-              backfaceVisibility: 'hidden'
+              width: `calc(${100 / navItems.length}% - 16px)`,
+              marginLeft: '8px',
+              transform: `translate3d(calc(${100 * activeIndex}% + ${activeIndex * 16}px), 0, 0)`,
+              backfaceVisibility: 'hidden',
+              willChange: 'transform'
             }}
           />
 
